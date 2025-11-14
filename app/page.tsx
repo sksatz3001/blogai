@@ -283,7 +283,7 @@ export default async function Home() {
                     {/* Quote */}
                     <Quote className="h-8 w-8 text-white/10 mb-4" />
                     <p className="text-[#E6EDF3]/90 mb-8 leading-relaxed text-base">
-                      "{testimonial.quote}"
+                      &ldquo;{testimonial.quote}&rdquo;
                     </p>
                     
                     {/* Author Info with Glass Effect */}
@@ -330,7 +330,7 @@ export default async function Home() {
                 </h2>
                 
                 <p className="text-lg text-[#9DA7BA]/70 mb-10 max-w-2xl mx-auto">
-                  Join thousands of companies shipping faster with Contendo AI's powerful content generation platform
+                  Join thousands of companies shipping faster with Contendo AI&apos;s powerful content generation platform
                 </p>
                 
                 <SignUpButton mode="modal">
@@ -361,7 +361,7 @@ export default async function Home() {
         <div className="mx-auto max-w-4xl px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-gradient-to-r from-[#E6EDF3] to-[#9DA7BA] bg-clip-text mb-4">
-              Questions? We've got answers
+              Questions? We&apos;ve got answers
             </h2>
             <p className="text-lg text-[#9DA7BA]/70">Everything you need to know about Contendo AI</p>
           </div>

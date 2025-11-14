@@ -1,0 +1,12 @@
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from './schema';
+
+// Use HTTP-based connection (more reliable in serverless)
+const sql = neon(process.env.DATABASE_URL!, {
+  fetchOptions: {
+    cache: 'no-store',
+  },
+});
+
+export const db = drizzle(sql, { schema });

@@ -133,7 +133,7 @@ export default async function PreviewBlogPage({
               {blog.secondaryKeywords && Array.isArray(blog.secondaryKeywords) && blog.secondaryKeywords.map((keyword: string, index: number) => (
                 <span
                   key={index}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300"
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[hsl(var(--secondary))]/20 text-[hsl(var(--foreground))] border border-[hsl(var(--secondary))]/30"
                 >
                   {keyword}
                 </span>
@@ -152,7 +152,7 @@ export default async function PreviewBlogPage({
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {blog.seoScore !== null && blog.seoScore !== undefined && (
               <div className="text-center p-5 rounded-xl border bg-muted/30">
-                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                <div className="text-3xl font-bold text-[hsl(var(--primary))]">
                   {blog.seoScore}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1">
@@ -162,7 +162,7 @@ export default async function PreviewBlogPage({
             )}
             {blog.keywordDensity && typeof blog.keywordDensity === 'object' && Object.keys(blog.keywordDensity).length > 0 ? (
               <div className="text-center p-5 rounded-xl border bg-muted/30">
-                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                <div className="text-3xl font-bold text-[hsl(var(--secondary))]">
                   {(Object.values(blog.keywordDensity as Record<string, number>)[0] as number).toFixed(1)}%
                 </div>
                 <div className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1">
@@ -173,7 +173,7 @@ export default async function PreviewBlogPage({
             ) : null}
             {blog.aeoScore !== null && blog.aeoScore !== undefined && (
               <div className="text-center p-5 rounded-xl border bg-muted/30">
-                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                <div className="text-3xl font-bold text-[hsl(var(--secondary))]">
                   {blog.aeoScore}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1">
@@ -184,7 +184,7 @@ export default async function PreviewBlogPage({
             )}
             {blog.geoScore !== null && blog.geoScore !== undefined && (
               <div className="text-center p-5 rounded-xl border bg-muted/30">
-                <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+                <div className="text-3xl font-bold text-[hsl(var(--accent))]">
                   {blog.geoScore}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1">
@@ -195,7 +195,7 @@ export default async function PreviewBlogPage({
             )}
             {blog.eeatScore !== null && blog.eeatScore !== undefined && (
               <div className="text-center p-5 rounded-xl border bg-muted/30">
-                <div className="text-3xl font-bold text-red-600 dark:text-red-400">
+                <div className="text-3xl font-bold text-[hsl(var(--primary))]">
                   {blog.eeatScore}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1">

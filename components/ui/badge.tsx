@@ -4,17 +4,17 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-3 py-0.5 text-xs font-bold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#88C0D0] focus:ring-offset-2",
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] focus:ring-offset-2",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-gradient-to-r from-[#88C0D0] to-[#8FBCBB] text-[#2E3440] hover:from-[#88C0D0]/90 hover:to-[#8FBCBB]/90 shadow-md",
+          "border-transparent bg-[hsl(var(--primary))] text-white shadow-sm",
         secondary:
-          "border-transparent bg-gradient-to-r from-[#D08770] to-[#EBCB8B] text-[#2E3440] hover:from-[#D08770]/90 hover:to-[#EBCB8B]/90 shadow-md",
+          "border-transparent bg-[hsl(var(--secondary))] text-white shadow-sm",
         destructive:
-          "border-transparent bg-[#BF616A] text-[#ECEFF4] hover:bg-[#BF616A]/80 shadow-md",
-        outline: "border-[#88C0D0] text-[#88C0D0] hover:bg-[#88C0D0]/10",
+          "border-transparent bg-destructive text-destructive-foreground shadow",
+        outline: "text-[hsl(var(--foreground))] border-2 border-[hsl(var(--primary))] bg-transparent font-medium",
       },
     },
     defaultVariants: {

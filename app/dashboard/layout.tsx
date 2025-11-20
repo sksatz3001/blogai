@@ -31,7 +31,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1E222A] via-[#2E3440] to-[#1E222A]">
+    <div className="min-h-screen">
       <Suspense fallback={null}>
         <AuthCheck />
       </Suspense>
@@ -40,7 +40,7 @@ export default function DashboardLayout({
         <div className="container mx-auto p-8">
           <Suspense fallback={
             <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#434C5E] border-t-[#88C0D0]" />
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
             </div>
           }>
             {children}

@@ -18,7 +18,9 @@ const TiptapEditor = dynamic(() => import("@/components/tiptap-editor").then(m =
   ),
 });
 import { BlogToc } from "@/components/blog-toc";
-import { ArrowLeft, Save, Eye, Download, BarChart3, Sparkles, Loader2, List, Info } from "lucide-react";
+import { ImagePromptModal } from "@/components/image-prompt-modal";
+import { ProfessionalImageEditor } from "@/components/professional-image-editor";
+import { ArrowLeft, Save, Eye, Download, BarChart3, Sparkles, Loader2, List, Info, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 
 export default function EditBlogPage() {
@@ -37,6 +39,11 @@ export default function EditBlogPage() {
   const [showToc, setShowToc] = useState(true);
   const [saving, setSaving] = useState(false);
   const [calculatingSEO, setCalculatingSEO] = useState(false);
+  const [featuredImageUrl, setFeaturedImageUrl] = useState<string | null>(null);
+  const [showImagePromptModal, setShowImagePromptModal] = useState(false);
+  const [showImageEditorModal, setShowImageEditorModal] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [featuredImageEditSrc, setFeaturedImageEditSrc] = useState<string | null>(null);
   const showMagicWandRef = useRef(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const streamCompletedRef = useRef(false);
@@ -59,6 +66,13 @@ export default function EditBlogPage() {
       setMetaDescription(data.metaDescription || "");
       const newContent = data.htmlContent || data.content || "";
       setContent(newContent);
+      
+      // Extract featured image if present
+      const featuredImgMatch = newContent.match(/<div class="featured-image-wrapper"[^>]*><img src="([^"]+)"/i);
+      if (featuredImgMatch) {
+        setFeaturedImageUrl(featuredImgMatch[1]);
+      }
+      
       if (autoGenerate && !data.content && !data.htmlContent) {
         setTimeout(() => startGenerationWithBlog(data), 100);
       }
@@ -235,6 +249,60 @@ export default function EditBlogPage() {
       }
     };
 
+  const handleGenerateFeaturedImage = async (prompt: string) => {
+    if (!blogId) return;
+    setGeneratingImage(true);
+    try {
+      const response = await fetch("/api/images/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, blogId }),
+      });
+      if (!response.ok) throw new Error("Image generation failed");
+      const data = await response.json();
+      const imageUrl = data.imageUrl || data.url;
+      
+      if (imageUrl) {
+        setFeaturedImageUrl(imageUrl);
+        const featuredImgHtml = `<div class="featured-image-wrapper" style="margin: 2rem 0;"><img src="${imageUrl}" alt="${title}" style="width: 100%; height: auto; border-radius: 8px;" /></div>`;
+        let updatedContent = content.replace(/<div class="featured-image-wrapper"[^>]*>.*?<\/div>/i, '');
+        setContent(featuredImgHtml + updatedContent);
+        toast.success("Featured image generated!");
+      }
+    } catch (error) {
+      console.error("Image generation error:", error);
+      toast.error("Failed to generate image");
+    } finally {
+      setGeneratingImage(false);
+      setShowImagePromptModal(false);
+    }
+  };
+
+  const handleSaveFeaturedImage = async (editedImageUrl: string) => {
+    setFeaturedImageUrl(editedImageUrl);
+    const featuredImgHtml = `<div class="featured-image-wrapper" style="margin: 2rem 0;"><img src="${editedImageUrl}" alt="${title}" style="width: 100%; height: auto; border-radius: 8px;" /></div>`;
+    let updatedContent = content.replace(/<div class="featured-image-wrapper"[^>]*>.*?<\/div>/i, '');
+    setContent(featuredImgHtml + updatedContent);
+    setShowImageEditorModal(false);
+    toast.success("Featured image updated!");
+    
+    // Trigger auto-save after featured image update
+    setTimeout(() => {
+      saveBlog();
+    }, 500);
+  };
+
+  const handleEditFeaturedImage = () => {
+    if (!featuredImageUrl) return;
+    const storageBase = (process.env.NEXT_PUBLIC_IMAGE_STORAGE_BASE || '').replace(/\/$/, '');
+    const isAbs = /^https?:\/\//i.test(featuredImageUrl);
+    const isStorage = storageBase && isAbs && featuredImageUrl.startsWith(storageBase);
+    // Proxy storage images for editing to avoid CORS canvas taint if bucket lacks CORS headers
+    const editingSrc = isStorage ? `/api/images/proxy?url=${encodeURIComponent(featuredImageUrl)}` : featuredImageUrl;
+    setFeaturedImageEditSrc(editingSrc);
+    setShowImageEditorModal(true);
+  };
+
     const calculateSEO = async () => {
       if (!blogId) return;
       setCalculatingSEO(true);
@@ -302,9 +370,9 @@ export default function EditBlogPage() {
     }
 
     return (
-      <div className="container mx-auto py-8 px-4 max-w-7xl">
+      <div className="container mx-auto py-6 px-2 max-w-[1800px]">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 px-2">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
               <Link href="/dashboard/blogs">
@@ -358,9 +426,9 @@ export default function EditBlogPage() {
 
         {/* SEO Metrics Display (parity with employee UI) */}
         {blog?.seoScore !== null && blog?.seoScore !== undefined && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 px-2">
             <div className="text-center p-5 rounded-xl border bg-card">
-              <div className="text-3xl font-bold text-[#88C0D0]">{blog.seoScore}</div>
+              <div className="text-3xl font-bold text-[hsl(var(--primary))]">{blog.seoScore}</div>
               <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
                 SEO Score
                 <span title="Overall SEO quality (0–100). Good: 70–100."><Info className="h-3.5 w-3.5" /></span>
@@ -368,7 +436,7 @@ export default function EditBlogPage() {
             </div>
             {blog.aeoScore !== null && blog.aeoScore !== undefined && (
               <div className="text-center p-5 rounded-xl border bg-card">
-                <div className="text-3xl font-bold text-[#B48EAD]">{blog.aeoScore}</div>
+                <div className="text-3xl font-bold text-[hsl(var(--secondary))]">{blog.aeoScore}</div>
                 <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
                   AEO Score
                   <span title="Answer Engine Optimization (0–100). Good: 70–100. Focus on FAQs and concise answers."><Info className="h-3.5 w-3.5" /></span>
@@ -377,7 +445,7 @@ export default function EditBlogPage() {
             )}
             {blog.geoScore !== null && blog.geoScore !== undefined && (
               <div className="text-center p-5 rounded-xl border bg-card">
-                <div className="text-3xl font-bold text-[#D08770]">{blog.geoScore}</div>
+                <div className="text-3xl font-bold text-[hsl(var(--secondary))]">{blog.geoScore}</div>
                 <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
                   GEO Score
                   <span title="Geo/Entity Optimization (0–100). Good: 70–100. Local relevance and entities."><Info className="h-3.5 w-3.5" /></span>
@@ -386,7 +454,7 @@ export default function EditBlogPage() {
             )}
             {blog.eeatScore !== null && blog.eeatScore !== undefined && (
               <div className="text-center p-5 rounded-xl border bg-card">
-                <div className="text-3xl font-bold text-[#BF616A]">{blog.eeatScore}</div>
+                <div className="text-3xl font-bold text-[hsl(var(--primary))]">{blog.eeatScore}</div>
                 <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
                   E-E-A-T
                   <span title="Expertise, Experience, Authoritativeness, Trust (0–100). Good: 70–100."><Info className="h-3.5 w-3.5" /></span>
@@ -395,7 +463,7 @@ export default function EditBlogPage() {
             )}
             {blog.keywordDensity && typeof blog.keywordDensity === 'object' && Object.keys(blog.keywordDensity).length > 0 && (
               <div className="text-center p-5 rounded-xl border bg-card">
-                <div className="text-3xl font-bold text-[#A3BE8C]">
+                <div className="text-3xl font-bold text-[#A3E635]">
                   {((Object.values(blog.keywordDensity)[0] as number) || 0).toFixed(1)}%
                 </div>
                 <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
@@ -411,7 +479,21 @@ export default function EditBlogPage() {
 
         {/* Editor */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Editor + Controls */}
+          {/* TOC Panel - Left Side */}
+          <div className="lg:col-span-3 space-y-4">
+            <Card className="sticky top-4">
+              <CardHeader className="flex flex-row items-center justify-between py-3 px-3">
+                <div className="flex items-center gap-2"><List className="h-4 w-4" /><span className="font-semibold">Structure</span></div>
+                <Button variant="ghost" size="sm" onClick={()=>setShowToc(!showToc)}>{showToc?"Hide":"Show"}</Button>
+              </CardHeader>
+              <CardContent className="pt-0 px-2">
+                {/* Table of Contents */}
+                {showToc ? <BlogToc html={content} /> : <p className="text-xs text-muted-foreground">TOC hidden</p>}
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Editor + Controls - Right Side */}
           <Card className="lg:col-span-9">
           <CardHeader>
             <div className="space-y-4">
@@ -439,22 +521,10 @@ export default function EditBlogPage() {
                   </Badge>
                 )}
               </div>
-              <TiptapEditor content={content} onChange={setContent} editable={!generating} blogId={blog.id} />
+              <TiptapEditor content={content} onChange={setContent} editable={!generating} blogId={blog.id} onAutoSave={saveBlog} />
             </div>
           </CardContent>
           </Card>
-          {/* TOC Panel */}
-          <div className="lg:col-span-3 space-y-4">
-            <Card className="sticky top-4">
-              <CardHeader className="flex flex-row items-center justify-between py-3">
-                <div className="flex items-center gap-2"><List className="h-4 w-4" /><span className="font-semibold">Structure</span></div>
-                <Button variant="ghost" size="sm" onClick={()=>setShowToc(!showToc)}>{showToc?"Hide":"Show"}</Button>
-              </CardHeader>
-              <CardContent className="pt-0">
-                {showToc ? <BlogToc html={content} /> : <p className="text-xs text-muted-foreground">TOC hidden</p>}
-              </CardContent>
-            </Card>
-          </div>
         </div>
 
         {/* Generate Button */}
@@ -469,6 +539,27 @@ export default function EditBlogPage() {
             <Sparkles className="h-4 w-4 mr-2" />
             Regenerate Content
           </Button>
+        )}
+        
+        {/* Image Modals */}
+        {showImagePromptModal && (
+          <ImagePromptModal
+            onClose={() => setShowImagePromptModal(false)}
+            onSubmit={handleGenerateFeaturedImage}
+            isGenerating={generatingImage}
+          />
+        )}
+        {showImageEditorModal && featuredImageEditSrc && featuredImageUrl && (
+          <ProfessionalImageEditor
+            imageSrc={featuredImageEditSrc}
+            originalImageUrl={featuredImageUrl}
+            blogId={blogId || ""}
+            onClose={() => {
+              setShowImageEditorModal(false);
+              setFeaturedImageEditSrc(null);
+            }}
+            onSave={handleSaveFeaturedImage}
+          />
         )}
       </div>
     );

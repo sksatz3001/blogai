@@ -26,7 +26,7 @@ export default async function OnboardingPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-4xl font-bold mb-8 text-center">Welcome to Contendo! 👋</h1>
+          <h1 className="text-4xl font-bold mb-8 text-center">Welcome to Contendo!</h1>
           <p className="text-center text-muted-foreground mb-12">
             Let&apos;s set up your account to personalize your blog creation experience
           </p>

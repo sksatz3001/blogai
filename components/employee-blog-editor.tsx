@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 const TiptapEditor = dynamic(() => import("@/components/tiptap-editor").then(m => ({ default: m.TiptapEditor })), {
   ssr: false,
   loading: () => (
-    <div className="rounded-xl border-2 border-[#3B4252] p-6 text-center text-[#D8DEE9]/70">
+    <div className="rounded-xl border border-border p-6 text-center text-muted-foreground">
       Loading editor...
     </div>
   ),
@@ -304,14 +304,14 @@ export default function EmployeeBlogEditor({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#1E222A]">
-        <Loader2 className="h-8 w-8 text-[#88C0D0] animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#1E222A] p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -319,22 +319,22 @@ export default function EmployeeBlogEditor({
             <Button
               variant="ghost"
               onClick={() => router.push("/employee/blogs")}
-              className="text-[#D8DEE9] hover:text-[#88C0D0] mb-4"
+              className="text-foreground hover:text-primary mb-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Blogs
             </Button>
-            <h1 className="text-3xl font-bold text-[#ECEFF4]">{blog?.title}</h1>
-            <p className="text-[#D8DEE9]/70 mt-2">Logged in as {employeeName}</p>
+            <h1 className="text-3xl font-bold text-foreground">{blog?.title}</h1>
+            <p className="text-muted-foreground mt-2">Logged in as {employeeName}</p>
           </div>
 
           <div className="flex gap-3">
             {!streaming && (
               <>
-                <Button onClick={calculateSEO} variant="outline" className="border-[#88C0D0]/30">
+                <Button onClick={calculateSEO} variant="outline" className="border-primary/30">
                   📊 Calculate SEO
                 </Button>
-                <Button onClick={exportHTML} variant="outline" className="border-[#D8DEE9]/30">
+                <Button onClick={exportHTML} variant="outline" className="border-foreground/30">
                   <Download className="h-4 w-4 mr-2" />
                   Export HTML
                 </Button>
@@ -345,7 +345,7 @@ export default function EmployeeBlogEditor({
               <Button
                 onClick={() => handleSave(content)}
                 disabled={saving}
-                className="bg-[#A3BE8C] hover:bg-[#A3BE8C]/90"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {saving ? (
                   <>
@@ -366,7 +366,7 @@ export default function EmployeeBlogEditor({
               <Button
                 onClick={() => updateStatus("published")}
                 disabled={publishing}
-                className="bg-[#88C0D0] hover:bg-[#88C0D0]/90 text-[#2E3440]"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {publishing ? "Publishing..." : "Publish"}
               </Button>
@@ -376,7 +376,7 @@ export default function EmployeeBlogEditor({
                 onClick={() => updateStatus("draft")}
                 disabled={publishing}
                 variant="outline"
-                className="border-[#D08770]/50 text-[#D08770]"
+                className="border-destructive/50 text-destructive"
               >
                 {publishing ? "Updating..." : "Unpublish"}
               </Button>
@@ -385,7 +385,7 @@ export default function EmployeeBlogEditor({
             {!generating && !streaming && (
               <Button
                 onClick={startGeneration}
-                className="bg-gradient-to-r from-[#88C0D0] to-[#8FBCBB] text-[#2E3440]"
+                className="bg-gradient-to-r from-primary via-secondary to-accent text-foreground"
               >
                 <Wand2 className="h-4 w-4 mr-2" />
                 {content ? "Regenerate" : "Generate"}
@@ -397,56 +397,56 @@ export default function EmployeeBlogEditor({
         {/* SEO Metrics Display */}
         {blog?.seoScore !== null && blog?.seoScore !== undefined && (
           <div className="grid grid-cols-5 gap-4">
-            <div className="glass text-center p-5 rounded-xl border-2 border-[#88C0D0]/30">
-              <div className="text-3xl font-bold text-[#88C0D0]">
+            <div className="glass text-center p-5 rounded-xl border border-primary/30">
+              <div className="text-3xl font-bold text-primary">
                 {blog.seoScore}
               </div>
-              <div className="text-xs text-[#D8DEE9] mt-1 inline-flex items-center gap-1">
+              <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
                 SEO Score
-                <span title="Overall SEO quality (0–100). Good: 70–100."><Info className="h-3.5 w-3.5 text-[#D8DEE9]/70" /></span>
+                <span title="Overall SEO quality (0–100). Good: 70–100."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
               </div>
             </div>
             {blog.aeoScore !== null && blog.aeoScore !== undefined && (
-              <div className="glass text-center p-5 rounded-xl border-2 border-[#B48EAD]/30">
-                <div className="text-3xl font-bold text-[#B48EAD]">
+              <div className="glass text-center p-5 rounded-xl border border-secondary/30">
+                <div className="text-3xl font-bold text-secondary">
                   {blog.aeoScore}
                 </div>
-                <div className="text-xs text-[#D8DEE9] mt-1 inline-flex items-center gap-1">
+                <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
                   AEO Score
-                  <span title="Answer Engine Optimization (0–100). Good: 70–100. Focus on FAQs and concise answers."><Info className="h-3.5 w-3.5 text-[#D8DEE9]/70" /></span>
+                  <span title="Answer Engine Optimization (0–100). Good: 70–100. Focus on FAQs and concise answers."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
                 </div>
               </div>
             )}
             {blog.geoScore !== null && blog.geoScore !== undefined && (
-              <div className="glass text-center p-5 rounded-xl border-2 border-[#D08770]/30">
-                <div className="text-3xl font-bold text-[#D08770]">
+              <div className="glass text-center p-5 rounded-xl border border-secondary/30">
+                <div className="text-3xl font-bold text-secondary">
                   {blog.geoScore}
                 </div>
-                <div className="text-xs text-[#D8DEE9] mt-1 inline-flex items-center gap-1">
+                <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
                   GEO Score
-                  <span title="Geo/Entity Optimization (0–100). Good: 70–100. Local relevance and entities."><Info className="h-3.5 w-3.5 text-[#D8DEE9]/70" /></span>
+                  <span title="Geo/Entity Optimization (0–100). Good: 70–100. Local relevance and entities."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
                 </div>
               </div>
             )}
             {blog.eeatScore !== null && blog.eeatScore !== undefined && (
-              <div className="glass text-center p-5 rounded-xl border-2 border-[#BF616A]/30">
-                <div className="text-3xl font-bold text-[#BF616A]">
+              <div className="glass text-center p-5 rounded-xl border border-primary/30">
+                <div className="text-3xl font-bold text-primary">
                   {blog.eeatScore}
                 </div>
-                <div className="text-xs text-[#D8DEE9] mt-1 inline-flex items-center gap-1">
+                <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
                   E-E-A-T
-                  <span title="Expertise, Experience, Authoritativeness, Trust (0–100). Good: 70–100."><Info className="h-3.5 w-3.5 text-[#D8DEE9]/70" /></span>
+                  <span title="Expertise, Experience, Authoritativeness, Trust (0–100). Good: 70–100."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
                 </div>
               </div>
             )}
             {blog.keywordDensity && typeof blog.keywordDensity === 'object' && Object.keys(blog.keywordDensity).length > 0 && (
-              <div className="glass text-center p-5 rounded-xl border-2 border-[#A3BE8C]/30">
-                <div className="text-3xl font-bold text-[#A3BE8C]">
+              <div className="glass text-center p-5 rounded-xl border border-accent/30">
+                <div className="text-3xl font-bold text-accent">
                   {((Object.values(blog.keywordDensity)[0] as number) || 0).toFixed(1)}%
                 </div>
-                <div className="text-xs text-[#D8DEE9] mt-1 inline-flex items-center gap-1">
+                <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
                   Keyword Density
-                  <span title="Primary keyword usage as % of total words. Target 0.8%–2.5%."><Info className="h-3.5 w-3.5 text-[#D8DEE9]/70" /></span>
+                  <span title="Primary keyword usage as % of total words. Target 0.8%–2.5%."><Info className="h-3.5 w-3.5 text-muted-foreground" /></span>
                 </div>
               </div>
             )}
@@ -462,8 +462,8 @@ export default function EmployeeBlogEditor({
               exit={{ opacity: 0, scale: 0.5 }}
               className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50"
             >
-              <div className="bg-[#2E3440] p-8 rounded-xl border-2 border-[#88C0D0] shadow-2xl">
-                <Sparkles className="h-16 w-16 text-[#88C0D0] animate-pulse" />
+              <div className="bg-card p-8 rounded-xl border border-primary shadow-2xl">
+                <Sparkles className="h-16 w-16 text-primary animate-pulse" />
               </div>
             </motion.div>
           )}
@@ -471,10 +471,10 @@ export default function EmployeeBlogEditor({
 
         {/* Generating State */}
         {streaming && (
-          <div className="bg-[#88C0D0]/10 border-2 border-[#88C0D0] rounded-xl p-4">
+          <div className="bg-primary/10 border border-primary rounded-xl p-4">
             <div className="flex items-center gap-3">
-              <Loader2 className="h-5 w-5 text-[#88C0D0] animate-spin" />
-              <p className="text-[#88C0D0] font-medium">
+              <Loader2 className="h-5 w-5 text-primary animate-spin" />
+              <p className="text-primary font-medium">
                 Generating your blog... Watch the magic happen!
               </p>
             </div>
@@ -491,12 +491,12 @@ export default function EmployeeBlogEditor({
             />
           </div>
           <div className="lg:col-span-3 space-y-4">
-            <div className="glass border-2 border-[#3B4252] rounded-xl p-4 sticky top-4">
+            <div className="glass border border-border rounded-xl p-4 sticky top-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-[#ECEFF4]">Structure</span>
+                <span className="font-semibold text-foreground">Structure</span>
                 <Button variant="ghost" size="sm" onClick={()=>setShowToc(!showToc)}>{showToc?"Hide":"Show"}</Button>
               </div>
-              {showToc ? <BlogToc html={content} /> : <p className="text-xs text-[#D8DEE9]/50">TOC hidden</p>}
+              {showToc ? <BlogToc html={content} /> : <p className="text-xs text-muted-foreground">TOC hidden</p>}
             </div>
           </div>
         </div>

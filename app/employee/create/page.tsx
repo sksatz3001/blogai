@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Sparkles, Wand2, ArrowLeft } from "lucide-react";
+import { Loader2, Sparkles, Wand2, ArrowLeft, Lightbulb, ImagePlus, Target } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function EmployeeCreateBlogPage() {
@@ -101,7 +101,7 @@ export default function EmployeeCreateBlogPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1E222A] p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-3xl mx-auto space-y-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -111,7 +111,7 @@ export default function EmployeeCreateBlogPage() {
           <Button
             variant="ghost"
             onClick={() => router.push("/employee/dashboard")}
-            className="text-[#D8DEE9] hover:text-[#88C0D0] mb-4"
+            className="text-foreground hover:text-[hsl(var(--primary))] mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
@@ -119,11 +119,11 @@ export default function EmployeeCreateBlogPage() {
           <h1 className="text-4xl font-bold mb-2 gradient-text">
             Create New Blog
           </h1>
-          <p className="text-[#D8DEE9]">
+          <p className="text-[hsl(var(--muted-foreground))]">
             Let AI help you create amazing, SEO-optimized content
           </p>
           {employeeName && (
-            <p className="text-[#D8DEE9]/70 mt-2">Logged in as {employeeName}</p>
+            <p className="text-[hsl(var(--muted-foreground))] mt-2">Logged in as {employeeName}</p>
           )}
         </motion.div>
 
@@ -132,34 +132,34 @@ export default function EmployeeCreateBlogPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <Card className="glass border-2 border-[#3B4252]">
+          <Card className="glass border-2 border-[hsl(var(--border))]">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-[#ECEFF4]">
-                <Sparkles className="h-5 w-5 text-[#88C0D0]" />
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Sparkles className="h-5 w-5 text-[hsl(var(--primary))]" />
                 Blog Configuration
               </CardTitle>
-              <CardDescription className="text-[#D8DEE9]/70">
+              <CardDescription className="text-[hsl(var(--muted-foreground))]">
                 Provide details about your blog and let AI do the magic
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="title" className="text-base text-[#ECEFF4]">
-                  Blog Title <span className="text-[#BF616A]">*</span>
+                <Label htmlFor="title" className="text-base text-foreground">
+                  Blog Title <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="title"
                   placeholder="10 Best Practices for Modern Web Development"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="h-12 bg-[#3B4252] border-[#434C5E] text-[#ECEFF4] placeholder:text-[#4C566A] focus:border-[#88C0D0] focus:ring-[#88C0D0] text-lg"
+                  className="h-12 bg-[hsl(var(--card))] border-[hsl(var(--border))] text-foreground placeholder:text-[hsl(var(--muted-foreground))] focus:border-[hsl(var(--ring))] focus:ring-[hsl(var(--ring))] text-lg"
                 />
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="primaryKeyword" className="text-base text-[#ECEFF4]">
-                    Primary Keyword <span className="text-[#BF616A]">*</span>
+                  <Label htmlFor="primaryKeyword" className="text-base text-foreground">
+                    Primary Keyword <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="primaryKeyword"
@@ -168,12 +168,12 @@ export default function EmployeeCreateBlogPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, primaryKeyword: e.target.value })
                     }
-                    className="h-11 bg-[#3B4252] border-[#434C5E] text-[#ECEFF4] placeholder:text-[#4C566A] focus:border-[#88C0D0] focus:ring-[#88C0D0]"
+                    className="h-11 bg-[hsl(var(--card))] border-[hsl(var(--border))] text-foreground placeholder:text-[hsl(var(--muted-foreground))] focus:border-[hsl(var(--ring))] focus:ring-[hsl(var(--ring))]"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wordCount" className="text-base text-[#ECEFF4]">
+                  <Label htmlFor="wordCount" className="text-base text-foreground">
                     Target Word Count
                   </Label>
                   <Input
@@ -186,15 +186,15 @@ export default function EmployeeCreateBlogPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, wordCount: e.target.value })
                     }
-                    className="h-11 bg-[#3B4252] border-[#434C5E] text-[#ECEFF4] placeholder:text-[#4C566A] focus:border-[#88C0D0] focus:ring-[#88C0D0]"
+                    className="h-11 bg-[hsl(var(--card))] border-[hsl(var(--border))] text-foreground placeholder:text-[hsl(var(--muted-foreground))] focus:border-[hsl(var(--ring))] focus:ring-[hsl(var(--ring))]"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="secondaryKeywords" className="text-base text-[#ECEFF4]">
+                <Label htmlFor="secondaryKeywords" className="text-base text-foreground">
                   Secondary Keywords
-                  <span className="text-sm text-[#D8DEE9] ml-2">
+                  <span className="text-sm text-[hsl(var(--muted-foreground))] ml-2">
                     (comma-separated)
                   </span>
                 </Label>
@@ -205,7 +205,7 @@ export default function EmployeeCreateBlogPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, secondaryKeywords: e.target.value })
                   }
-                  className="h-11 bg-[#3B4252] border-[#434C5E] text-[#ECEFF4] placeholder:text-[#4C566A] focus:border-[#88C0D0] focus:ring-[#88C0D0]"
+                  className="h-11 bg-[hsl(var(--card))] border-[hsl(var(--border))] text-foreground placeholder:text-[hsl(var(--muted-foreground))] focus:border-[hsl(var(--ring))] focus:ring-[hsl(var(--ring))]"
                 />
               </div>
 
@@ -214,7 +214,7 @@ export default function EmployeeCreateBlogPage() {
                   onClick={handleGenerate}
                   disabled={loading || !formData.title || !formData.primaryKeyword}
                   size="lg"
-                  className="w-full h-12 text-lg gap-2 bg-gradient-to-r from-[#88C0D0] to-[#8FBCBB] text-[#2E3440] hover:from-[#88C0D0]/90 hover:to-[#8FBCBB]/90"
+                  className="w-full h-12 text-lg gap-2 bg-gradient-to-r from-[#00FA9A] via-[#00B2FF] to-[#1E90FF] text-white hover:from-[#00FA9A]/90 hover:to-[#1E90FF]/90"
                 >
                   {loading ? (
                     <>
@@ -239,12 +239,13 @@ export default function EmployeeCreateBlogPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="glass p-5 rounded-xl border-2 border-[#88C0D0]/20"
+            className="glass p-5 rounded-xl border-2 border-[hsl(var(--primary))]/20"
           >
-            <h3 className="font-semibold text-[#88C0D0] mb-1">
-              AI Generation
+            <Lightbulb className="h-6 w-6 text-[hsl(var(--primary))] mb-2" />
+            <h3 className="font-semibold text-[hsl(var(--primary))] mb-1">
+              Best Practices
             </h3>
-            <p className="text-sm text-[#D8DEE9]">
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">
               Watch your blog being written in real-time with smooth animations
             </p>
           </motion.div>
@@ -253,12 +254,13 @@ export default function EmployeeCreateBlogPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="glass p-5 rounded-xl border-2 border-[#D08770]/20"
+            className="glass p-5 rounded-xl border-2 border-[hsl(var(--secondary))]/20"
           >
-            <h3 className="font-semibold text-[#D08770] mb-1">
+            <ImagePlus className="h-6 w-6 text-[hsl(var(--secondary))] mb-2" />
+            <h3 className="font-semibold text-[hsl(var(--secondary))] mb-1">
               Auto Images
             </h3>
-            <p className="text-sm text-[#D8DEE9]">
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">
               AI will automatically generate and place relevant images
             </p>
           </motion.div>
@@ -267,12 +269,13 @@ export default function EmployeeCreateBlogPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="glass p-5 rounded-xl border-2 border-[#88C0D0]/20"
+            className="glass p-5 rounded-xl border-2 border-[hsl(var(--accent))]/20"
           >
-            <h3 className="font-semibold text-[#88C0D0] mb-1">
+            <Target className="h-6 w-6 text-[hsl(var(--accent))] mb-2" />
+            <h3 className="font-semibold text-[hsl(var(--accent))] mb-1">
               SEO Optimized
             </h3>
-            <p className="text-sm text-[#D8DEE9]">
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">
               Get comprehensive SEO metrics and optimization suggestions
             </p>
           </motion.div>

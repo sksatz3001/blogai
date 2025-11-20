@@ -61,10 +61,10 @@ export default function EmployeeBlogsClient({ employee }: EmployeeBlogsClientPro
   };
 
   const gradients = [
-    'from-[#88C0D0]/20 via-[#81A1C1]/10 to-transparent',
-    'from-[#D08770]/20 via-[#EBCB8B]/10 to-transparent',
-    'from-[#B48EAD]/20 via-[#88C0D0]/10 to-transparent',
-    'from-[#A3BE8C]/20 via-[#8FBCBB]/10 to-transparent',
+    'from-primary/20 via-secondary/10 to-transparent',
+    'from-secondary/20 via-accent/10 to-transparent',
+    'from-primary/20 via-accent/10 to-transparent',
+    'from-secondary/20 via-primary/10 to-transparent',
   ];
 
   const filteredAndSortedBlogs = useMemo(() => {
@@ -106,7 +106,7 @@ export default function EmployeeBlogsClient({ employee }: EmployeeBlogsClientPro
   }, [blogs, searchQuery, sortBy, filterStatus]);
 
   return (
-    <div className="min-h-screen bg-[#1E222A] p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -114,17 +114,17 @@ export default function EmployeeBlogsClient({ employee }: EmployeeBlogsClientPro
             <Button
               variant="ghost"
               onClick={() => router.push("/employee/dashboard")}
-              className="text-[#D8DEE9] hover:text-[#88C0D0] mb-4"
+              className="text-foreground hover:text-primary mb-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
-            <h1 className="text-3xl font-bold text-[#ECEFF4]">My Blogs</h1>
-            <p className="text-[#D8DEE9]/70 mt-2">Logged in as {employee.fullName}</p>
+            <h1 className="text-3xl font-bold text-foreground">My Blogs</h1>
+            <p className="text-muted-foreground mt-2">Logged in as {employee.fullName}</p>
           </div>
 
           <Link href="/employee/create" prefetch={true}>
-            <Button className="bg-gradient-to-r from-[#88C0D0] to-[#8FBCBB] text-[#2E3440] hover:from-[#88C0D0]/90 hover:to-[#8FBCBB]/90">
+            <Button className="bg-gradient-to-r from-primary via-secondary to-accent text-foreground hover:opacity-95">
               <FileText className="h-4 w-4 mr-2" />
               Create New Blog
             </Button>
@@ -133,19 +133,19 @@ export default function EmployeeBlogsClient({ employee }: EmployeeBlogsClientPro
 
         {/* Error Message */}
         {error && (
-          <Card className="glass border-2 border-[#BF616A] bg-[#BF616A]/10">
-            <CardContent className="p-4">
-              <p className="text-[#BF616A]">{error}</p>
+          <Card className="glass border border-destructive bg-destructive/10">
+            <CardContent className="p-6">
+              <p className="text-destructive">{error}</p>
             </CardContent>
           </Card>
         )}
 
         {/* Blogs List */}
-        <Card className="glass border-2 border-[#3B4252]">
+        <Card className="glass border border-border">
           <CardHeader>
-            <CardTitle className="text-[#ECEFF4] flex items-center justify-between">
+            <CardTitle className="text-foreground flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-[#88C0D0]" />
+                <FileText className="h-5 w-5 text-primary" />
                 Your Blog Posts ({blogs.length})
               </span>
             </CardTitle>
@@ -153,15 +153,15 @@ export default function EmployeeBlogsClient({ employee }: EmployeeBlogsClientPro
           <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 text-[#88C0D0] animate-spin" />
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
               </div>
             ) : blogs.length === 0 ? (
               <div className="text-center py-12">
-                <FileText className="h-12 w-12 text-[#4C566A] mx-auto mb-4" />
-                <p className="text-[#D8DEE9]/60">No blogs yet</p>
-                <p className="text-sm text-[#D8DEE9]/40 mt-2">Create your first blog to get started</p>
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No blogs yet</p>
+                <p className="text-sm text-muted-foreground mt-2">Create your first blog to get started</p>
                 <Link href="/employee/create" prefetch={true}>
-                  <Button className="mt-6 bg-gradient-to-r from-[#88C0D0] to-[#8FBCBB] text-[#2E3440]">
+                  <Button className="mt-6 bg-gradient-to-r from-primary via-secondary to-accent text-foreground">
                     <Plus className="h-4 w-4 mr-2" />
                     Create Blog
                   </Button>
@@ -172,36 +172,36 @@ export default function EmployeeBlogsClient({ employee }: EmployeeBlogsClientPro
                 {/* Search and Filters */}
                 <div className="space-y-4 mb-4">
                   <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#88C0D0]" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
                     <Input
                       placeholder="Search by title or keyword..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-12 pr-4 h-12 bg-[#2E3440]/50 border-2 border-[#3B4252] focus:border-[#88C0D0] rounded-xl"
+                      className="pl-12 pr-4 h-12 bg-card/50 border border-border focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
                     />
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-[#88C0D0]/10 to-[#8FBCBB]/5 border border-[#88C0D0]/30">
-                      <Filter className="h-4 w-4 text-[#88C0D0]" />
-                      <span className="text-sm font-semibold text-[#88C0D0]">Filters</span>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-primary/10 to-secondary/5 border border-primary/30">
+                      <Filter className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold text-primary">Filters</span>
                     </div>
                     <div className="relative">
                       <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value as any)}
-                        className="appearance-none pl-4 pr-10 py-2.5 rounded-lg bg-[#2E3440] border-2 border-[#434C5E] text-[#ECEFF4] text-sm font-medium focus:outline-none focus:border-[#88C0D0]"
+                        className="appearance-none pl-4 pr-10 py-2.5 rounded-lg bg-card border border-border text-foreground text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       >
                         <option value="all">All Status</option>
                         <option value="saved">Saved</option>
                         <option value="draft">Draft</option>
                       </select>
-                      <SortDesc className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#88C0D0] pointer-events-none" />
+                      <SortDesc className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary pointer-events-none" />
                     </div>
                     <div className="relative">
                       <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as any)}
-                        className="appearance-none pl-4 pr-10 py-2.5 rounded-lg bg-[#2E3440] border-2 border-[#434C5E] text-[#ECEFF4] text-sm font-medium focus:outline-none focus:border-[#88C0D0]"
+                        className="appearance-none pl-4 pr-10 py-2.5 rounded-lg bg-card border border-border text-foreground text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       >
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
@@ -210,7 +210,7 @@ export default function EmployeeBlogsClient({ employee }: EmployeeBlogsClientPro
                         <option value="words-high">Most Words</option>
                         <option value="words-low">Least Words</option>
                       </select>
-                      <SortDesc className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#88C0D0] pointer-events-none" />
+                      <SortDesc className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary pointer-events-none" />
                     </div>
                   </div>
                 </div>
@@ -222,52 +222,52 @@ export default function EmployeeBlogsClient({ employee }: EmployeeBlogsClientPro
                     return (
                       <div
                         key={blog.id}
-                        className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} backdrop-blur-sm border-2 border-[#3B4252] hover:border-[#88C0D0]/50 transition-all duration-300 hover:shadow-2xl hover:shadow-[#88C0D0]/10 hover:-translate-y-2 flex flex-col`}
+                        className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} backdrop-blur-sm border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 flex flex-col`}
                       >
-                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#88C0D0]/0 via-[#88C0D0]/5 to-[#D08770]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-transparent via-primary/5 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                         <div className="relative p-6 flex flex-col flex-1">
                           <div className="absolute top-4 right-4">
                             <Badge
                               variant={(blog.status || 'draft') === 'published' ? 'default' : 'secondary'}
-                              className={`${(blog.status || 'draft') === 'published' ? 'bg-[#88C0D0] text-[#2E3440]' : 'bg-[#D08770] text-[#2E3440]'} shadow-lg capitalize`}
+                              className={`${(blog.status || 'draft') === 'published' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'} shadow-lg capitalize`}
                             >
                               {(blog.status || 'draft') === 'published' ? 'saved' : (blog.status || 'draft')}
                             </Badge>
                           </div>
 
                           <div className="space-y-3 mb-4 pr-20">
-                            <h3 className="text-xl font-bold text-[#ECEFF4] group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-[#88C0D0] group-hover:to-[#8FBCBB] transition-all duration-300 line-clamp-2">
+                            <h3 className="text-xl font-bold text-foreground group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-primary group-hover:to-secondary transition-all duration-300 line-clamp-2">
                               {blog.title}
                             </h3>
-                            <div className="h-1 w-16 rounded-full bg-gradient-to-r from-[#88C0D0] to-[#D08770] group-hover:w-24 transition-all duration-300" />
+                            <div className="h-1 w-16 rounded-full bg-gradient-to-r from-primary to-secondary group-hover:w-24 transition-all duration-300" />
                           </div>
 
                           <div className="flex items-center gap-2 text-sm mb-4">
-                            <span className="text-[#88C0D0] font-semibold">🔑</span>
-                            <span className="text-[#D8DEE9] font-medium line-clamp-1">
+                            <span className="text-primary font-semibold">🔑</span>
+                            <span className="text-foreground font-medium line-clamp-1">
                               {blog.primaryKeyword || (blog.targetKeywords ? blog.targetKeywords.split(',')[0].trim() : 'No keyword')}
                             </span>
                           </div>
 
                           <div className="flex flex-wrap items-center gap-2 mb-auto">
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#3B4252]/50 border border-[#434C5E]">
-                              <span className="text-xs font-medium text-[#88C0D0]">📝</span>
-                              <span className="text-xs font-semibold text-[#D8DEE9]">{blog.wordCount || 0}</span>
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[hsl(var(--card))]/50 border border-[hsl(var(--border))]">
+                              <span className="text-xs font-medium text-primary">📝</span>
+                              <span className="text-xs font-semibold text-foreground">{blog.wordCount || 0}</span>
                             </div>
                             {blog.seoScore && (
-                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#3B4252]/50 border border-[#434C5E]">
-                                <span className="text-xs font-medium text-[#A3BE8C]">📊</span>
-                                <span className="text-xs font-semibold text-[#D8DEE9]">{blog.seoScore}</span>
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[hsl(var(--card))]/50 border border-[hsl(var(--border))]">
+                                <span className="text-xs font-medium text-accent">📊</span>
+                                <span className="text-xs font-semibold text-foreground">{blog.seoScore}</span>
                               </div>
                             )}
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#3B4252]/50 border border-[#434C5E]">
-                              <span className="text-xs font-medium text-[#D08770]">📅</span>
-                              <span className="text-xs font-semibold text-[#D8DEE9]">{new Date(blog.createdAt || '').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[hsl(var(--card))]/50 border border-[hsl(var(--border))]">
+                              <span className="text-xs font-medium text-secondary">📅</span>
+                              <span className="text-xs font-semibold text-foreground">{new Date(blog.createdAt || '').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                             </div>
                           </div>
 
-                          <div className="h-px bg-gradient-to-r from-transparent via-[#88C0D0]/30 to-transparent my-4" />
+                          <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent my-4" />
 
                           <div className="space-y-2">
                             <Link href={`/employee/blogs/${blog.id}/edit`} className="block" prefetch={true}>

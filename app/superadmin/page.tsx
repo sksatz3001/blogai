@@ -59,51 +59,51 @@ export default async function SuperAdminDashboardPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-[#1B2332] to-[#0E1626] border-[#1F2A3A]">
+        <Card className="bg-gradient-to-br from-card to-background border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-[#E6EDF3]">
-              <UsersIcon className="h-5 w-5 text-[#88C0D0]" /> Users
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <UsersIcon className="h-5 w-5 text-accent" /> Users
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-[#E6EDF3]">{uc}</div>
-            <p className="text-xs text-[#9DA7BA] mt-1">Total registered companies</p>
+            <div className="text-4xl font-bold text-foreground">{uc}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total registered companies</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-[#1B2332] to-[#0E1626] border-[#1F2A3A]">
+        <Card className="bg-gradient-to-br from-card to-background border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-[#E6EDF3]">
-              <UserCheck className="h-5 w-5 text-[#A3BE8C]" /> Active Employees
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <UserCheck className="h-5 w-5 text-primary" /> Active Employees
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-[#E6EDF3]">{ac}</div>
-            <p className="text-xs text-[#9DA7BA] mt-1">Currently active accounts</p>
+            <div className="text-4xl font-bold text-foreground">{ac}</div>
+            <p className="text-xs text-muted-foreground mt-1">Currently active accounts</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-[#1B2332] to-[#0E1626] border-[#1F2A3A]">
+        <Card className="bg-gradient-to-br from-card to-background border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-[#E6EDF3]">
-              <FileText className="h-5 w-5 text-[#81A1C1]" /> Blogs
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <FileText className="h-5 w-5 text-secondary" /> Blogs
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-[#E6EDF3]">{bc}</div>
-            <p className="text-xs text-[#9DA7BA] mt-1">Total blog posts</p>
+            <div className="text-4xl font-bold text-foreground">{bc}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total blog posts</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-[#1B2332] to-[#0E1626] border-[#1F2A3A]">
+        <Card className="bg-gradient-to-br from-card to-background border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-[#E6EDF3]">
-              <CheckCircle className="h-5 w-5 text-[#D08770]" /> Published
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <CheckCircle className="h-5 w-5 text-secondary" /> Published
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-[#E6EDF3]">{pc}</div>
-            <p className="text-xs text-[#9DA7BA] mt-1">Live public posts</p>
+            <div className="text-4xl font-bold text-foreground">{pc}</div>
+            <p className="text-xs text-muted-foreground mt-1">Live public posts</p>
           </CardContent>
         </Card>
       </div>
@@ -111,10 +111,10 @@ export default async function SuperAdminDashboardPage() {
       {/* Insights Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* SEO & Content Health */}
-        <Card className="lg:col-span-1 bg-[#0E1626] border-[#1F2A3A]">
+        <Card className="lg:col-span-1 bg-card border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-[#88C0D0]" /> Content Health
+              <BarChart3 className="h-5 w-5 text-accent" /> Content Health
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -128,32 +128,32 @@ export default async function SuperAdminDashboardPage() {
                 <p className="text-xs text-muted-foreground">New last 7 days</p>
               </div>
             </div>
-            <div className="mt-4 h-2 w-full rounded-full bg-[#1B2332]">
-              <div className="h-2 rounded-full bg-gradient-to-r from-[#88C0D0] to-[#8FBCBB]" style={{ width: `${Math.min(100, avgSEO)}%` }} />
+            <div className="mt-4 h-2 w-full rounded-full bg-card/80">
+              <div className="h-2 rounded-full bg-gradient-to-r from-accent to-primary" style={{ width: `${Math.min(100, avgSEO)}%` }} />
             </div>
           </CardContent>
         </Card>
 
         {/* Quick Actions */}
-        <Card className="lg:col-span-1 bg-[#0E1626] border-[#1F2A3A]">
+        <Card className="lg:col-span-1 bg-card border-border">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3">
-              <Link href="/superadmin/users" className="rounded-xl border border-[#1F2A3A] p-3 hover:bg-[#1B2332] transition">
+              <Link href="/superadmin/users" className="rounded-xl border border-border p-3 hover:bg-card transition">
                 <div className="text-sm">Manage Users</div>
                 <div className="text-xs text-muted-foreground">View, edit, delete</div>
               </Link>
-              <Link href="/superadmin/employees" className="rounded-xl border border-[#1F2A3A] p-3 hover:bg-[#1B2332] transition">
+              <Link href="/superadmin/employees" className="rounded-xl border border-border p-3 hover:bg-card transition">
                 <div className="text-sm">Manage Employees</div>
                 <div className="text-xs text-muted-foreground">Toggle active, delete</div>
               </Link>
-              <Link href="/superadmin/blogs" className="rounded-xl border border-[#1F2A3A] p-3 hover:bg-[#1B2332] transition">
+              <Link href="/superadmin/blogs" className="rounded-xl border border-border p-3 hover:bg-card transition">
                 <div className="text-sm">Manage Blogs</div>
                 <div className="text-xs text-muted-foreground">Publish, unpublish, delete</div>
               </Link>
-              <Link href="/dashboard" className="rounded-xl border border-[#1F2A3A] p-3 hover:bg-[#1B2332] transition">
+              <Link href="/dashboard" className="rounded-xl border border-border p-3 hover:bg-card transition">
                 <div className="text-sm">Admin Area</div>
                 <div className="text-xs text-muted-foreground">Go to main dashboard</div>
               </Link>
@@ -162,9 +162,9 @@ export default async function SuperAdminDashboardPage() {
         </Card>
 
         {/* Recent Activity */}
-        <Card className="lg:col-span-1 bg-[#0E1626] border-[#1F2A3A]">
+        <Card className="lg:col-span-1 bg-card border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5 text-[#A3BE8C]" /> Recent Activity</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5 text-primary" /> Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -172,7 +172,7 @@ export default async function SuperAdminDashboardPage() {
                 <p className="text-sm text-muted-foreground">No recent activity</p>
               )}
               {activities.map((a) => (
-                <div key={a.id} className="flex items-center justify-between rounded-lg border border-[#1F2A3A] p-3">
+                <div key={a.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                   <div>
                     <div className="text-sm font-medium">{a.activityType}</div>
                     {a.metadata ? (

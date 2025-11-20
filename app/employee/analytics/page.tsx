@@ -40,22 +40,22 @@ export default async function EmployeeAnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1E222A] p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-[#ECEFF4]">Analytics</h1>
-          <p className="text-[#D8DEE9]/70 mt-2">Insights and performance metrics</p>
+          <h1 className="text-3xl font-bold text-foreground">Analytics</h1>
+          <p className="text-[hsl(var(--muted-foreground))] mt-2">Insights and performance metrics</p>
         </div>
 
-        <Card className="glass border-2 border-[#3B4252]">
+        <Card className="glass border-2 border-[hsl(var(--border))]">
           <CardHeader>
-            <CardTitle className="text-[#ECEFF4] flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-[#88C0D0]" />
+            <CardTitle className="text-foreground flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-[hsl(var(--primary))]" />
               Coming soon
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-[#D8DEE9]/70">
+            <p className="text-[hsl(var(--muted-foreground))]">
               This page will show your blog performance, SEO scores over time, and engagement stats.
             </p>
           </CardContent>

@@ -43,18 +43,18 @@ export default function SuperAdminUsersPage() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Users</h2>
-      <Card>
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>All Users</CardTitle>
         </CardHeader>
         <CardContent>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
           {loading ? (
-            <p>Loading...</p>
+            <p className="text-muted-foreground">Loading...</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="text-muted-foreground">
                   <tr className="text-left">
                     <th className="p-2">ID</th>
                     <th className="p-2">Email</th>
@@ -66,7 +66,7 @@ export default function SuperAdminUsersPage() {
                 </thead>
                 <tbody>
                   {users.map(u => (
-                    <tr key={u.id} className="border-t">
+                    <tr key={u.id} className="border-t border-border">
                       <td className="p-2">{u.id}</td>
                       <td className="p-2">{u.email}</td>
                       <td className="p-2">{u.companyName || '-'}</td>

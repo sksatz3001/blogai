@@ -49,18 +49,18 @@ export default function SuperAdminEmployeesPage() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Employees</h2>
-      <Card>
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>All Employees</CardTitle>
         </CardHeader>
         <CardContent>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
           {loading ? (
-            <p>Loading...</p>
+            <p className="text-muted-foreground">Loading...</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="text-muted-foreground">
                   <tr className="text-left">
                     <th className="p-2">ID</th>
                     <th className="p-2">Username</th>
@@ -74,7 +74,7 @@ export default function SuperAdminEmployeesPage() {
                 </thead>
                 <tbody>
                   {employees.map(e => (
-                    <tr key={e.id} className="border-t">
+                    <tr key={e.id} className="border-t border-border">
                       <td className="p-2">{e.id}</td>
                       <td className="p-2">{e.username}</td>
                       <td className="p-2">{e.fullName}</td>

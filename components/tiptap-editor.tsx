@@ -9,7 +9,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Button } from "@/components/ui/button";
 import { ImagePromptModal } from "@/components/image-prompt-modal";
-import { ImageEditorModal } from "@/components/image-editor-modal";
+import { ProfessionalImageEditor } from "@/components/professional-image-editor";
 import { ImageLoading } from "@/lib/tiptap/image-loading";
 import { toast } from "sonner";
 import {
@@ -34,9 +34,11 @@ interface TiptapEditorProps {
   editable?: boolean;
   // Optional blogId to enable server-side persistence of edited images
   blogId?: number | string;
+  // Optional callback to trigger auto-save after image edit
+  onAutoSave?: () => void;
 }
 
-export function TiptapEditor({ content, onChange, editable = true, blogId }: TiptapEditorProps) {
+export function TiptapEditor({ content, onChange, editable = true, blogId, onAutoSave }: TiptapEditorProps) {
   const [showImagePromptModal, setShowImagePromptModal] = useState(false);
   const [showImageEditorModal, setShowImageEditorModal] = useState(false);
     const [selectedImageSrc, setSelectedImageSrc] = useState<string>("");
@@ -444,6 +446,13 @@ export function TiptapEditor({ content, onChange, editable = true, blogId }: Tip
     } finally {
       setShowImageEditorModal(false);
       setSelectedImageSrc("");
+      
+      // Trigger auto-save after image is replaced
+      if (onAutoSave) {
+        setTimeout(() => {
+          onAutoSave();
+        }, 500);
+      }
     }
   };
 
@@ -455,15 +464,15 @@ export function TiptapEditor({ content, onChange, editable = true, blogId }: Tip
   };
 
   return (
-    <div className="glass border-2 border-[#3B4252] rounded-2xl overflow-hidden flex flex-col max-h-[70vh]">
+    <div className="glass border-2 border-[hsl(var(--border))] rounded-2xl overflow-hidden flex flex-col max-h-[70vh]">
       {editable && (
-        <div className="flex-shrink-0 border-b-2 border-[#3B4252] p-3 flex flex-wrap gap-1.5 bg-[#2E3440]/50 backdrop-blur-sm shadow-lg sticky top-0 z-10">
+        <div className="flex-shrink-0 border-b-2 border-[hsl(var(--border))] p-3 flex flex-wrap gap-1.5 bg-[hsl(var(--card))]/50 backdrop-blur-sm shadow-lg sticky top-0 z-10">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={cn(editor.isActive("bold") && "bg-[#88C0D0]/20 text-[#88C0D0]")}
+            className={cn(editor.isActive("bold") && "bg-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]")}
           >
             <Bold className="h-4 w-4" />
           </Button>
@@ -473,12 +482,12 @@ export function TiptapEditor({ content, onChange, editable = true, blogId }: Tip
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={cn(editor.isActive("italic") && "bg-[#88C0D0]/20 text-[#88C0D0]")}
+            className={cn(editor.isActive("italic") && "bg-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]")}
           >
             <Italic className="h-4 w-4" />
           </Button>
 
-          <div className="w-px h-8 bg-[#434C5E] mx-1" />
+          <div className="w-px h-8 bg-[hsl(var(--border))] mx-1" />
 
           <Button
             type="button"
@@ -486,7 +495,7 @@ export function TiptapEditor({ content, onChange, editable = true, blogId }: Tip
             size="sm"
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             className={cn(
-              editor.isActive("heading", { level: 2 }) && "bg-[#88C0D0]/20 text-[#88C0D0]"
+              editor.isActive("heading", { level: 2 }) && "bg-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]"
             )}
           >
             <Heading2 className="h-4 w-4" />
@@ -498,20 +507,20 @@ export function TiptapEditor({ content, onChange, editable = true, blogId }: Tip
             size="sm"
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             className={cn(
-              editor.isActive("heading", { level: 3 }) && "bg-[#88C0D0]/20 text-[#88C0D0]"
+              editor.isActive("heading", { level: 3 }) && "bg-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]"
             )}
           >
             <Heading3 className="h-4 w-4" />
           </Button>
 
-          <div className="w-px h-8 bg-[#434C5E] mx-1" />
+          <div className="w-px h-8 bg-[hsl(var(--border))] mx-1" />
 
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={cn(editor.isActive("bulletList") && "bg-[#88C0D0]/20 text-[#88C0D0]")}
+            className={cn(editor.isActive("bulletList") && "bg-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]")}
           >
             <List className="h-4 w-4" />
           </Button>
@@ -521,12 +530,12 @@ export function TiptapEditor({ content, onChange, editable = true, blogId }: Tip
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={cn(editor.isActive("orderedList") && "bg-[#88C0D0]/20 text-[#88C0D0]")}
+            className={cn(editor.isActive("orderedList") && "bg-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]")}
           >
             <ListOrdered className="h-4 w-4" />
           </Button>
 
-          <div className="w-px h-8 bg-[#434C5E] mx-1" />
+          <div className="w-px h-8 bg-[hsl(var(--border))] mx-1" />
 
           <Button
             type="button"
@@ -534,7 +543,7 @@ export function TiptapEditor({ content, onChange, editable = true, blogId }: Tip
             size="sm"
             onClick={() => editor.chain().focus().setTextAlign("left").run()}
             className={cn(
-              editor.isActive({ textAlign: "left" }) && "bg-[#88C0D0]/20 text-[#88C0D0]"
+              editor.isActive({ textAlign: "left" }) && "bg-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]"
             )}
           >
             <AlignLeft className="h-4 w-4" />
@@ -546,7 +555,7 @@ export function TiptapEditor({ content, onChange, editable = true, blogId }: Tip
             size="sm"
             onClick={() => editor.chain().focus().setTextAlign("center").run()}
             className={cn(
-              editor.isActive({ textAlign: "center" }) && "bg-[#88C0D0]/20 text-[#88C0D0]"
+              editor.isActive({ textAlign: "center" }) && "bg-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]"
             )}
           >
             <AlignCenter className="h-4 w-4" />
@@ -558,13 +567,13 @@ export function TiptapEditor({ content, onChange, editable = true, blogId }: Tip
             size="sm"
             onClick={() => editor.chain().focus().setTextAlign("right").run()}
             className={cn(
-              editor.isActive({ textAlign: "right" }) && "bg-[#88C0D0]/20 text-[#88C0D0]"
+              editor.isActive({ textAlign: "right" }) && "bg-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]"
             )}
           >
             <AlignRight className="h-4 w-4" />
           </Button>
 
-          <div className="w-px h-8 bg-[#434C5E] mx-1" />
+          <div className="w-px h-8 bg-[hsl(var(--border))] mx-1" />
 
           <Button type="button" variant="ghost" size="sm" onClick={setLink}>
             <Link2 className="h-4 w-4" />
@@ -586,7 +595,7 @@ export function TiptapEditor({ content, onChange, editable = true, blogId }: Tip
               variant="ghost"
               size="sm"
               onClick={() => setShowImageEditorModal(true)}
-              className="bg-[#D08770]/20 text-[#D08770]"
+              className="bg-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]"
             >
               <Edit3 className="h-4 w-4" />
             </Button>
@@ -607,7 +616,7 @@ export function TiptapEditor({ content, onChange, editable = true, blogId }: Tip
       )}
 
       {showImageEditorModal && selectedImageSrc && (
-        <ImageEditorModal
+        <ProfessionalImageEditor
           imageSrc={selectedImageSrc}
           originalImageUrl={selectedImageOriginalSrc || selectedImageSrc}
           blogId={blogId}

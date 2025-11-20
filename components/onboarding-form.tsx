@@ -1,14 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Palette } from "lucide-react";
-import { HexColorPicker } from "react-colorful";
+import { Loader2 } from "lucide-react";
+import dynamic from "next/dynamic";
+
+// Dynamically import HexColorPicker to avoid SSR issues
+const HexColorPicker = dynamic(
+  () => import("react-colorful").then((mod) => mod.HexColorPicker),
+  { 
+    ssr: false,
+    loading: () => <div className="w-full h-48 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
+  }
+);
 
 export function OnboardingForm() {
   const router = useRouter();
@@ -139,12 +148,14 @@ export function OnboardingForm() {
                   </div>
                   {showColorPicker === "primary" && (
                     <div className="mt-2">
-                      <HexColorPicker
-                        color={formData.primaryColor}
-                        onChange={(color) =>
-                          setFormData({ ...formData, primaryColor: color })
-                        }
-                      />
+                      <Suspense fallback={<div className="w-full h-48 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />}>
+                        <HexColorPicker
+                          color={formData.primaryColor}
+                          onChange={(color) =>
+                            setFormData({ ...formData, primaryColor: color })
+                          }
+                        />
+                      </Suspense>
                     </div>
                   )}
                 </div>
@@ -167,12 +178,14 @@ export function OnboardingForm() {
                   </div>
                   {showColorPicker === "secondary" && (
                     <div className="mt-2">
-                      <HexColorPicker
-                        color={formData.secondaryColor}
-                        onChange={(color) =>
-                          setFormData({ ...formData, secondaryColor: color })
-                        }
-                      />
+                      <Suspense fallback={<div className="w-full h-48 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />}>
+                        <HexColorPicker
+                          color={formData.secondaryColor}
+                          onChange={(color) =>
+                            setFormData({ ...formData, secondaryColor: color })
+                          }
+                        />
+                      </Suspense>
                     </div>
                   )}
                 </div>
@@ -195,12 +208,14 @@ export function OnboardingForm() {
                   </div>
                   {showColorPicker === "accent" && (
                     <div className="mt-2">
-                      <HexColorPicker
-                        color={formData.accentColor}
-                        onChange={(color) =>
-                          setFormData({ ...formData, accentColor: color })
-                        }
-                      />
+                      <Suspense fallback={<div className="w-full h-48 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />}>
+                        <HexColorPicker
+                          color={formData.accentColor}
+                          onChange={(color) =>
+                            setFormData({ ...formData, accentColor: color })
+                          }
+                        />
+                      </Suspense>
                     </div>
                   )}
                 </div>

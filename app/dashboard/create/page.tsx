@@ -77,9 +77,15 @@ export default function CreateBlogPage() {
       const { blogId: newBlogId } = await response.json();
       setBlogId(newBlogId);
       setGenerating(true);
-      
-      // Navigate to editor with streaming
-      router.push(`/dashboard/blogs/${newBlogId}/edit`);
+      // Route to Outline step with context in query params
+      const params = new URLSearchParams({
+        title: formData.title,
+        primary: formData.primaryKeyword,
+        secondary: formData.secondaryKeywords,
+        wordCount: formData.wordCount,
+        companyProfileId: String(formData.companyProfileId || "self"),
+      });
+      router.push(`/dashboard/create/outline/${newBlogId}?${params.toString()}`);
     } catch (error) {
       toast.error("Something went wrong. Please try again.");
       setLoading(false);

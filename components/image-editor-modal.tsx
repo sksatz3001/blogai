@@ -39,6 +39,7 @@ interface Adjustments {
 
 export function ImageEditorModal({ imageSrc, originalImageUrl, blogId, onClose, onSave }: ImageEditorModalProps) {
   const [mounted, setMounted] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<EditorTab>("ai");
   const [aiPrompt, setAiPrompt] = useState("");
   const [externalEditedUrl, setExternalEditedUrl] = useState<string | null>(null);
@@ -221,12 +222,19 @@ export function ImageEditorModal({ imageSrc, originalImageUrl, blogId, onClose, 
 
   // Load image and draw to canvas
   useEffect(() => {
+    setImageLoading(true);
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.src = imageSrc;
     img.onload = () => {
       imageRef.current = img;
       drawCanvas();
+      setImageLoading(false);
+    };
+    img.onerror = (error) => {
+      console.error("Failed to load image:", error);
+      console.error("Image URL:", imageSrc);
+      setImageLoading(false);
     };
   }, [imageSrc, drawCanvas]);
 
@@ -263,6 +271,20 @@ export function ImageEditorModal({ imageSrc, originalImageUrl, blogId, onClose, 
       if (!editedUrl) throw new Error('No edited image URL returned');
       setExternalEditedUrl(editedUrl);
       setExternalEditedS3Key(data.s3Key || data.s3_key || null);
+      // Auto-persist edit when possible so changes reflect immediately in blog
+      try {
+        if (blogId && originalImageUrl && editedUrl) {
+          await fetch('/api/images/apply-edit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ blogId, originalImageUrl, editedImageUrl: editedUrl, s3Key: data.s3Key || data.s3_key || undefined }),
+          });
+          // Inform parent editor to replace the image immediately
+          onSave(editedUrl);
+        }
+      } catch (persistErr) {
+        console.warn('Auto-save of AI edit failed, changes still visible locally.', persistErr);
+      }
       // Display edited image (proxy if needed for canvas safety)
       const storageBase = (process.env.NEXT_PUBLIC_IMAGE_STORAGE_BASE || process.env.IMAGE_STORAGE_BASE || '').replace(/\/$/, '');
       const isAbs = /^https?:\/\//i.test(editedUrl);
@@ -694,10 +716,18 @@ export function ImageEditorModal({ imageSrc, originalImageUrl, blogId, onClose, 
           {/* Canvas Preview - Right Side */}
           <div className="flex-1 flex items-center justify-center p-6 bg-[#1E222A] overflow-hidden">
             <div className="relative max-w-full max-h-full flex items-center justify-center">
+              {imageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#1E222A] z-10">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 border-4 border-[#88C0D0] border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-[#D8DEE9] text-sm font-medium">Loading image...</p>
+                  </div>
+                </div>
+              )}
               <canvas
                 ref={canvasRef}
                 className="rounded-lg shadow-2xl border-2 border-[#434C5E] object-contain"
-                style={{ maxHeight: "calc(90vh - 150px)", maxWidth: "calc(95vw - 350px)" }}
+                style={{ maxHeight: "calc(90vh - 150px)", maxWidth: "calc(95vw - 350px)", opacity: imageLoading ? 0 : 1 }}
               />
             </div>
           </div>

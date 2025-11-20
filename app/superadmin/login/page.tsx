@@ -37,22 +37,22 @@ export default function SuperAdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen grid place-items-center bg-[#0B1220] p-6">
-      <Card className="w-full max-w-md bg-[#0E1626] border-[#1B2332]">
+    <div className="min-h-screen grid place-items-center bg-background p-6">
+      <Card className="w-full max-w-md bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-[#E6EDF3]">Super Admin Login</CardTitle>
+          <CardTitle className="text-foreground">Super Admin Login</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <label className="text-sm text-[#9DA7BA]">Username</label>
+              <label className="text-sm text-muted-foreground">Username</label>
               <Input value={username} onChange={(e)=>setUsername(e.target.value)} placeholder="superadmin" className="mt-1" />
             </div>
             <div>
-              <label className="text-sm text-[#9DA7BA]">Password</label>
+              <label className="text-sm text-muted-foreground">Password</label>
               <Input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Edysor@123" className="mt-1" />
             </div>
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && <p className="text-destructive text-sm">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>

@@ -90,10 +90,10 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
   }, [blogs, searchQuery, sortBy, filterStatus]);
 
   const gradients = [
-    'from-[#88C0D0]/20 via-[#81A1C1]/10 to-transparent',
-    'from-[#D08770]/20 via-[#EBCB8B]/10 to-transparent',
-    'from-[#B48EAD]/20 via-[#88C0D0]/10 to-transparent',
-    'from-[#A3BE8C]/20 via-[#8FBCBB]/10 to-transparent',
+    'from-accent/20 via-secondary/10 to-transparent',
+    'from-primary/20 via-accent/10 to-transparent',
+    'from-secondary/20 via-accent/10 to-transparent',
+    'from-primary/20 via-secondary/10 to-transparent',
   ];
 
   return (
@@ -102,7 +102,7 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold mb-2 gradient-text">My Blogs</h1>
-          <p className="text-[#D8DEE9]">
+          <p className="text-muted-foreground">
             Manage and view all your blog posts
           </p>
         </div>
@@ -117,9 +117,9 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
       {blogs.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <FileText className="h-16 w-16 text-[#88C0D0] mb-4" />
+            <FileText className="h-16 w-16 text-accent mb-4" />
             <h3 className="text-xl font-semibold mb-2">No blogs yet</h3>
-            <p className="text-[#D8DEE9] mb-6 text-center max-w-md">
+            <p className="text-muted-foreground mb-6 text-center max-w-md">
               Start creating amazing content with AI assistance. Your blogs will appear here.
             </p>
             <Link href="/dashboard/create">
@@ -136,21 +136,21 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
           <div className="space-y-4">
             {/* Search Bar */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#88C0D0]" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-accent" />
               <Input
                 placeholder="Search by title or keyword..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-4 h-14 text-base bg-[#2E3440]/50 backdrop-blur-sm border-2 border-[#3B4252] focus:border-[#88C0D0] rounded-xl"
+                className="pl-12 pr-4 h-14 text-base bg-card/50 backdrop-blur-sm border-2 border-border focus:border-accent rounded-xl text-foreground"
               />
             </div>
 
             {/* Filters Row */}
             <div className="flex flex-wrap items-center gap-3">
               {/* Filter Label */}
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-[#88C0D0]/10 to-[#8FBCBB]/5 border border-[#88C0D0]/30">
-                <Filter className="h-4 w-4 text-[#88C0D0]" />
-                <span className="text-sm font-semibold text-[#88C0D0]">Filters:</span>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-accent/10 to-primary/5 border border-accent/30">
+                <Filter className="h-4 w-4 text-accent" />
+                <span className="text-sm font-semibold text-accent">Filters:</span>
               </div>
 
               {/* Status Filter */}
@@ -158,13 +158,13 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value as FilterOption)}
-                  className="appearance-none pl-4 pr-10 py-2.5 rounded-lg bg-[#2E3440] border-2 border-[#434C5E] text-[#ECEFF4] text-sm font-medium focus:outline-none focus:border-[#88C0D0] hover:border-[#88C0D0]/50 cursor-pointer transition-colors"
+                  className="appearance-none pl-4 pr-10 py-2.5 rounded-lg bg-card border-2 border-border text-foreground text-sm font-medium focus:outline-none focus:border-accent hover:border-accent/50 cursor-pointer transition-colors"
                 >
                   <option value="all">All Status</option>
                   <option value="saved">Saved</option>
                   <option value="draft">Draft</option>
                 </select>
-                <SortDesc className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#88C0D0] pointer-events-none" />
+                <SortDesc className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent pointer-events-none" />
               </div>
 
               {/* Sort Filter */}
@@ -172,7 +172,7 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="appearance-none pl-4 pr-10 py-2.5 rounded-lg bg-[#2E3440] border-2 border-[#434C5E] text-[#ECEFF4] text-sm font-medium focus:outline-none focus:border-[#88C0D0] hover:border-[#88C0D0]/50 cursor-pointer transition-colors"
+                  className="appearance-none pl-4 pr-10 py-2.5 rounded-lg bg-card border-2 border-border text-foreground text-sm font-medium focus:outline-none focus:border-accent hover:border-accent/50 cursor-pointer transition-colors"
                 >
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
@@ -181,15 +181,15 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
                   <option value="words-high">Most Words</option>
                   <option value="words-low">Least Words</option>
                 </select>
-                <SortDesc className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#88C0D0] pointer-events-none" />
+                <SortDesc className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent pointer-events-none" />
               </div>
 
               {/* Results Count */}
               <div className="ml-auto flex items-center gap-4">
-                <span className="text-sm text-[#D8DEE9]">
-                  <span className="text-[#88C0D0] font-bold">{filteredAndSortedBlogs.length}</span>
-                  <span className="text-[#88C0D0]/60"> / </span>
-                  <span className="text-[#88C0D0] font-bold">{blogs.length}</span>
+                <span className="text-sm text-muted-foreground">
+                  <span className="text-accent font-bold">{filteredAndSortedBlogs.length}</span>
+                  <span className="text-accent/60"> / </span>
+                  <span className="text-accent font-bold">{blogs.length}</span>
                 </span>
                 {(searchQuery || filterStatus !== 'all') && (
                   <button
@@ -197,7 +197,7 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
                       setSearchQuery("");
                       setFilterStatus('all');
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-[#D08770]/10 border border-[#D08770]/30 text-[#D08770] hover:bg-[#D08770]/20 font-medium text-sm transition-colors"
+                    className="px-3 py-1.5 rounded-lg bg-secondary/10 border border-secondary/30 text-secondary hover:bg-secondary/20 font-medium text-sm transition-colors"
                   >
                     Clear
                   </button>
@@ -210,9 +210,9 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
           {filteredAndSortedBlogs.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16">
-                <Search className="h-16 w-16 text-[#88C0D0]/50 mb-4" />
+                <Search className="h-16 w-16 text-accent/50 mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No blogs found</h3>
-                <p className="text-[#D8DEE9] text-center max-w-md">
+                <p className="text-muted-foreground text-center max-w-md">
                   Try adjusting your search or filter criteria
                 </p>
               </CardContent>
@@ -225,10 +225,10 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
                 return (
                   <div
                     key={blog.id}
-                    className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} backdrop-blur-sm border-2 border-[#3B4252] hover:border-[#88C0D0]/50 transition-all duration-300 hover:shadow-2xl hover:shadow-[#88C0D0]/10 hover:-translate-y-2 flex flex-col`}
+                    className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} backdrop-blur-sm border-2 border-border hover:border-accent/50 transition-all duration-300 hover:shadow-2xl hover:shadow-accent/10 hover:-translate-y-2 flex flex-col`}
                   >
                     {/* Gradient overlay border effect */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#88C0D0]/0 via-[#88C0D0]/5 to-[#D08770]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent/0 via-accent/5 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                     
                     <div className="relative p-6 flex flex-col flex-1">
                       {/* Status Badge - Top Right */}
@@ -243,10 +243,10 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
                           }
                           className={`${
                             blog.status === "published"
-                              ? "bg-[#88C0D0] text-[#2E3440]"
+                              ? "bg-primary text-primary-foreground"
                               : blog.status === "draft"
-                              ? "bg-[#D08770] text-[#2E3440]"
-                              : "border-[#88C0D0] text-[#88C0D0]"
+                              ? "bg-secondary text-secondary-foreground"
+                              : "border-accent text-accent"
                           } shadow-lg capitalize`}
                         >
                           {blog.status === "published" ? "saved" : blog.status}
@@ -255,16 +255,16 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
 
                       {/* Title Section */}
                       <div className="space-y-3 mb-4 pr-20">
-                        <h3 className="text-xl font-bold text-[#ECEFF4] group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-[#88C0D0] group-hover:to-[#8FBCBB] transition-all duration-300 line-clamp-2">
+                        <h3 className="text-xl font-bold text-foreground group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-accent group-hover:to-primary transition-all duration-300 line-clamp-2">
                           {blog.title}
                         </h3>
-                        <div className="h-1 w-16 rounded-full bg-gradient-to-r from-[#88C0D0] to-[#D08770] group-hover:w-24 transition-all duration-300" />
+                        <div className="h-1 w-16 rounded-full bg-gradient-to-r from-accent to-secondary group-hover:w-24 transition-all duration-300" />
                       </div>
 
                       {/* Employee Badge (if created by employee) */}
                       {blog.employee && (
                         <div className="mb-3">
-                          <Badge variant="outline" className="border-[#B48EAD]/30 bg-[#B48EAD]/10 text-[#B48EAD] font-semibold">
+                          <Badge variant="outline" className="border-secondary/30 bg-secondary/10 text-secondary font-semibold">
                             👤 Created by {blog.employee.username}
                           </Badge>
                         </div>
@@ -272,8 +272,8 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
 
                       {/* Keyword */}
                       <div className="flex items-center gap-2 text-sm mb-4">
-                        <span className="text-[#88C0D0] font-semibold">🔑</span>
-                        <span className="text-[#D8DEE9] font-medium line-clamp-1">
+                        <span className="text-accent font-semibold">🔑</span>
+                        <span className="text-muted-foreground font-medium line-clamp-1">
                           {blog.primaryKeyword || 
                            (blog.targetKeywords ? blog.targetKeywords.split(',')[0].trim() : "No keyword")}
                         </span>
@@ -281,28 +281,28 @@ export function BlogsClientPage({ blogs }: BlogsClientPageProps) {
 
                       {/* Stats Pills */}
                       <div className="flex flex-wrap items-center gap-2 mb-auto">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#3B4252]/50 border border-[#434C5E]">
-                          <span className="text-xs font-medium text-[#88C0D0]">📝</span>
-                          <span className="text-xs font-semibold text-[#D8DEE9]">{blog.wordCount || 0}</span>
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border">
+                          <span className="text-xs font-medium text-accent">📝</span>
+                          <span className="text-xs font-semibold text-muted-foreground">{blog.wordCount || 0}</span>
                         </div>
                         
                         {blog.seoScore && (
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#3B4252]/50 border border-[#434C5E]">
-                            <span className="text-xs font-medium text-[#A3BE8C]">📊</span>
-                            <span className="text-xs font-semibold text-[#D8DEE9]">{blog.seoScore}</span>
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border">
+                            <span className="text-xs font-medium text-primary">📊</span>
+                            <span className="text-xs font-semibold text-muted-foreground">{blog.seoScore}</span>
                           </div>
                         )}
                         
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#3B4252]/50 border border-[#434C5E]">
-                          <span className="text-xs font-medium text-[#D08770]">📅</span>
-                          <span className="text-xs font-semibold text-[#D8DEE9]">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border">
+                          <span className="text-xs font-medium text-secondary">📅</span>
+                          <span className="text-xs font-semibold text-muted-foreground">
                             {new Date(blog.createdAt!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </span>
                         </div>
                       </div>
 
                       {/* Divider */}
-                      <div className="h-px bg-gradient-to-r from-transparent via-[#88C0D0]/30 to-transparent my-4" />
+                      <div className="h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent my-4" />
 
                       {/* Action Buttons */}
                       <div className="space-y-2">

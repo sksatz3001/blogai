@@ -52,18 +52,18 @@ export default function SuperAdminBlogsPage() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Blogs</h2>
-      <Card>
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>All Blogs</CardTitle>
         </CardHeader>
         <CardContent>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
           {loading ? (
-            <p>Loading...</p>
+            <p className="text-muted-foreground">Loading...</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="text-muted-foreground">
                   <tr className="text-left">
                     <th className="p-2">ID</th>
                     <th className="p-2">Title</th>
@@ -76,7 +76,7 @@ export default function SuperAdminBlogsPage() {
                 </thead>
                 <tbody>
                   {blogs.map(b => (
-                    <tr key={b.id} className="border-t">
+                    <tr key={b.id} className="border-t border-border">
                       <td className="p-2">{b.id}</td>
                       <td className="p-2">{b.title}</td>
                       <td className="p-2">{b.status}</td>

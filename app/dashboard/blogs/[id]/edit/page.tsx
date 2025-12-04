@@ -312,8 +312,8 @@ export default function EditBlogPage() {
         });
         if (!response.ok) throw new Error("Failed to calculate SEO");
         await response.json();
-        toast.success("SEO metrics calculated successfully!");
         await fetchBlog(false);
+        toast.success("SEO metrics calculated successfully!");
       } catch (error) {
         console.error("SEO calculation error:", error);
         toast.error("Failed to calculate SEO metrics");
@@ -436,7 +436,7 @@ export default function EditBlogPage() {
             </div>
             {blog.aeoScore !== null && blog.aeoScore !== undefined && (
               <div className="text-center p-5 rounded-xl border bg-card">
-                <div className="text-3xl font-bold text-[hsl(var(--secondary))]">{blog.aeoScore}</div>
+                <div className="text-3xl font-bold text-blue-500">{blog.aeoScore}</div>
                 <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
                   AEO Score
                   <span title="Answer Engine Optimization (0–100). Good: 70–100. Focus on FAQs and concise answers."><Info className="h-3.5 w-3.5" /></span>
@@ -445,7 +445,7 @@ export default function EditBlogPage() {
             )}
             {blog.geoScore !== null && blog.geoScore !== undefined && (
               <div className="text-center p-5 rounded-xl border bg-card">
-                <div className="text-3xl font-bold text-[hsl(var(--secondary))]">{blog.geoScore}</div>
+                <div className="text-3xl font-bold text-purple-500">{blog.geoScore}</div>
                 <div className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1">
                   GEO Score
                   <span title="Geo/Entity Optimization (0–100). Good: 70–100. Local relevance and entities."><Info className="h-3.5 w-3.5" /></span>

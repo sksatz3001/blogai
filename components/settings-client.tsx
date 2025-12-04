@@ -238,7 +238,7 @@ export function SettingsClient({ user, companyProfiles }: SettingsClientProps) {
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-4xl font-bold mb-2 gradient-text">Settings</h1>
+        <h1 className="text-4xl font-bold mb-2 text-foreground">Settings</h1>
         <p className="text-muted-foreground">
           Manage your account and preferences
         </p>

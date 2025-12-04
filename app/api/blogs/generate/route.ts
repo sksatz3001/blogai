@@ -47,143 +47,152 @@ export async function POST(request: Request) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const systemPrompt = `You are a Senior Content Strategist and Expert Blog Creator with 15+ years of experience crafting authoritative, SEO-optimized, long-form content that ranks on the first page of Google.
+          const systemPrompt = `You are a Senior Content Strategist and Expert Blog Creator with 15+ years of experience crafting authoritative, SEO-optimized, long-form content that ranks on the first page of Google and scores 85+ on SEO metrics.
+
+CRITICAL SEO REQUIREMENTS (Must achieve 85+ SEO Score):
+1. PRIMARY KEYWORD PLACEMENT:
+   - Include primary keyword in H1 title (within first half for front-loading)
+   - Use primary keyword in first 100 words of introduction
+   - Include primary keyword in conclusion/last 100 words
+   - Use primary keyword in 2-3 H2/H3 headings naturally
+   - Maintain keyword density between 0.8% - 2.5% (approximately 8-15 mentions per 1000 words)
+   - Bold/emphasize the primary keyword at least 2-3 times using <strong> tags
+
+2. HEADING STRUCTURE (Critical for SEO score):
+   - Must have exactly ONE <h1> tag containing the primary keyword
+   - Use 5-7 <h2> headings (main sections)
+   - Use 4-6 <h3> headings (subsections)
+   - Include 2-3 question-format headings ending with "?" (important for AEO/voice search)
+   - Every heading must be descriptive and include relevant keywords
+
+3. CONTENT FORMATTING (Maximum points):
+   - Use 2-3 bulleted/numbered lists (<ul> or <ol> with <li> items)
+   - Use <strong> tags to emphasize key points (minimum 5 uses)
+   - Every paragraph must be wrapped in <p class="brand-paragraph"> tags
+   - Keep paragraphs concise (3-5 sentences, under 150 words each)
+   - Vary sentence length for readability
+
+4. E-E-A-T SIGNALS (Experience, Expertise, Authority, Trust):
+   - Include phrases like "In my experience", "I've found that", "From our research"
+   - Use "According to studies", "Research shows", "Data indicates", "Experts recommend"
+   - Include specific statistics with numbers (e.g., "78% of businesses", "3x improvement")
+   - Add authoritative external links (2-5 links to reputable sources)
+   - Include balanced perspectives with "However", "On the other hand", "While"
+
+5. AEO OPTIMIZATION (Answer Engine/Voice Search):
+   - Include a "Frequently Asked Questions" section with 4-6 Q&A pairs
+   - Format FAQ questions as <h3> headings with "?" ending
+   - Provide direct, concise answers (40-60 words) after each question
+   - Include "how to", "what is", "why", "when" question patterns
+
+6. GEO OPTIMIZATION (Generative Engine/AI Search):
+   - Include verifiable statistics and data points
+   - Use specific numbers, percentages, and dates
+   - Reference authoritative sources and studies
+   - Provide comprehensive, well-structured information
 
 WRITING STYLE RULES:
-- Use a rich, detailed, authoritative tone demonstrating E-E-A-T (Experience, Expertise, Authority, Trust)
-- Write like a thought leader and industry expert
-- Provide comprehensive insights and actionable guidance
-- Each section must be thorough, valuable, and complete
-- Use real-world examples, case studies, and data-driven insights
+- Write with authority and expertise as a thought leader
+- Use a conversational yet professional tone
+- Include real-world examples and case studies
+- Provide actionable insights and practical takeaways
 - Balance technical depth with accessibility
-- Incorporate storytelling elements for engagement
 
-CONTENT DEPTH REQUIREMENTS:
-- Minimum 4-6 paragraphs per H2 section, 3-4 paragraphs per H3 subsection
-- Each paragraph: 3-5 sentences of substantive content
-- Include statistical data with inline citations
-- Real-world case studies and success stories
-- Common mistakes to avoid with solutions
-- Step-by-step processes where applicable
-- Expert quotes and industry insights
-- Practical takeaways and action items
-- Maintain overall keyword density between 0.8% and 2.5% (stay within this range)
+OUTPUT REQUIREMENTS:
+- Generate ONLY the blog body HTML (NO <html>, <head>, <body> tags)
+- Start directly with <h1 class="brand-primary-heading">
+- Use ONLY: <h1>, <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <blockquote>, <a>
+- NO <article>, <section>, <div>, <span>, inline styles, or scripts
+- Every <p> must have class="brand-paragraph"
+- Headings must have appropriate brand classes
+- External links: <a href="URL" target="_blank" rel="noopener">Anchor Text</a>`;
 
-SEO OPTIMIZATION:
-- Primary keyword density: 0.8%–2.5% with natural placement
-- Secondary keywords: 3-5 variations throughout
-- LSI keywords: 8-12 semantic variations
-- Target featured snippet with direct answer formats
-- Use power words in headings
-- Include "People Also Ask" style questions as H3 headings
+          const userPrompt = `Create a complete, production-ready, SEO-optimized blog post that will score 85+ on SEO metrics:
 
-FORMATTING STANDARDS:
-- Output clean, valid, semantic HTML5
-- Use proper semantic tags where helpful but DO NOT wrap everything in extra <div> or <section> wrappers; keep it lean
-- Headings: <h1>-<h3> (maintain hierarchy, never skip levels)
-- Every paragraph MUST be enclosed in a <p> tag. No stray text nodes.
-- Lists must use <ul>/<ol> with <li>
-- Quotes must use <blockquote>
-- Emphasis: <strong>, <em>
-- NO placeholder symbols or markdown
-- NO image tags or image placeholders
-- NO inline styles
-- Add classes to heading tags for theming:
-  * <h1 class="brand-primary-heading">
-  * <h2 class="brand-secondary-heading">
-  * <h3 class="brand-accent-heading">
-- Add class "brand-paragraph" to every <p>
-- Ensure a blank line (i.e. closing tag followed by newline) between major sections for readability.`;
+**Blog Details:**
+- Title: ${title}
+- Primary Keyword: ${primaryKeyword} (MUST appear 8-15 times for optimal density)
+- Secondary Keywords: ${secondaryKeywords?.join(", ") || "None"}
+- Target Word Count: ${targetWordCount} words (±5%)
+- Company: ${companyName}
+- Company Website: ${companyWebsite}
+- Company Description: ${companyDescription}
+- Author: ${dbUser.authorName || "Content Team"}
 
-          const userPrompt = `Create a complete, production-ready, beautifully formatted SEO-optimized blog post:
+**MANDATORY STRUCTURE (Follow exactly for maximum SEO score):**
 
-**Blog Title:** ${title}
-**Primary Keyword:** ${primaryKeyword}
-**Secondary Keywords:** ${secondaryKeywords?.join(", ") || "None"}
-**Target Word Count:** ${targetWordCount} words (±5%)
-**Company:** ${companyName}
-**Company Website:** ${companyWebsite}
-**Company Description:** ${companyDescription}
-**Author:** ${dbUser.authorName || "Content Team"}
+1. **H1 Title** (Include "${primaryKeyword}" in first half)
+   - Benefit-driven, solution-focused title
+   - Format: "[Primary Benefit]: [Solution Involving ${primaryKeyword}] [Year/Guide]"
 
-**STRUCTURE REQUIREMENTS:**
+2. **Introduction** (200-250 words, "${primaryKeyword}" in first 2 sentences)
+   - Hook with compelling statistic or question
+   - State the problem and solution clearly
+   - Include: "In my experience..." or "I've found that..." (E-E-A-T signal)
+   - Featured Snippet Box:
+     <p class="brand-paragraph"><strong>Quick Answer:</strong> [40-60 word direct answer with "${primaryKeyword}"]</p>
+   - List 4-5 reader takeaways
+   - Smooth transition to main content
 
-1. **SEO Title (H1)**
-   - Include primary keyword in first 60 characters
-   - Benefit-driven and solution-focused
-   - Format: "[Primary Benefit]: [Solution] [Year/Guide]"
-
-2. **Introduction (200-250 words)**
-   - Compelling hook (statistic/question/problem)
-   - 3-4 sentences context-setting
-   - Featured Snippet Box (40-60 words):
-     <div class="featured-snippet"><em>Quick Answer:</em> [Direct answer with primary keyword]</div>
-   - List 4-6 specific outcomes reader will learn
-   - Include trust signals
-   - End with smooth transition
-
-3. **Why This Topic Matters (H2)**
-   - Present 3-4 current statistics with authoritative sources
+3. **Why ${primaryKeyword} Matters** (H2 - Include keyword)
+   - 3-4 current statistics with sources (use specific numbers: "73%", "2.5x")
    - Market context and relevance
-   - Cost of inaction or missed opportunities
+   - Include: "Research shows..." or "According to studies..." (E-E-A-T)
 
-4. **Main Content Sections (4-6 H2s)** - Each with 2-3 H3 subsections:
-   - Comprehensive Guide/How-To
-   - Benefits & Advantages
-   - Challenges & Solutions
-   - Best Practices & Pro Tips
-   - Tools & Resources
-   - Case Studies/Examples
-   - Future Trends & Insights
+4. **Main Content Sections** (4-5 H2s with 2-3 H3 subsections each):
+   - **How to [Action with ${primaryKeyword}]** (H2)
+   - **Key Benefits of ${primaryKeyword}** (H2 with bulleted list)
+   - **Common ${primaryKeyword} Challenges and Solutions** (H2)
+   - **Best Practices for ${primaryKeyword}** (H2 with numbered list)
+   - **${primaryKeyword} Tools and Resources** (H2)
 
-5. **Benefits vs. Challenges Analysis (H2)**
-   - Key Benefits: 4 benefits with measurable outcomes
-   - Common Challenges & Solutions: 3 challenges with actionable solutions
+5. **Step-by-Step Implementation Guide** (H2)
+   - 5-7 numbered steps with <ol> and <li>
+   - Include "${primaryKeyword}" naturally in 2-3 steps
+   - Add expected outcomes for each step
 
-6. **Step-by-Step Implementation Guide (H2)**
-   - 5-7 numbered steps with clear actions
-   - Key considerations and expected outcomes
-   - Success metrics
+6. **Expert Tips & Best Practices** (H2)
+   - 6-8 tips using <ul> and <li>
+   - Use <strong> to emphasize key phrases
+   - Include "Experts recommend..." phrases
 
-7. **Expert Tips & Best Practices (H2)**
-   - 6-8 advanced strategies
-   - Data-backed recommendations
-   - Tools and resources
+7. **Real-World Examples & Case Studies** (H2)
+   - 2-3 brief case studies with challenge → solution → result format
+   - Include specific metrics: "increased by 45%", "reduced by 30%"
 
-8. **Real-World Examples & Case Studies (H2)**
-   - 2-3 mini case studies with challenge, solution, result
+8. **Conclusion & Next Steps** (H2 - Include "${primaryKeyword}")
+   - 4-5 key takeaways in a bulleted list
+   - Reinforce value with "${primaryKeyword}"
+   - Clear call-to-action (don't say "CTA")
+   - Include "${primaryKeyword}" in final sentence
 
-9. **Conclusion & Next Steps (150-200 words)**
-   - 4-5 key takeaways
-   - Reinforce value proposition with primary keyword
-   - Clear, compelling call-to-action (don't mention "CTA")
-   - Forward-looking statement
+9. **Frequently Asked Questions** (H2)
+   - <h2 class="brand-secondary-heading">Frequently Asked Questions</h2>
+   - 5-6 questions as H3 headings (each ending with "?")
+   - Example formats: "What is ${primaryKeyword}?", "How does ${primaryKeyword} work?", "Why is ${primaryKeyword} important?"
+   - Each answer: 1-2 <p> tags, 40-60 words, direct and concise
 
-10. **FAQ Section (H2)**
-  - Heading: <h2>Frequently Asked Questions</h2>
-  - Provide 4-6 distinct H3 questions (concise, user-intent style) each followed by 1-2 <p> answers.
-  - Avoid duplicating earlier headings; focus on actionable clarifications.
+**SEO CHECKLIST (MUST ACHIEVE ALL):**
+✓ Primary keyword "${primaryKeyword}" appears 8-15 times (0.8%-2.5% density)
+✓ "${primaryKeyword}" in H1 (first half), first 100 words, and last 100 words
+✓ "${primaryKeyword}" in 2-3 H2/H3 headings
+✓ 5-7 H2 headings, 4-6 H3 headings
+✓ 2-3 question headings ending with "?"
+✓ 2-3 lists (ul/ol) with multiple items
+✓ 5+ uses of <strong> for emphasis (include "${primaryKeyword}" at least twice)
+✓ 2-5 external links to authoritative sources
+✓ E-E-A-T phrases: "In my experience", "Research shows", "Experts recommend"
+✓ Specific statistics and numbers throughout
+✓ Short paragraphs (under 150 words each)
 
-**OUTPUT FORMAT (STRICT):**
-- Generate ONLY the blog body (NO <html>, <head>, or <body>)
-- Start directly with <h1 class="brand-primary-heading"> ...
-- USE ONLY these tags: <h1>, <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <blockquote>. Nothing else.
-- NO <article>, <section>, <div>, <span>, <style>, <script>, inline styles, or custom attributes beyond required classes.
-- EVERY paragraph enclosed in <p class="brand-paragraph"> ... </p>
-- Headings must include the proper brand heading class as specified.
-- No images, captions, or placeholders.
-- Hyperlinks ONLY for authoritative citations (max 6); use <a href="URL">Anchor</a>.
-- Keyword density must be between 0.8% and 2.5% (stay in range).
-- Return fully structured HTML with clear separation of sections (newline after each closing heading and after blocks of paragraphs).
+**OUTPUT FORMAT:**
+- Start with: <h1 class="brand-primary-heading">[Title with ${primaryKeyword}]</h1>
+- All headings with proper classes (brand-primary-heading, brand-secondary-heading, brand-accent-heading)
+- All paragraphs: <p class="brand-paragraph">
+- No images, no inline styles, no div/section/article tags
+- External links: <a href="URL" target="_blank" rel="noopener">text</a>
 
-**QUALITY TARGETS:**
-- Content Score: 85+
-- Readability: Flesch Reading Ease 50-70
-- Time on Page: 4+ minutes target
-- Professional formatting through semantic HTML
-- Rich, engaging content with proper structure
-
-Write the complete blog post now:`;
+Write the complete, optimized blog post now:`;
 
           const completion = await openai.chat.completions.create({
             model: "gpt-4o",
@@ -253,6 +262,11 @@ Write the complete blog post now:`;
           };
           const applyFormatting = (raw: string) => {
             let output = raw;
+            // Strip markdown code block markers if present (```html ... ```)
+            output = output
+              .replace(/^[\s\n]*```(?:html)?[\s\n]*/i, '')
+              .replace(/[\s\n]*```[\s\n]*$/i, '')
+              .trim();
             // Remove any accidental high level wrappers
             output = output.replace(/<!DOCTYPE[^>]*>/gi, '')
               .replace(/<head>[\s\S]*?<\/head>/gi, '')
@@ -281,9 +295,13 @@ Write the complete blog post now:`;
             return output.trim();
           };
 
-          let cleanedContent = applyFormatting(fullContent);
+          // Strip markdown code block markers if present (```html ... ```)
+          let strippedContent = fullContent
+            .replace(/^\s*```(?:html)?\s*\n?/i, '')
+            .replace(/\n?\s*```\s*$/i, '')
+            .trim();
           
-          // (Further cleaning already handled by applyFormatting)
+          let cleanedContent = applyFormatting(strippedContent);
 
           // Save the generated content to database
           await db

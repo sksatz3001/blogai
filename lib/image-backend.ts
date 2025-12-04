@@ -242,41 +242,98 @@ export async function externalPromptEditImage(params: { sourceImageUrl: string; 
 
 export async function externalUploadImage(params: { imageData: string; altText?: string; prompt?: string; blogId?: number | string; }): Promise<{ imageUrl: string; s3Key?: string; }> {
   if (!BASE) throw new Error('IMAGE_BACKEND_BASE not configured');
-  // Best-effort upload endpoint name; adjust via backend to accept base64 data
-  const url = `${BASE.replace(/\/$/, '')}/image/upload`;
-  const variants = [
+  const base = BASE.replace(/\/$/, '');
+  
+  // Try multiple upload endpoints
+  const uploadEndpoints = [
+    '/image/upload',
+    '/images/upload',
+    '/upload',
+    '/api/image/upload',
+  ];
+  
+  const uploadVariants = [
     params,
     { dataUrl: params.imageData, altText: params.altText, prompt: params.prompt, blogId: params.blogId },
     { base64: params.imageData, altText: params.altText, prompt: params.prompt, blogId: params.blogId },
+    { image_data: params.imageData, alt_text: params.altText, prompt: params.prompt, blog_id: params.blogId },
   ];
+  
   let lastErr: any = null;
-  for (const body of variants) {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: headersJson(),
-      body: JSON.stringify(body),
-      cache: 'no-store',
-    });
-    try {
-      if (!res.ok) {
-        const errText = await safeText(res);
-        lastErr = new Error(`External upload failed: ${res.status} ${errText || ''}`.trim());
-        if (res.status >= 500) break;
-        continue;
-      }
-      const data: GenerateResponse = await res.json();
-      const outUrl = data.imageUrl || data.url || data?.data?.imageUrl || data?.data?.url;
-      if (!outUrl) {
+  
+  // First, try dedicated upload endpoints
+  for (const endpoint of uploadEndpoints) {
+    const url = `${base}${endpoint}`;
+    for (const body of uploadVariants) {
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: headersJson(),
+          body: JSON.stringify(body),
+          cache: 'no-store',
+        });
+        
+        if (res.status === 404) {
+          // Endpoint doesn't exist, skip to next
+          break;
+        }
+        
+        if (!res.ok) {
+          const errText = await safeText(res);
+          lastErr = new Error(`External upload failed: ${res.status} ${errText || ''}`.trim());
+          if (res.status >= 500) break;
+          continue;
+        }
+        
+        const data: GenerateResponse = await res.json();
+        const outUrl = data.imageUrl || data.url || data?.data?.imageUrl || data?.data?.url;
+        if (outUrl) {
+          return { imageUrl: outUrl, s3Key: data.s3Key || data.s3_key || data?.data?.s3Key || data?.data?.s3_key };
+        }
         lastErr = new Error('External upload returned no imageUrl');
+      } catch (e) {
+        lastErr = e;
         continue;
       }
-      return { imageUrl: outUrl, s3Key: data.s3Key || data.s3_key || data?.data?.s3Key || data?.data?.s3_key };
-    } catch (e) {
-      lastErr = e;
-      continue;
     }
   }
-  throw lastErr || new Error('External upload failed');
+  
+  // Fallback: Use /image/edit endpoint with a "keep as is" prompt
+  // This will upload the image and return a URL even without real editing
+  console.log('No upload endpoint found, trying /image/edit as fallback...');
+  try {
+    const editUrl = `${base}/image/edit`;
+    const editBody = {
+      source_image_url: params.imageData, // Send base64 as source
+      editing_prompt: params.prompt || 'keep the image exactly as is without any changes',
+      image_data: params.imageData,
+      dataUrl: params.imageData,
+      base64: params.imageData,
+      blog_id: String(params.blogId ?? ''),
+    };
+    
+    const res = await fetch(editUrl, {
+      method: 'POST',
+      headers: headersJson(),
+      body: JSON.stringify(editBody),
+      cache: 'no-store',
+    });
+    
+    if (res.ok) {
+      const data: any = await res.json();
+      const outUrl = data.edited_image_url || data.imageUrl || data.url || data?.data?.imageUrl;
+      if (outUrl) {
+        return { imageUrl: outUrl, s3Key: data.s3_key || data.s3Key };
+      }
+    } else {
+      const errText = await safeText(res);
+      lastErr = new Error(`Edit fallback failed: ${res.status} ${errText || ''}`.trim());
+    }
+  } catch (e) {
+    lastErr = e;
+  }
+  
+  throw lastErr || new Error('External upload failed - no upload endpoint available');
 }
 
 async function safeText(res: Response): Promise<string | null> {

@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, primaryKeyword, secondaryKeywords, targetWordCount, companyProfileId } = body;
+    const { title, primaryKeyword, secondaryKeywords, targetWordCount, companyProfileId, status } = body;
 
     // Generate slug from title
     const slug = title
@@ -29,7 +29,12 @@ export async function POST(request: Request) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
 
-    // Create blog entry
+    // Create blog entry - status can be 'draft' or 'processing'
+    // Handle secondaryKeywords - can be array or string
+    const secondaryKeywordsArray = Array.isArray(secondaryKeywords) 
+      ? secondaryKeywords 
+      : (secondaryKeywords ? secondaryKeywords.split(',').map((s: string) => s.trim()).filter(Boolean) : []);
+    
     const [newBlog] = await db
       .insert(blogs)
       .values({
@@ -38,9 +43,11 @@ export async function POST(request: Request) {
         title,
         slug,
         content: '', // Empty content initially
-        targetKeywords: `${primaryKeyword}${secondaryKeywords ? ',' + secondaryKeywords : ''}`, // Store keywords
+        primaryKeyword: primaryKeyword || null,
+        targetKeywords: `${primaryKeyword}${secondaryKeywordsArray.length > 0 ? ',' + secondaryKeywordsArray.join(',') : ''}`, // Store keywords
+        secondaryKeywords: secondaryKeywordsArray,
         wordCount: targetWordCount || 1000,
-        status: "draft",
+        status: status || "draft",
       })
       .returning();
 

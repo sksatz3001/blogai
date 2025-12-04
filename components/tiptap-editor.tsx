@@ -378,26 +378,56 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, onAut
 
     try {
       let finalUrl = editedImageSrc;
+      let uploadSucceeded = false;
+      
       // If blogId is present, attempt server upload + persistence
       if (blogId) {
-        const res = await fetch("/api/images/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageData: editedImageSrc, blogId }),
-        });
-        if (res.ok) {
-          const up = await res.json();
-          if (up?.imageUrl) {
-            finalUrl = up.imageUrl;
+        try {
+          const res = await fetch("/api/images/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ imageData: editedImageSrc, blogId }),
+          });
+          
+          if (res.ok) {
+            const up = await res.json();
+            if (up?.imageUrl) {
+              finalUrl = up.imageUrl;
+              uploadSucceeded = true;
+              console.log("Image uploaded successfully:", finalUrl);
+            }
+          } else {
+            const errorData = await res.json().catch(() => ({}));
+            console.warn("Image upload failed:", res.status, errorData);
+            // If upload fails due to backend not configured, show warning
+            if (errorData?.code === 'NO_BACKEND') {
+              toast.error("Image storage not configured. Please contact admin to set up IMAGE_BACKEND_BASE.");
+              // Don't insert the base64 - it will cause save issues
+              return;
+            }
           }
+        } catch (uploadError) {
+          console.error("Image upload error:", uploadError);
         }
+      }
+
+      // If upload failed and we still have base64, warn and don't proceed
+      if (!uploadSucceeded && editedImageSrc.startsWith('data:')) {
+        // Check size - base64 images over 500KB will likely cause issues
+        const sizeKB = Math.round(editedImageSrc.length / 1024);
+        if (sizeKB > 500) {
+          toast.error(`Image too large (${sizeKB}KB). Image storage backend required for edited images.`);
+          console.error("Image too large for inline storage:", sizeKB, "KB");
+          return;
+        }
+        toast.warning("Image saved locally. Configure image backend for permanent storage.");
       }
 
       // Find and replace the image in the editor
       const { state } = editor;
       const { doc } = state;
 
-      // Proxy edited image only if it's an external URL
+      // Proxy edited image only if it's an external URL (not base64)
       const storageBase = (process.env.NEXT_PUBLIC_IMAGE_STORAGE_BASE || process.env.IMAGE_STORAGE_BASE || '').replace(/\/$/, '');
       const isAbs = /^https?:\/\//i.test(finalUrl);
       const isStorage = storageBase && isAbs && finalUrl.startsWith(storageBase);
@@ -405,49 +435,49 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, onAut
         ? `/api/images/proxy?url=${encodeURIComponent(finalUrl)}`
         : finalUrl;
 
+      // Find and preserve original image alt text
+      let originalAlt: string | undefined;
+      
+      doc.descendants((node) => {
+        if (node.type.name === 'image' && (node.attrs.src === selectedImageOriginalSrc || node.attrs.src === selectedImageSrc)) {
+          originalAlt = node.attrs.alt;
+          return false;
+        }
+        return true;
+      });
+
       doc.descendants((node, pos) => {
         if (node.type.name === 'image' && (node.attrs.src === selectedImageOriginalSrc || node.attrs.src === selectedImageSrc)) {
+          // Build attrs
+          const newAttrs: Record<string, any> = { src: proxiedEditedUrl };
+          if (originalAlt) newAttrs.alt = originalAlt;
+          
           editor
             .chain()
             .deleteRange({ from: pos, to: pos + 1 })
             .insertContentAt(pos, {
               type: "image",
-              attrs: { src: proxiedEditedUrl },
-            })
-            .run();
-          return false;
-        }
-      });
-    } catch (e) {
-      console.error("Failed to upload edited image; using local data URL.", e);
-      // Fallback to original behavior: insert the data URL proxied
-      const { state } = editor;
-      const { doc } = state;
-      const storageBase = (process.env.NEXT_PUBLIC_IMAGE_STORAGE_BASE || process.env.IMAGE_STORAGE_BASE || '').replace(/\/$/, '');
-      const isAbs2 = /^https?:\/\//i.test(editedImageSrc);
-      const isStorage2 = storageBase && isAbs2 && editedImageSrc.startsWith(storageBase);
-      const proxiedEditedUrl = isAbs2 && !isStorage2
-        ? `/api/images/proxy?url=${encodeURIComponent(editedImageSrc)}`
-        : editedImageSrc;
-      doc.descendants((node, pos) => {
-        if (node.type.name === 'image' && (node.attrs.src === selectedImageOriginalSrc || node.attrs.src === selectedImageSrc)) {
-          editor
-            .chain()
-            .deleteRange({ from: pos, to: pos + 1 })
-            .insertContentAt(pos, {
-              type: 'image',
-              attrs: { src: proxiedEditedUrl },
+              attrs: newAttrs,
             })
             .run();
           return false;
         }
         return true;
       });
+      
+      // Show success message
+      if (uploadSucceeded) {
+        toast.success("Image edited and saved!");
+      }
+    } catch (e) {
+      console.error("Failed to handle edited image:", e);
+      toast.error("Failed to save edited image");
     } finally {
       setShowImageEditorModal(false);
       setSelectedImageSrc("");
+      setSelectedImageOriginalSrc("");
       
-      // Trigger auto-save after image is replaced
+      // Trigger auto-save after image is replaced (only if upload succeeded)
       if (onAutoSave) {
         setTimeout(() => {
           onAutoSave();
@@ -589,6 +619,7 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, onAut
             <ImageIcon className="h-4 w-4" />
           </Button>
 
+          {/* Edit Image button hidden for now - backend upload endpoint not available
           {selectedImageSrc && (
             <Button
               type="button"
@@ -600,6 +631,7 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, onAut
               <Edit3 className="h-4 w-4" />
             </Button>
           )}
+          */}
         </div>
       )}
 

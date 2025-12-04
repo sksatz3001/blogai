@@ -18,10 +18,10 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className="dark" suppressHydrationWarning>
+      <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
           {children}
-          <Toaster position="top-right" richColors theme="dark" />
+          <Toaster position="top-right" richColors theme="light" />
         </body>
       </html>
     </ClerkProvider>

@@ -60,7 +60,7 @@ export default function OutlineStepPage() {
         const mapped: OutlineItem[] = (data.outline || []).map((sec: any) => ({
           id: newId(),
           title: sec.title,
-          sectionImage: true,
+          sectionImage: false,
           sub: (sec.items || []).map((s: any) => ({ id: newId(), title: s.title })),
         }));
         setOutline(mapped);
@@ -75,7 +75,7 @@ export default function OutlineStepPage() {
     return () => { cancelled = true; };
   }, [blogId, ctx.title, ctx.primary, ctx.secondary, ctx.wordCount, ctx.companyProfileId]);
 
-  const addSection = () => setOutline([...outline, { id: newId(), title: "New Section", sectionImage: true, sub: [] }]);
+  const addSection = () => setOutline([...outline, { id: newId(), title: "New Section", sectionImage: false, sub: [] }]);
   const removeSection = (id: string) => setOutline(outline.filter(s => s.id !== id));
   const addSub = (sid: string) =>
     setOutline(outline.map(s =>
@@ -105,19 +105,9 @@ export default function OutlineStepPage() {
       const mapped: OutlineItem[] = (data.outline || []).map((sec: any) => ({
         id: newId(),
         title: sec.title,
-        sectionImage: true,
+        sectionImage: false,
         sub: (sec.items || []).map((s: any) => ({ id: newId(), title: s.title, isImage: false })),
       }));
-      // Re-apply up to 3 default image placeholders after regeneration
-      let remaining = 3;
-      for (const sec of mapped) {
-        for (const sub of sec.sub || []) {
-          if (remaining <= 0) break;
-          sub.isImage = true;
-          remaining -= 1;
-        }
-        if (remaining <= 0) break;
-      }
       setOutline(mapped);
     } catch (e) {
       toast.error("Regeneration failed");
@@ -131,7 +121,10 @@ export default function OutlineStepPage() {
       toast.error("Add at least one section to outline");
       return;
     }
-    // Save outline (including image flags) to sessionStorage and navigate to generating screen
+    
+    setGenerating(true);
+    
+    // Prepare outline data
     const wire = {
       featuredImage,
       sections: outline.map(sec => ({
@@ -140,17 +133,43 @@ export default function OutlineStepPage() {
         items: (sec.sub || []).map(s => ({ title: s.title })),
       }))
     };
+    
     try {
+      // Update blog status to processing
+      await fetch(`/api/blogs/${blogId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'processing' }),
+      });
+      
+      // Store outline in sessionStorage for background generation
       window.sessionStorage.setItem(`outline:${blogId}`, JSON.stringify(wire));
-    } catch {}
-    const params = new URLSearchParams({
-      title: ctx.title,
-      primary: ctx.primary,
-      secondary: ctx.secondary || "",
-      wordCount: String(ctx.wordCount),
-      companyProfileId: String(ctx.companyProfileId || "self"),
-    });
-    router.push(`/dashboard/blogs/${blogId}/generating?${params.toString()}`);
+      
+      // Redirect to My Blogs immediately
+      toast.success("Blog generation started! You'll see progress in My Blogs.");
+      router.push('/dashboard/blogs');
+      
+      // Trigger generation in background (fire and forget)
+      fetch("/api/blogs/generate-from-outline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          blogId,
+          title: ctx.title,
+          primaryKeyword: ctx.primary,
+          secondaryKeywords: ctx.secondary.split(",").map(s=>s.trim()).filter(Boolean),
+          targetWordCount: ctx.wordCount,
+          outline: wire.sections,
+          featuredImage: wire.featuredImage,
+          companyProfileId: ctx.companyProfileId === "self" ? null : Number(ctx.companyProfileId),
+        }),
+      }).catch(err => console.error("Background generation error:", err));
+      
+    } catch (error) {
+      console.error("Failed to start generation:", error);
+      toast.error("Failed to start blog generation");
+      setGenerating(false);
+    }
   };
 
   return (

@@ -15,7 +15,7 @@ const HexColorPicker = dynamic(
   () => import("react-colorful").then((mod) => mod.HexColorPicker),
   { 
     ssr: false,
-    loading: () => <div className="w-full h-48 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
+    loading: () => <div className="w-full h-48 bg-muted rounded-lg animate-pulse" />
   }
 );
 
@@ -61,12 +61,12 @@ export function OnboardingForm() {
 
   return (
     <div className="space-y-6">
-      <Card className="backdrop-blur-sm bg-white/70 dark:bg-slate-900/70 border-slate-200 dark:border-slate-700">
+      <Card className="bg-white border-border shadow-sm">
         <CardHeader>
-          <CardTitle>
+          <CardTitle className="text-foreground">
             {step === 1 ? "Company Information" : "Brand Colors"}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             {step === 1
               ? "Tell us about your company and brand"
               : "Choose your brand colors for personalized content"}
@@ -86,7 +86,7 @@ export function OnboardingForm() {
                   onChange={(e) =>
                     setFormData({ ...formData, companyName: e.target.value })
                   }
-                  className="bg-white/50 dark:bg-slate-800/50"
+                  className="bg-white border-border"
                 />
               </div>
 
@@ -100,7 +100,7 @@ export function OnboardingForm() {
                   onChange={(e) =>
                     setFormData({ ...formData, companyWebsite: e.target.value })
                   }
-                  className="bg-white/50 dark:bg-slate-800/50"
+                  className="bg-white border-border"
                 />
               </div>
 
@@ -115,7 +115,7 @@ export function OnboardingForm() {
                   onChange={(e) =>
                     setFormData({ ...formData, authorName: e.target.value })
                   }
-                  className="bg-white/50 dark:bg-slate-800/50"
+                  className="bg-white border-border"
                 />
               </div>
 
@@ -134,7 +134,7 @@ export function OnboardingForm() {
                   <Label>Primary Color</Label>
                   <div className="flex gap-3 items-center">
                     <div
-                      className="w-16 h-16 rounded-lg border-2 border-slate-300 dark:border-slate-600 cursor-pointer hover:scale-105 transition-transform"
+                      className="w-16 h-16 rounded-lg border-2 border-border cursor-pointer hover:scale-105 transition-transform"
                       style={{ backgroundColor: formData.primaryColor }}
                       onClick={() => setShowColorPicker("primary")}
                     />
@@ -143,12 +143,12 @@ export function OnboardingForm() {
                       onChange={(e) =>
                         setFormData({ ...formData, primaryColor: e.target.value })
                       }
-                      className="bg-white/50 dark:bg-slate-800/50"
+                      className="bg-white border-border"
                     />
                   </div>
                   {showColorPicker === "primary" && (
                     <div className="mt-2">
-                      <Suspense fallback={<div className="w-full h-48 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />}>
+                      <Suspense fallback={<div className="w-full h-48 bg-muted rounded-lg animate-pulse" />}>
                         <HexColorPicker
                           color={formData.primaryColor}
                           onChange={(color) =>
@@ -164,7 +164,7 @@ export function OnboardingForm() {
                   <Label>Secondary Color</Label>
                   <div className="flex gap-3 items-center">
                     <div
-                      className="w-16 h-16 rounded-lg border-2 border-slate-300 dark:border-slate-600 cursor-pointer hover:scale-105 transition-transform"
+                      className="w-16 h-16 rounded-lg border-2 border-border cursor-pointer hover:scale-105 transition-transform"
                       style={{ backgroundColor: formData.secondaryColor }}
                       onClick={() => setShowColorPicker("secondary")}
                     />
@@ -173,12 +173,12 @@ export function OnboardingForm() {
                       onChange={(e) =>
                         setFormData({ ...formData, secondaryColor: e.target.value })
                       }
-                      className="bg-white/50 dark:bg-slate-800/50"
+                      className="bg-white border-border"
                     />
                   </div>
                   {showColorPicker === "secondary" && (
                     <div className="mt-2">
-                      <Suspense fallback={<div className="w-full h-48 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />}>
+                      <Suspense fallback={<div className="w-full h-48 bg-muted rounded-lg animate-pulse" />}>
                         <HexColorPicker
                           color={formData.secondaryColor}
                           onChange={(color) =>
@@ -194,7 +194,7 @@ export function OnboardingForm() {
                   <Label>Accent Color</Label>
                   <div className="flex gap-3 items-center">
                     <div
-                      className="w-16 h-16 rounded-lg border-2 border-slate-300 dark:border-slate-600 cursor-pointer hover:scale-105 transition-transform"
+                      className="w-16 h-16 rounded-lg border-2 border-border cursor-pointer hover:scale-105 transition-transform"
                       style={{ backgroundColor: formData.accentColor }}
                       onClick={() => setShowColorPicker("accent")}
                     />
@@ -203,12 +203,12 @@ export function OnboardingForm() {
                       onChange={(e) =>
                         setFormData({ ...formData, accentColor: e.target.value })
                       }
-                      className="bg-white/50 dark:bg-slate-800/50"
+                      className="bg-white border-border"
                     />
                   </div>
                   {showColorPicker === "accent" && (
                     <div className="mt-2">
-                      <Suspense fallback={<div className="w-full h-48 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />}>
+                      <Suspense fallback={<div className="w-full h-48 bg-muted rounded-lg animate-pulse" />}>
                         <HexColorPicker
                           color={formData.accentColor}
                           onChange={(color) =>
@@ -239,12 +239,12 @@ export function OnboardingForm() {
       <div className="flex justify-center gap-2">
         <div
           className={`h-2 w-16 rounded-full transition-colors ${
-            step >= 1 ? "bg-blue-600" : "bg-slate-300 dark:bg-slate-700"
+            step >= 1 ? "bg-primary" : "bg-muted"
           }`}
         />
         <div
           className={`h-2 w-16 rounded-full transition-colors ${
-            step >= 2 ? "bg-blue-600" : "bg-slate-300 dark:bg-slate-700"
+            step >= 2 ? "bg-primary" : "bg-muted"
           }`}
         />
       </div>

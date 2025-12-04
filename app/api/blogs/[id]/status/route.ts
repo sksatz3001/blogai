@@ -83,6 +83,7 @@ export async function GET(
 
     return NextResponse.json({ 
       status: blog.status,
+      content: blog.content,
       hasContent: !!blog.content && blog.content.length > 100,
     });
   } catch (error) {

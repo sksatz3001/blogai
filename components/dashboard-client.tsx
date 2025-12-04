@@ -160,16 +160,16 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-4xl font-bold mb-2 gradient-text">
+          <h1 className="text-2xl font-bold text-foreground">
             Good Morning, {userName}!
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm mt-1">
             All your content matters, all in one place. Managing blogs has never been easier.
           </p>
         </div>
         <Link href="/dashboard/create">
-          <Button size="lg" className="gap-2">
-            <Plus className="h-5 w-5" />
+          <Button size="default" className="gap-2">
+            <Plus className="h-4 w-4" />
             Create Blog
           </Button>
         </Link>
@@ -178,19 +178,19 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
       {/* Top Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Content */}
-        <Card className="glass border border-border hover:border-primary/50 transition-all group">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
-                <FileText className="h-5 w-5 text-primary" />
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <FileText className="h-4 w-4 text-primary" />
               </div>
-              <Badge variant="outline">
+              <Badge variant="outline" className="text-xs">
                 All Time
               </Badge>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Total Content</p>
-              <p className="text-3xl font-bold text-foreground">{stats.totalBlogs}</p>
+              <p className="text-2xl font-bold">{stats.totalBlogs}</p>
               <p className="text-xs text-primary">
                 {stats.totalWords.toLocaleString()} total words
               </p>
@@ -199,29 +199,29 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
         </Card>
 
         {/* Saved Blogs */}
-        <Card className="glass border border-border hover:border-primary/50 transition-all group">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
-                <CheckCircle2 className="h-5 w-5 text-primary" />
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2 rounded-lg bg-green-50">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
               </div>
               <div className="flex items-center gap-1 text-xs">
                 {savedChange >= 0 ? (
                   <>
-                    <ArrowUpRight className="h-3 w-3 text-primary" />
-                    <span className="text-primary font-semibold">+{savedChange}%</span>
+                    <ArrowUpRight className="h-3 w-3 text-green-600" />
+                    <span className="text-green-600 font-medium">+{savedChange}%</span>
                   </>
                 ) : (
                   <>
-                    <ArrowDownRight className="h-3 w-3 text-destructive" />
-                    <span className="text-destructive font-semibold">{savedChange}%</span>
+                    <ArrowDownRight className="h-3 w-3 text-red-500" />
+                    <span className="text-red-500 font-medium">{savedChange}%</span>
                   </>
                 )}
               </div>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Saved Blogs</p>
-              <p className="text-3xl font-bold text-foreground">{stats.savedBlogs}</p>
+              <p className="text-2xl font-bold">{stats.savedBlogs}</p>
               <p className="text-xs text-muted-foreground">
                 {lastMonthSaved} this month
               </p>
@@ -230,19 +230,19 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
         </Card>
 
         {/* Total Words Written */}
-        <Card className="glass border border-border hover:border-secondary/50 transition-all group">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-secondary/20 to-secondary/5">
-                <BookOpen className="h-5 w-5 text-secondary" />
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2 rounded-lg bg-blue-50">
+                <BookOpen className="h-4 w-4 text-blue-600" />
               </div>
-              <Badge variant="secondary">
+              <Badge variant="secondary" className="text-xs">
                 Content
               </Badge>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Total Words</p>
-              <p className="text-3xl font-bold text-foreground">
+              <p className="text-2xl font-bold">
                 {stats.totalWords >= 1000 
                   ? `${(stats.totalWords / 1000).toFixed(1)}k` 
                   : stats.totalWords}
@@ -255,19 +255,19 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
         </Card>
 
         {/* Drafts */}
-        <Card className="glass border border-border hover:border-accent/50 transition-all group">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5">
-                <PenTool className="h-5 w-5 text-accent" />
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2 rounded-lg bg-gray-100">
+                <PenTool className="h-4 w-4 text-gray-600" />
               </div>
-              <Badge variant="outline">
+              <Badge variant="outline" className="text-xs">
                 Draft
               </Badge>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">In Progress</p>
-              <p className="text-3xl font-bold text-foreground">{stats.draftBlogs}</p>
+              <p className="text-2xl font-bold">{stats.draftBlogs}</p>
               <p className="text-xs text-muted-foreground">
                 {stats.avgWordsPerBlog} avg words/post
               </p>
@@ -276,149 +276,28 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
         </Card>
       </div>
 
-      {/* Employee Metrics Section */}
-      {stats.totalEmployees > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="h-1 w-12 rounded-full bg-gradient-to-r from-primary to-secondary" />
-            <h2 className="text-2xl font-bold text-foreground">Team Performance</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Total Employees */}
-            <Card className="glass border border-border hover:border-secondary/50 transition-all">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-secondary/20 to-secondary/5">
-                    <svg className="h-5 w-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                  <Link href="/dashboard/team">
-                    <Button variant="ghost" size="sm" className="h-6 text-xs text-primary hover:text-primary">
-                      Manage →
-                    </Button>
-                  </Link>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Total Employees</p>
-                  <p className="text-3xl font-bold text-foreground">{stats.totalEmployees}</p>
-                  <p className="text-xs text-primary">
-                    {stats.activeEmployees} active
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* Employee Blogs */}
-            <Card className="glass border border-border hover:border-primary/50 transition-all">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
-                    <FileText className="h-5 w-5 text-primary" />
-                  </div>
-                  <Badge variant="outline" className="border-primary/30 text-primary">
-                    Team
-                  </Badge>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Employee Blogs</p>
-                  <p className="text-3xl font-bold text-foreground">{stats.totalEmployeeBlogs}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {((stats.totalEmployeeBlogs / Math.max(stats.totalBlogs, 1)) * 100).toFixed(0)}% of total
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Employee Saved */}
-            <Card className="glass border border-border hover:border-primary/50 transition-all">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5">
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
-                  </div>
-                  <Badge variant="outline" className="border-primary/30 text-primary">
-                    Saved
-                  </Badge>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Team Saved</p>
-                  <p className="text-3xl font-bold text-foreground">{stats.employeeSavedBlogs}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.employeeDraftBlogs} drafts
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Your Blogs */}
-            <Card className="glass border border-border hover:border-secondary/50 transition-all">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-secondary/20 to-secondary/5">
-                    <Award className="h-5 w-5 text-secondary" />
-                  </div>
-                  <Badge variant="outline" className="border-secondary/30 text-secondary">
-                    You
-                  </Badge>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Your Blogs</p>
-                  <p className="text-3xl font-bold text-foreground">{stats.adminBlogs}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {((stats.adminBlogs / Math.max(stats.totalBlogs, 1)) * 100).toFixed(0)}% of total
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Productivity Metric */}
-            <Card className="glass border border-border hover:border-accent/50 transition-all">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5">
-                    <TrendingUp className="h-5 w-5 text-accent" />
-                  </div>
-                  <Badge variant="outline" className="border-accent/30 text-accent">
-                    Avg
-                  </Badge>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Blogs/Employee</p>
-                  <p className="text-3xl font-bold text-foreground">
-                    {stats.totalEmployees > 0 ? (stats.totalEmployeeBlogs / stats.totalEmployees).toFixed(1) : '0'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Team productivity
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
 
       {/* Middle Section: Chart & Quick Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Content Performance Chart */}
-        <Card className="lg:col-span-2 glass border border-border">
+        <Card className="lg:col-span-2">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-xl text-foreground">Content Activity</CardTitle>
+                <CardTitle>Content Activity</CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
                   {chartPeriod === 'daily' ? 'Last 7 days' : chartPeriod === 'weekly' ? 'Last 7 weeks' : 'Last 6 months'}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 {/* Period Filter Buttons */}
-                <div className="flex items-center gap-1 p-1 rounded-lg bg-card/50 border border-border">
+                <div className="flex items-center gap-1 p-1 rounded-md bg-muted">
                   <button
                     onClick={() => setChartPeriod('daily')}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
                       chartPeriod === 'daily'
-                        ? 'bg-gradient-to-r from-primary to-secondary text-primary-foreground shadow-lg'
+                        ? 'bg-primary text-white'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -426,9 +305,9 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
                   </button>
                   <button
                     onClick={() => setChartPeriod('weekly')}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
                       chartPeriod === 'weekly'
-                        ? 'bg-gradient-to-r from-primary to-secondary text-primary-foreground shadow-lg'
+                        ? 'bg-primary text-white'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -436,9 +315,9 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
                   </button>
                   <button
                     onClick={() => setChartPeriod('monthly')}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
                       chartPeriod === 'monthly'
-                        ? 'bg-gradient-to-r from-primary to-secondary text-primary-foreground shadow-lg'
+                        ? 'bg-primary text-white'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -454,7 +333,7 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
                 <span className="text-muted-foreground">Saved</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-secondary"></div>
+                <div className="w-3 h-3 rounded-full bg-gray-400"></div>
                 <span className="text-muted-foreground">Drafts</span>
               </div>
             </div>
@@ -462,7 +341,7 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
           <CardContent>
             {chartData.every(d => d.saved === 0 && d.drafts === 0) ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <BarChart3 className="h-12 w-12 text-primary/30 mb-3" />
+                <BarChart3 className="h-12 w-12 text-gray-300 mb-3" />
                 <p className="text-muted-foreground text-sm">No activity in this period</p>
                 <p className="text-muted-foreground text-xs mt-1">Start creating blogs to see insights</p>
               </div>
@@ -474,28 +353,28 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
                       <span className="text-muted-foreground font-medium min-w-[60px]">{data.label}</span>
                       <div className="flex items-center gap-4 text-xs">
                         <span className="text-primary">{data.saved} saved</span>
-                        <span className="text-secondary">{data.drafts} drafts</span>
+                        <span className="text-gray-500">{data.drafts} drafts</span>
                       </div>
                     </div>
-                    <div className="flex gap-1 h-10">
+                    <div className="flex gap-1 h-8">
                       {/* Saved Bar */}
                       <div 
-                        className="bg-gradient-to-t from-primary to-secondary rounded-lg transition-all hover:opacity-80 relative group"
+                        className="bg-primary rounded transition-all hover:opacity-80 relative"
                         style={{ width: `${(data.saved / maxChartValue) * 100}%`, minWidth: data.saved > 0 ? '4px' : '0' }}
                       >
                         {data.saved > 0 && (
-                          <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-primary-foreground">
+                          <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
                             {data.saved}
                           </span>
                         )}
                       </div>
                       {/* Drafts Bar */}
                       <div 
-                        className="bg-gradient-to-t from-secondary to-accent rounded-lg transition-all hover:opacity-80 relative group"
+                        className="bg-gray-300 rounded transition-all hover:opacity-80 relative"
                         style={{ width: `${(data.drafts / maxChartValue) * 100}%`, minWidth: data.drafts > 0 ? '4px' : '0' }}
                       >
                         {data.drafts > 0 && (
-                          <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-primary-foreground">
+                          <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-gray-700">
                             {data.drafts}
                           </span>
                         )}
@@ -511,13 +390,13 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
         {/* Quick Actions & Stats */}
         <div className="space-y-4">
           {/* Quick Create */}
-          <Card className="glass border border-dashed border-primary/30 hover:border-primary/60 transition-all bg-gradient-to-br from-primary/5 to-secondary/5">
-            <CardContent className="p-6 text-center space-y-3">
-              <div className="mx-auto w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <Sparkles className="h-6 w-6 text-primary-foreground" />
+          <Card className="border-dashed">
+            <CardContent className="p-5 text-center space-y-3">
+              <div className="mx-auto w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-1">Start Creating</h3>
+                <h3 className="font-medium text-sm">Start Creating</h3>
                 <p className="text-xs text-muted-foreground">Generate AI-powered content</p>
               </div>
               <Link href="/dashboard/create">
@@ -529,21 +408,21 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
           </Card>
 
           {/* This Month Stats */}
-          <Card className="glass border border-border">
-            <CardContent className="p-6 space-y-4">
-              <div className="flex items-center gap-2 text-foreground">
+          <Card>
+            <CardContent className="p-5 space-y-3">
+              <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold">This Month</h3>
+                <h3 className="font-medium text-sm">This Month</h3>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Saved</span>
                   <span className="text-lg font-bold text-primary">{lastMonthSaved}</span>
                 </div>
-                <div className="h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                <div className="h-px bg-border" />
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">In Progress</span>
-                  <span className="text-lg font-bold text-accent">
+                  <span className="text-lg font-bold text-gray-600">
                     {monthlyData[monthlyData.length - 1]?.drafts || 0}
                   </span>
                 </div>
@@ -552,26 +431,26 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
           </Card>
 
           {/* SEO Insights */}
-          <Card className="glass border border-border">
-            <CardContent className="p-6 space-y-3">
-              <div className="flex items-center gap-2 text-foreground">
-                <Target className="h-4 w-4 text-secondary" />
-                <h3 className="font-semibold">SEO Insights</h3>
+          <Card>
+            <CardContent className="p-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-primary" />
+                <h3 className="font-medium text-sm">SEO Insights</h3>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">Avg SEO Score</span>
-                  <span className="text-2xl font-bold text-secondary">{stats.avgSeoScore}</span>
+                  <span className="text-2xl font-bold text-primary">{stats.avgSeoScore}</span>
                 </div>
-                <div className="h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                <div className="h-px bg-border" />
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">High Quality (80+)</span>
-                    <span className="text-primary font-semibold">{stats.highSeoBlogs}</span>
+                    <span className="text-green-600 font-medium">{stats.highSeoBlogs}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Needs Work (&lt;80)</span>
-                    <span className="text-accent font-semibold">{stats.totalBlogs - stats.highSeoBlogs}</span>
+                    <span className="text-gray-600 font-medium">{stats.totalBlogs - stats.highSeoBlogs}</span>
                   </div>
                 </div>
               </div>
@@ -581,11 +460,11 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
       </div>
 
       {/* Recent Blogs */}
-      <Card className="glass border border-border">
+      <Card>
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-xl text-foreground">Recent Blogs</CardTitle>
+              <CardTitle>Recent Blogs</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">Your latest content</p>
             </div>
             <Link href="/dashboard/blogs">
@@ -598,9 +477,9 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
         <CardContent>
           {recentBlogs.length === 0 ? (
             <div className="text-center py-12">
-              <FileText className="h-16 w-16 text-primary/50 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">No blogs yet</h3>
-              <p className="text-muted-foreground mb-6">
+              <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-base font-medium mb-2">No blogs yet</h3>
+              <p className="text-muted-foreground text-sm mb-6">
                 Start creating amazing content with AI assistance
               </p>
               <Link href="/dashboard/create">
@@ -611,29 +490,25 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {recentBlogs.map((blog) => (
                 <div
                   key={blog.id}
-                  className="group flex items-center justify-between p-4 rounded-xl bg-card/30 border border-border hover:border-primary/50 hover:bg-card/50 transition-all"
+                  className="group flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/30 hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
                         {blog.title}
                       </h4>
                       <Badge 
                         variant={blog.status === "published" ? "default" : "secondary"}
-                        className={`${
-                          blog.status === "published" 
-                            ? "bg-primary text-primary-foreground" 
-                            : "bg-secondary text-secondary-foreground"
-                        }`}
+                        className="text-xs"
                       >
                         {blog.status === "published" ? "saved" : "draft"}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <FileText className="h-3 w-3" />
                         {blog.wordCount || 0} words
@@ -650,7 +525,7 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex items-center gap-1 ml-4">
                     <Link href={`/dashboard/blogs/${blog.id}/edit`}>
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                         <Edit className="h-4 w-4" />

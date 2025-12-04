@@ -122,6 +122,11 @@ STRICT FORMAT RULES:
           };
           const applyFormatting = (raw: string) => {
             let output = raw;
+            // Strip markdown code block markers if present (```html ... ```)
+            output = output
+              .replace(/^\s*```(?:html)?\s*\n?/i, '')
+              .replace(/\n?\s*```\s*$/i, '')
+              .trim();
             output = output.replace(/<!DOCTYPE[^>]*>/gi, '')
               .replace(/<head>[\s\S]*?<\/head>/gi, '')
               .replace(/<\/?(html|body|article|section|main|header|footer|nav|div|span)[^>]*>/gi, '');

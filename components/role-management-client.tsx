@@ -13,7 +13,6 @@ import {
   Trash2,
   CheckCircle2,
   AlertCircle,
-  Lock,
   User,
 } from "lucide-react";
 
@@ -228,273 +227,266 @@ export default function RoleManagementClient() {
   }, {} as Record<string, Permission[]>);
 
   return (
-    <div className="min-h-screen bg-[#1E222A] p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-[#ECEFF4] flex items-center gap-3">
-              <Shield className="h-8 w-8 text-[#88C0D0]" />
-              Role Management
-            </h1>
-            <p className="text-[#D8DEE9]/70 mt-2">
-              Create roles and assign permissions
-            </p>
-          </div>
-
-          <Button
-            onClick={() => setShowNewRoleForm(!showNewRoleForm)}
-            className="bg-gradient-to-r from-[#88C0D0] to-[#8FBCBB]"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Role
-          </Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
+            <Shield className="h-6 w-6 text-primary" />
+            Role Management
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Create roles and assign permissions
+          </p>
         </div>
 
-        {/* Notifications */}
-        {success && (
-          <div className="glass p-4 rounded-xl border-2 border-[#A3BE8C] bg-[#A3BE8C]/10 flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-[#A3BE8C]" />
-            <span className="text-[#A3BE8C]">{success}</span>
-          </div>
-        )}
+        <Button onClick={() => setShowNewRoleForm(!showNewRoleForm)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Role
+        </Button>
+      </div>
 
-        {error && (
-          <div className="glass p-4 rounded-xl border-2 border-[#BF616A] bg-[#BF616A]/10 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-[#BF616A]" />
-            <span className="text-[#BF616A]">{error}</span>
-          </div>
-        )}
+      {/* Notifications */}
+      {success && (
+        <div className="p-4 rounded-lg border border-green-200 bg-green-50 flex items-center gap-3">
+          <CheckCircle2 className="h-5 w-5 text-green-600" />
+          <span className="text-green-700">{success}</span>
+        </div>
+      )}
 
-        {/* New Role Form */}
-        {showNewRoleForm && (
-          <Card className="glass border-2 border-[#3B4252]">
-            <CardHeader>
-              <CardTitle className="text-[#ECEFF4] flex items-center gap-2">
-                <Plus className="h-5 w-5 text-[#88C0D0]" />
-                Create New Role
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCreateRole} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Role Name *</Label>
-                    <Input
-                      id="name"
-                      value={newRole.name}
-                      onChange={(e) =>
-                        setNewRole({ ...newRole, name: e.target.value })
-                      }
-                      placeholder="Content Writer"
-                      required
-                      className="bg-[#2E3440]/50 border-[#3B4252]"
-                    />
-                  </div>
+      {error && (
+        <div className="p-4 rounded-lg border border-red-200 bg-red-50 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-red-600" />
+          <span className="text-red-700">{error}</span>
+        </div>
+      )}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Input
-                      id="description"
-                      value={newRole.description}
-                      onChange={(e) =>
-                        setNewRole({ ...newRole, description: e.target.value })
-                      }
-                      placeholder="Creates and edits blog content"
-                      className="bg-[#2E3440]/50 border-[#3B4252]"
-                    />
-                  </div>
-                </div>
-
-                {/* Permissions Selection */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-lg">Assign Permissions</Label>
-                    <span className="text-xs text-[#D8DEE9]/60">
-                      {permissions.length} permissions available
-                    </span>
-                  </div>
-                  
-                  {permissions.length === 0 ? (
-                    <div className="p-6 rounded-lg bg-[#2E3440]/30 border-2 border-[#3B4252]">
-                      <p className="text-[#D8DEE9]/60 text-center">Loading permissions...</p>
-                      <p className="text-xs text-[#D8DEE9]/40 mt-2 text-center">
-                        If this persists, check browser console (F12) for errors
-                      </p>
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          console.log("Manually reloading permissions...");
-                          fetchPermissions();
-                        }}
-                        variant="outline"
-                        className="mt-4 mx-auto block"
-                      >
-                        Retry Loading Permissions
-                      </Button>
-                    </div>
-                  ) : (
-                    Object.entries(groupedPermissions).map(([category, perms]) => (
-                      <div key={category} className="space-y-2">
-                        <h3 className="text-sm font-semibold text-[#88C0D0] uppercase">
-                          {category}
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {perms.map((perm) => (
-                            <div
-                              key={perm.id}
-                              onClick={() => togglePermission(perm.id)}
-                              className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                                selectedPermissions.includes(perm.id)
-                                  ? "bg-[#88C0D0]/20 border-[#88C0D0]"
-                                  : "bg-[#2E3440]/30 border-[#3B4252] hover:border-[#88C0D0]/50"
-                              }`}
-                            >
-                              <div className="flex items-start gap-2">
-                                <div
-                                  className={`mt-0.5 h-4 w-4 rounded border-2 flex items-center justify-center ${
-                                    selectedPermissions.includes(perm.id)
-                                      ? "bg-[#88C0D0] border-[#88C0D0]"
-                                      : "border-[#4C566A]"
-                                  }`}
-                                >
-                                  {selectedPermissions.includes(perm.id) && (
-                                    <CheckCircle2 className="h-3 w-3 text-[#2E3440]" />
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-[#ECEFF4]">
-                                    {perm.name.replace(/_/g, " ")}
-                                  </p>
-                                  {perm.description && (
-                                    <p className="text-xs text-[#D8DEE9]/60 mt-1">
-                                      {perm.description}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                <div className="flex gap-3">
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Creating..." : "Create Role"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowNewRoleForm(false);
-                      setSelectedPermissions([]);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Roles List */}
-        <Card className="glass border-2 border-[#3B4252]">
+      {/* New Role Form */}
+      {showNewRoleForm && (
+        <Card>
           <CardHeader>
-            <CardTitle className="text-[#ECEFF4] flex items-center gap-2">
-              <Shield className="h-5 w-5 text-[#88C0D0]" />
-              Roles ({roles.length})
+            <CardTitle className="text-foreground flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Create New Role
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {roles.length === 0 ? (
-              <div className="text-center py-12">
-                <Shield className="h-12 w-12 text-[#4C566A] mx-auto mb-4" />
-                <p className="text-[#D8DEE9]/60">No roles yet</p>
-                <p className="text-sm text-[#D8DEE9]/40 mt-2">
-                  Create your first role to get started
-                </p>
+            <form onSubmit={handleCreateRole} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Role Name *</Label>
+                  <Input
+                    id="name"
+                    value={newRole.name}
+                    onChange={(e) =>
+                      setNewRole({ ...newRole, name: e.target.value })
+                    }
+                    placeholder="Content Writer"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    value={newRole.description}
+                    onChange={(e) =>
+                      setNewRole({ ...newRole, description: e.target.value })
+                    }
+                    placeholder="Creates and edits blog content"
+                  />
+                </div>
               </div>
-            ) : (
+
+              {/* Permissions Selection */}
               <div className="space-y-4">
-                {roles.map((role) => {
-                  const assignedPermissions = getRolePermissions(role.id);
-                  return (
-                    <div
-                      key={role.id}
-                      className="p-4 rounded-xl bg-[#2E3440]/30 border-2 border-[#3B4252] hover:border-[#88C0D0]/50 transition-all"
+                <div className="flex items-center justify-between">
+                  <Label className="text-base">Assign Permissions</Label>
+                  <span className="text-xs text-muted-foreground">
+                    {permissions.length} permissions available
+                  </span>
+                </div>
+                
+                {permissions.length === 0 ? (
+                  <div className="p-6 rounded-lg bg-muted border border-border">
+                    <p className="text-muted-foreground text-center">Loading permissions...</p>
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      If this persists, check browser console (F12) for errors
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        console.log("Manually reloading permissions...");
+                        fetchPermissions();
+                      }}
+                      variant="outline"
+                      className="mt-4 mx-auto block"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-3 flex-1">
-                          <div>
-                            <h3 className="text-lg font-semibold text-[#ECEFF4]">
-                              {role.name}
-                            </h3>
-                            {role.description && (
-                              <p className="text-sm text-[#D8DEE9]/70 mt-1">
-                                {role.description}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="space-y-2">
-                            <p className="text-xs font-semibold text-[#88C0D0] uppercase">
-                              Permissions ({assignedPermissions.length})
-                            </p>
-                            {assignedPermissions.length > 0 ? (
-                              <div className="flex flex-wrap gap-2">
-                                {assignedPermissions.map((permId) => {
-                                  const perm = permissions.find((p) => p.id === permId);
-                                  return perm ? (
-                                    <Badge
-                                      key={permId}
-                                      variant="outline"
-                                      className="bg-[#88C0D0]/10 text-[#88C0D0] border-[#88C0D0] font-semibold"
-                                    >
-                                      {perm.name.replace(/_/g, " ")}
-                                    </Badge>
-                                  ) : null;
-                                })}
+                      Retry Loading Permissions
+                    </Button>
+                  </div>
+                ) : (
+                  Object.entries(groupedPermissions).map(([category, perms]) => (
+                    <div key={category} className="space-y-2">
+                      <h3 className="text-sm font-semibold text-primary uppercase">
+                        {category}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {perms.map((perm) => (
+                          <div
+                            key={perm.id}
+                            onClick={() => togglePermission(perm.id)}
+                            className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                              selectedPermissions.includes(perm.id)
+                                ? "bg-primary/10 border-primary"
+                                : "bg-muted/50 border-border hover:border-primary/50"
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <div
+                                className={`mt-0.5 h-4 w-4 rounded border-2 flex items-center justify-center ${
+                                  selectedPermissions.includes(perm.id)
+                                    ? "bg-primary border-primary"
+                                    : "border-gray-300"
+                                }`}
+                              >
+                                {selectedPermissions.includes(perm.id) && (
+                                  <CheckCircle2 className="h-3 w-3 text-white" />
+                                )}
                               </div>
-                            ) : (
-                              <p className="text-xs text-[#D8DEE9]/40">
-                                No permissions assigned
-                              </p>
-                            )}
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-foreground">
+                                  {perm.name.replace(/_/g, " ")}
+                                </p>
+                                {perm.description && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {perm.description}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeleteRole(role.id)}
-                          className="text-[#BF616A] hover:bg-[#BF616A]/20"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        ))}
                       </div>
                     </div>
-                  );
-                })}
+                  ))
+                )}
               </div>
-            )}
+
+              <div className="flex gap-3">
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Creating..." : "Create Role"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowNewRoleForm(false);
+                    setSelectedPermissions([]);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
+      )}
 
-        {/* Quick Access */}
-        <div className="flex gap-4">
-          <Button
-            variant="outline"
-            onClick={() => router.push("/dashboard/team")}
-            className="flex-1"
-          >
-            <User className="h-4 w-4 mr-2" />
-            Manage Employees
-          </Button>
-        </div>
+      {/* Roles List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-foreground flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            Roles ({roles.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {roles.length === 0 ? (
+            <div className="text-center py-12">
+              <Shield className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-muted-foreground">No roles yet</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Create your first role to get started
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {roles.map((role) => {
+                const assignedPermissions = getRolePermissions(role.id);
+                return (
+                  <div
+                    key={role.id}
+                    className="p-4 rounded-lg bg-muted/30 border border-border hover:border-primary/30 transition-all"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-3 flex-1">
+                        <div>
+                          <h3 className="text-base font-semibold text-foreground">
+                            {role.name}
+                          </h3>
+                          {role.description && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {role.description}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold text-primary uppercase">
+                            Permissions ({assignedPermissions.length})
+                          </p>
+                          {assignedPermissions.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {assignedPermissions.map((permId) => {
+                                const perm = permissions.find((p) => p.id === permId);
+                                return perm ? (
+                                  <Badge
+                                    key={permId}
+                                    variant="outline"
+                                    className="bg-primary/5 text-primary border-primary/20"
+                                  >
+                                    {perm.name.replace(/_/g, " ")}
+                                  </Badge>
+                                ) : null;
+                              })}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">
+                              No permissions assigned
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteRole(role.id)}
+                        className="text-red-600 hover:bg-red-50 border-red-200"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Quick Access */}
+      <div className="flex gap-4">
+        <Button
+          variant="outline"
+          onClick={() => router.push("/dashboard/team")}
+          className="flex-1"
+        >
+          <User className="h-4 w-4 mr-2" />
+          Manage Employees
+        </Button>
       </div>
     </div>
   );

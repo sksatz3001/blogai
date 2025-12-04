@@ -47,28 +47,39 @@ export async function POST(request: Request) {
       company = await db.query.companyProfiles.findFirst({ where: eq(companyProfiles.id, Number(companyProfileId)) });
     }
 
-    const sys = `You are a Senior Content Strategist and Expert Blog Creator. Write a complete, SEO-optimized blog as clean semantic HTML according to a provided outline.`;
+    const sys = `You are a world-class SEO Content Strategist and Expert Blog Writer. Your content consistently achieves high SEO scores and ranks well on search engines. You write engaging, authoritative, and valuable content that satisfies E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) criteria.`;
     const outlineText = outline.map((s: any, i: number) => `H2 ${i+1}. ${s.title}${(s.items||[]).length?"\n"+ (s.items||[]).filter((x:any)=>!x.isImage).map((x:any,j:number)=>`  H3 ${i+1}.${j+1}. ${x.title}`).join("\n"):""}`).join("\n");
-    const usr = `Title: ${title}
-Primary Keyword: ${primaryKeyword}
-Secondary Keywords: ${secondaryKeywords.join(", ")}
-Target Word Count: ${targetWordCount}
-Company: ${(company?.companyName) || (dbUser.companyName || "Our Company")}
+    const usr = `Write a comprehensive, SEO-optimized blog article.
 
-OUTLINE (strictly follow):\n${outlineText}
+**ARTICLE DETAILS:**
+- Title: ${title}
+- Primary Keyword: ${primaryKeyword} (use this keyword 5-8 times naturally throughout the content)
+- Secondary Keywords: ${secondaryKeywords.join(", ")} (use each 2-3 times)
+- Target Word Count: ${targetWordCount} words
+- Company/Author: ${(company?.companyName) || (dbUser.companyName || "Our Company")}
 
-OUTPUT RULES:
-- Output ONLY the blog body HTML (no <html>, <head>, <body>)
-- Tags allowed: <h1>, <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <blockquote>, <a>
-- Every paragraph must be <p class="brand-paragraph"> ... </p>
-- Headings must be:
-  <h1 class="brand-primary-heading">, <h2 class="brand-secondary-heading">, <h3 class="brand-accent-heading">
-- Add ids to headings from their text
-- Do NOT include images or placeholders (we will add images separately)
-- Rich, authoritative tone with E-E-A-T, actionable detail
-- Keep keyword density 0.8%–2.5%, use secondary and LSI variations naturally
-- Include a short FAQ H2 with 4–6 H3 Q&A
-- Clean, production-ready HTML only.`;
+**OUTLINE TO FOLLOW:**
+${outlineText}
+
+**SEO REQUIREMENTS (CRITICAL - these affect the SEO score):**
+1. Start with an H1 title containing the primary keyword
+2. Use the primary keyword in the FIRST paragraph (within first 100 words)
+3. Include the primary keyword in at least 2 H2 headings
+4. Use <strong> tags to emphasize the primary keyword at least twice
+5. Include at least 2 bulleted or numbered lists (<ul> or <ol>)
+6. Write at least 6 paragraphs with substantive content
+7. Add a FAQ section with H2 "Frequently Asked Questions" and 4-6 H3 questions (with ? at the end)
+8. Include actionable tips, statistics, or data points where relevant
+9. Write in an authoritative yet accessible tone
+
+**HTML OUTPUT RULES:**
+- Output ONLY the blog body HTML (no <html>, <head>, <body> tags)
+- Allowed tags: <h1>, <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <blockquote>, <a>
+- Every paragraph MUST be: <p class="brand-paragraph">...</p>
+- Headings MUST be: <h1 class="brand-primary-heading">, <h2 class="brand-secondary-heading">, <h3 class="brand-accent-heading">
+- Add id attributes to all headings (slugified from text)
+- Do NOT include images or image placeholders
+- Output clean, production-ready HTML only`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -79,6 +90,11 @@ OUTPUT RULES:
     });
 
     let html = completion.choices[0]?.message?.content || "";
+    // Strip markdown code block markers if present (```html ... ```)
+    html = html
+      .replace(/^\s*```(?:html)?\s*\n?/i, '')
+      .replace(/\n?\s*```\s*$/i, '')
+      .trim();
     // Normalize heading classes and add ids
     html = html
       .replace(/<h1(?![^>]*brand-primary-heading)[^>]*>/gi, '<h1 class="brand-primary-heading">')
@@ -108,7 +124,7 @@ OUTPUT RULES:
         prompts.push({
           type: 'featured',
           after: '', // Will be inserted at the beginning
-          prompt: `${title}. High-quality illustrative header image related to: ${primaryKeyword}.`,
+          prompt: `Professional blog header image for article titled "${title}". High-quality, modern, clean design with visual elements representing ${primaryKeyword}. Style: editorial photography or sleek illustration, vibrant colors, eye-catching composition suitable for social media sharing. No text overlay.`,
         });
       }
       
@@ -129,7 +145,7 @@ OUTPUT RULES:
           prompts.push({
             type: 'section',
             after: h2,
-            prompt: `Illustration for section: ${sec.title}. Context: ${title}. Style: clean, professional blog graphic.`,
+            prompt: `Illustrative image for blog section: "${sec.title}". Context: Article about ${primaryKeyword}. Style: professional, modern, clean graphic or photograph. Visual should complement and enhance the written content. Suitable for web blog post. No text overlay.`,
           });
         }
       });
@@ -204,6 +220,11 @@ OUTPUT RULES:
         const featuredImg = `<div class="featured-image-wrapper" style="margin: 2rem 0;"><img src="${featuredImageUrl}" alt="${title}" style="width: 100%; height: auto; border-radius: 8px;" /></div>`;
         html = featuredImg + html;
         console.log(`Featured image injected at the beginning`);
+        
+        // Update featured image in blog record
+        await db.update(blogs)
+          .set({ featuredImage: featuredImageUrl })
+          .where(eq(blogs.id, blog.id));
       }
       
       // Inject section images after their respective H2s
@@ -213,13 +234,19 @@ OUTPUT RULES:
       }
       
       await db.update(blogs)
-        .set({ content: html, htmlContent: html, updatedAt: new Date() })
+        .set({ content: html, htmlContent: html, status: 'draft', updatedAt: new Date() })
+        .where(eq(blogs.id, blog.id));
+    } else {
+      // No image backend - just update status to draft
+      await db.update(blogs)
+        .set({ status: 'draft', updatedAt: new Date() })
         .where(eq(blogs.id, blog.id));
     }
 
-    return new Response(JSON.stringify({ htmlContent: html }), { status: 200, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ htmlContent: html, success: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (e) {
     console.error("generate-from-outline error", e);
+    // Update status to failed on error
     return new Response("Internal server error", { status: 500 });
   }
 }

@@ -99,10 +99,10 @@ export default function CreateBlogPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-4xl font-bold mb-2 gradient-text">
+        <h1 className="text-4xl font-bold mb-2 text-primary">
           Create New Blog
         </h1>
-        <p className="text-[#D8DEE9]">
+        <p className="text-muted-foreground">
           Let AI help you create amazing, SEO-optimized content
         </p>
       </motion.div>
@@ -115,7 +115,7 @@ export default function CreateBlogPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-[#88C0D0]" />
+              <Sparkles className="h-5 w-5 text-primary" />
               Blog Configuration
             </CardTitle>
             <CardDescription>
@@ -125,14 +125,14 @@ export default function CreateBlogPage() {
           <CardContent className="space-y-6">
             {/* Company Profile Selection */}
             <div className="space-y-2">
-              <Label className="text-base text-[#ECEFF4] flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-[#88C0D0]" />
+              <Label className="text-base text-foreground flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-primary" />
                 Company Profile
               </Label>
               <select
                 value={formData.companyProfileId}
                 onChange={(e) => setFormData({ ...formData, companyProfileId: e.target.value })}
-                className="w-full h-12 px-4 rounded-lg bg-[#3B4252] border-2 border-[#434C5E] text-[#ECEFF4] focus:outline-none focus:border-[#88C0D0] cursor-pointer"
+                className="w-full h-12 px-4 rounded-lg bg-white border-2 border-border text-foreground focus:outline-none focus:border-primary cursor-pointer"
                 disabled={loadingProfiles}
               >
                 <option value="self">Self (Your Company)</option>
@@ -142,7 +142,7 @@ export default function CreateBlogPage() {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-[#D8DEE9]/60">
+              <p className="text-xs text-muted-foreground">
                 {formData.companyProfileId === "self" 
                   ? "Creating blog for your own company" 
                   : "Creating blog for a client company"}
@@ -150,22 +150,22 @@ export default function CreateBlogPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="title" className="text-base text-[#ECEFF4]">
-                Blog Title <span className="text-[#BF616A]">*</span>
+              <Label htmlFor="title" className="text-base text-foreground">
+                Blog Title <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="title"
                 placeholder="10 Best Practices for Modern Web Development"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="h-12 bg-[#3B4252] border-[#434C5E] text-[#ECEFF4] placeholder:text-[#4C566A] focus:border-[#88C0D0] focus:ring-[#88C0D0] text-lg"
+                className="h-12 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary text-lg"
               />
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="primaryKeyword" className="text-base text-[#ECEFF4]">
-                  Primary Keyword <span className="text-[#BF616A]">*</span>
+                <Label htmlFor="primaryKeyword" className="text-base text-foreground">
+                  Primary Keyword <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="primaryKeyword"
@@ -174,12 +174,12 @@ export default function CreateBlogPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, primaryKeyword: e.target.value })
                   }
-                  className="h-11 bg-[#3B4252] border-[#434C5E] text-[#ECEFF4] placeholder:text-[#4C566A] focus:border-[#88C0D0] focus:ring-[#88C0D0]"
+                  className="h-11 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="wordCount" className="text-base text-[#ECEFF4]">
+                <Label htmlFor="wordCount" className="text-base text-foreground">
                   Target Word Count
                 </Label>
                 <Input
@@ -192,15 +192,15 @@ export default function CreateBlogPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, wordCount: e.target.value })
                   }
-                  className="h-11 bg-[#3B4252] border-[#434C5E] text-[#ECEFF4] placeholder:text-[#4C566A] focus:border-[#88C0D0] focus:ring-[#88C0D0]"
+                  className="h-11 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="secondaryKeywords" className="text-base text-[#ECEFF4]">
+              <Label htmlFor="secondaryKeywords" className="text-base text-foreground">
                 Secondary Keywords
-                <span className="text-sm text-[#D8DEE9] ml-2">
+                <span className="text-sm text-muted-foreground ml-2">
                   (comma-separated)
                 </span>
               </Label>
@@ -211,7 +211,7 @@ export default function CreateBlogPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, secondaryKeywords: e.target.value })
                 }
-                className="h-11 bg-[#3B4252] border-[#434C5E] text-[#ECEFF4] placeholder:text-[#4C566A] focus:border-[#88C0D0] focus:ring-[#88C0D0]"
+                className="h-11 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
               />
             </div>
 
@@ -245,12 +245,12 @@ export default function CreateBlogPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="glass p-5 rounded-xl border-2 border-[#88C0D0]/20"
+          className="bg-white p-5 rounded-xl border border-border shadow-sm"
         >
-          <h3 className="font-semibold text-[#88C0D0] mb-1">
+          <h3 className="font-semibold text-primary mb-1">
             AI Generation
           </h3>
-          <p className="text-sm text-[#D8DEE9]">
+          <p className="text-sm text-muted-foreground">
             Watch your blog being written in real-time with smooth animations
           </p>
         </motion.div>
@@ -259,12 +259,12 @@ export default function CreateBlogPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="glass p-5 rounded-xl border-2 border-[#D08770]/20"
+          className="bg-white p-5 rounded-xl border border-border shadow-sm"
         >
-          <h3 className="font-semibold text-[#D08770] mb-1">
+          <h3 className="font-semibold text-orange-500 mb-1">
             Auto Images
           </h3>
-          <p className="text-sm text-[#D8DEE9]">
+          <p className="text-sm text-muted-foreground">
             AI will automatically generate and place relevant images
           </p>
         </motion.div>
@@ -273,12 +273,12 @@ export default function CreateBlogPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="glass p-5 rounded-xl border-2 border-[#88C0D0]/20"
+          className="bg-white p-5 rounded-xl border border-border shadow-sm"
         >
-          <h3 className="font-semibold text-[#88C0D0] mb-1">
+          <h3 className="font-semibold text-primary mb-1">
             SEO Optimized
           </h3>
-          <p className="text-sm text-[#D8DEE9]">
+          <p className="text-sm text-muted-foreground">
             Get comprehensive SEO metrics and optimization suggestions
           </p>
         </motion.div>

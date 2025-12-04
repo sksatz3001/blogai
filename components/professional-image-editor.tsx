@@ -64,6 +64,8 @@ export function ProfessionalImageEditor({
   const containerRef = useRef<HTMLDivElement>(null);
   const originalImageRef = useRef<string>(imageSrc);
   const originalImageScaleRef = useRef<number>(1);
+  // Store original image dimensions for proper export
+  const originalImageDimensionsRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 });
 
   useEffect(() => {
     setMounted(true);
@@ -91,12 +93,17 @@ export function ProfessionalImageEditor({
         fabricCanvasRef.current = canvas;
 
         fabric.Image.fromURL(imageSrc, (img: any) => {
+          // Store original image dimensions BEFORE scaling
+          const originalWidth = img.width!;
+          const originalHeight = img.height!;
+          originalImageDimensionsRef.current = { width: originalWidth, height: originalHeight };
+          
           const scale = Math.min(
-            (canvas.width! - 100) / img.width!,
-            (canvas.height! - 100) / img.height!
+            (canvas.width! - 100) / originalWidth,
+            (canvas.height! - 100) / originalHeight
           );
           
-          // Store the original scale for later use
+          // Store the scale for reference
           originalImageScaleRef.current = scale;
           
           img.scale(scale);
@@ -106,6 +113,9 @@ export function ProfessionalImageEditor({
             originX: 'center',
             originY: 'center',
             selectable: false,
+            // Store original dimensions as custom properties
+            originalWidth: originalWidth,
+            originalHeight: originalHeight,
           });
           
           canvas.add(img);
@@ -486,11 +496,68 @@ export function ProfessionalImageEditor({
     
     setSaving(true);
     try {
-      const dataURL = canvas.toDataURL({
-        format: 'png',
-        quality: 1,
-        multiplier: 2,
-      });
+      // Get original image dimensions
+      const originalWidth = originalImageDimensionsRef.current.width;
+      const originalHeight = originalImageDimensionsRef.current.height;
+      
+      // Find the main image object
+      const objects = canvas.getObjects();
+      const imageObj = objects.find((obj: any) => obj.type === 'image');
+      
+      let dataURL: string;
+      
+      if (imageObj && originalWidth > 0 && originalHeight > 0) {
+        // Get the current scale of the displayed image
+        const currentScale = imageObj.scaleX || 1;
+        
+        // Calculate the displayed image dimensions on the canvas
+        const displayedWidth = originalWidth * currentScale;
+        const displayedHeight = originalHeight * currentScale;
+        
+        // Get the image position (center-based)
+        const imgLeft = imageObj.left || canvas.getWidth() / 2;
+        const imgTop = imageObj.top || canvas.getHeight() / 2;
+        
+        // Calculate top-left corner of the image on the canvas
+        const cropLeft = imgLeft - displayedWidth / 2;
+        const cropTop = imgTop - displayedHeight / 2;
+        
+        // Calculate the multiplier needed to export at original resolution
+        const multiplier = 1 / currentScale;
+        
+        // Clamp multiplier to reasonable bounds (between 1x and 6x to avoid memory issues)
+        const clampedMultiplier = Math.max(1, Math.min(multiplier, 6));
+        
+        console.log('Export info:', {
+          originalWidth,
+          originalHeight,
+          currentScale,
+          displayedWidth,
+          displayedHeight,
+          cropLeft,
+          cropTop,
+          multiplier: clampedMultiplier,
+        });
+        
+        // Export only the image area, not the entire canvas
+        dataURL = canvas.toDataURL({
+          format: 'png',
+          quality: 1,
+          multiplier: clampedMultiplier,
+          left: cropLeft,
+          top: cropTop,
+          width: displayedWidth,
+          height: displayedHeight,
+        });
+      } else {
+        // Fallback: export at 2x canvas size for reasonable quality
+        console.log('Fallback export: no original dimensions stored');
+        dataURL = canvas.toDataURL({
+          format: 'png',
+          quality: 1,
+          multiplier: 2,
+        });
+      }
       
       await onSave(dataURL);
       toast.success("Changes applied successfully!");
@@ -558,11 +625,11 @@ export function ProfessionalImageEditor({
 
   const modalContent = (
     <div
-      className="fixed inset-0 bg-black/95 flex items-center justify-center z-[9999]"
+      className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999]"
       onClick={onClose}
     >
       <div
-        className="w-[98vw] h-[98vh] bg-white dark:bg-slate-900 rounded-xl overflow-hidden flex flex-col shadow-2xl"
+        className="w-[98vw] h-[98vh] bg-white rounded-xl overflow-hidden flex flex-col shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -594,24 +661,24 @@ export function ProfessionalImageEditor({
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Toolbar */}
-          <div className="w-72 bg-gray-50 dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 p-4 overflow-y-auto">
+          <div className="w-72 bg-gray-50 border-r border-gray-200 p-4 overflow-y-auto">
             <div className="space-y-2">
               {[
-                { icon: Wand2, tool: 'ai' as Tool, label: 'AI Edit', color: 'purple' },
-                { icon: Move, tool: 'select' as Tool, label: 'Select & Move', color: 'blue' },
-                { icon: Brush, tool: 'draw' as Tool, label: 'Draw', color: 'green' },
-                { icon: Type, tool: 'text' as Tool, label: 'Add Text', color: 'orange' },
-                { icon: Square, tool: 'shape' as Tool, label: 'Shapes', color: 'pink' },
-                { icon: Sliders, tool: 'filter' as Tool, label: 'Filters', color: 'indigo' },
-                { icon: Maximize2, tool: 'resize' as Tool, label: 'Resize', color: 'cyan' },
-              ].map(({ icon: Icon, tool, label, color }) => (
+                { icon: Wand2, tool: 'ai' as Tool, label: 'AI Edit', bgActive: 'bg-purple-500' },
+                { icon: Move, tool: 'select' as Tool, label: 'Select & Move', bgActive: 'bg-blue-500' },
+                { icon: Brush, tool: 'draw' as Tool, label: 'Draw', bgActive: 'bg-green-500' },
+                { icon: Type, tool: 'text' as Tool, label: 'Add Text', bgActive: 'bg-orange-500' },
+                { icon: Square, tool: 'shape' as Tool, label: 'Shapes', bgActive: 'bg-pink-500' },
+                { icon: Sliders, tool: 'filter' as Tool, label: 'Filters', bgActive: 'bg-indigo-500' },
+                { icon: Maximize2, tool: 'resize' as Tool, label: 'Resize', bgActive: 'bg-cyan-500' },
+              ].map(({ icon: Icon, tool, label, bgActive }) => (
                 <button
                   key={tool}
                   onClick={() => handleToolChange(tool)}
                   className={`w-full px-4 py-3 rounded-lg flex items-center gap-3 transition-all font-medium ${
                     activeTool === tool
-                      ? `bg-${color}-500 text-white shadow-lg`
-                      : 'bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-600'
+                      ? `${bgActive} text-white shadow-lg`
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                   }`}
                 >
                   <Icon size={20} />
@@ -620,11 +687,11 @@ export function ProfessionalImageEditor({
               ))}
             </div>
 
-            <div className="h-px bg-gray-200 dark:bg-slate-700 my-4" />
+            <div className="h-px bg-gray-200 my-4" />
 
             {/* Quick Actions */}
             <div className="space-y-2">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Quick Actions</h3>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-2">
                 <Button onClick={() => handleRotate(90)} variant="outline" size="sm" className="w-full">
                   <RotateCw size={14} className="mr-1" />
@@ -638,7 +705,7 @@ export function ProfessionalImageEditor({
                   <FlipVertical size={14} className="mr-1" />
                   Flip V
                 </Button>
-                <Button onClick={handleDelete} variant="outline" size="sm" className="w-full text-red-600">
+                <Button onClick={handleDelete} variant="outline" size="sm" className="w-full text-red-600 hover:text-red-700 hover:bg-red-50">
                   <Scissors size={14} className="mr-1" />
                   Delete
                 </Button>
@@ -647,14 +714,14 @@ export function ProfessionalImageEditor({
           </div>
 
           {/* Canvas Area */}
-          <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-100 to-gray-200 dark:from-slate-800 dark:to-slate-900">
+          <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-100 to-gray-200">
             {/* Top Toolbar */}
-            <div className="h-14 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between px-4">
+            <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4">
               <div className="flex items-center gap-2">
                 <Button onClick={handleUndo} variant="ghost" size="sm">
                   <Undo2 size={18} />
                 </Button>
-                <div className="w-px h-6 bg-gray-300 dark:bg-slate-600 mx-1" />
+                <div className="w-px h-6 bg-gray-300 mx-1" />
                 <Button onClick={() => handleZoom(true)} variant="ghost" size="sm">
                   <ZoomIn size={18} />
                 </Button>
@@ -666,7 +733,7 @@ export function ProfessionalImageEditor({
               {/* Color Picker */}
               {(activeTool === 'draw' || activeTool === 'text' || activeTool === 'shape') && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Color:</span>
+                  <span className="text-sm font-medium text-gray-700">Color:</span>
                   <div className="relative">
                     <button
                       onClick={() => setShowColorPicker(!showColorPicker)}
@@ -674,11 +741,11 @@ export function ProfessionalImageEditor({
                       style={{ backgroundColor: color }}
                     />
                     {showColorPicker && (
-                      <div className="absolute top-12 right-0 z-50 bg-white dark:bg-slate-800 p-3 rounded-lg shadow-xl border">
+                      <div className="absolute top-12 right-0 z-50 bg-white p-3 rounded-lg shadow-xl border border-gray-200">
                         <HexColorPicker color={color} onChange={setColor} />
                         <button 
                           onClick={() => setShowColorPicker(false)}
-                          className="mt-2 w-full px-3 py-1 bg-gray-100 dark:bg-slate-700 rounded text-sm"
+                          className="mt-2 w-full px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm text-gray-700"
                         >
                           Close
                         </button>
@@ -692,10 +759,10 @@ export function ProfessionalImageEditor({
             {/* Canvas */}
             <div ref={containerRef} className="flex-1 flex items-center justify-center p-8 relative">
               {loading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-slate-900/80 z-10">
+                <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
                   <div className="flex flex-col items-center gap-4">
                     <Loader2 size={48} className="text-blue-500 animate-spin" />
-                    <p className="text-gray-700 dark:text-gray-300 font-medium">Loading editor...</p>
+                    <p className="text-gray-700 font-medium">Loading editor...</p>
                   </div>
                 </div>
               )}
@@ -704,16 +771,16 @@ export function ProfessionalImageEditor({
           </div>
 
           {/* Right Panel - Tool Options */}
-          <div className="w-80 bg-white dark:bg-slate-800 border-l border-gray-200 dark:border-slate-700 p-6 overflow-y-auto">
+          <div className="w-80 bg-white border-l border-gray-200 p-6 overflow-y-auto">
             {/* AI Edit Panel */}
             {activeTool === 'ai' && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Wand2 className="text-purple-500" size={24} />
-                  <h3 className="text-lg font-bold">AI Image Edit</h3>
+                  <h3 className="text-lg font-bold text-gray-900">AI Image Edit</h3>
                 </div>
                 
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-600">
                   Describe how you want to modify this image
                 </p>
                 
@@ -721,7 +788,7 @@ export function ProfessionalImageEditor({
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
                   placeholder="E.g., make it brighter, add sunlight, change background to beach, make colors more vibrant..."
-                  className="w-full p-3 border-2 border-gray-300 dark:border-slate-600 rounded-lg text-sm resize-none min-h-[140px] focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 bg-white dark:bg-slate-700"
+                  className="w-full p-3 border-2 border-gray-200 rounded-lg text-sm resize-none min-h-[140px] focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 bg-white text-gray-900 placeholder:text-gray-400"
                   disabled={isAiEditing}
                 />
                 
@@ -744,9 +811,9 @@ export function ProfessionalImageEditor({
                   )}
                 </Button>
 
-                <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                  <h4 className="text-sm font-semibold text-purple-700 dark:text-purple-300 mb-2">💡 Examples:</h4>
-                  <ul className="text-xs text-purple-600 dark:text-purple-400 space-y-1">
+                <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                  <h4 className="text-sm font-semibold text-purple-700 mb-2">💡 Examples:</h4>
+                  <ul className="text-xs text-purple-600 space-y-1">
                     <li>• &quot;Make it brighter and add warmth&quot;</li>
                     <li>• &quot;Change background to sunset&quot;</li>
                     <li>• &quot;Add professional lighting&quot;</li>
@@ -759,16 +826,16 @@ export function ProfessionalImageEditor({
             {/* Draw Panel */}
             {activeTool === 'draw' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-bold">Brush Settings</h3>
+                <h3 className="text-lg font-bold text-gray-900">Brush Settings</h3>
                 <div>
-                  <label className="text-sm font-medium block mb-2">Brush Size: {brushSize}px</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">Brush Size: {brushSize}px</label>
                   <input
                     type="range"
                     min="1"
                     max="50"
                     value={brushSize}
                     onChange={(e) => setBrushSize(parseInt(e.target.value))}
-                    className="w-full"
+                    className="w-full accent-blue-500"
                   />
                 </div>
               </div>
@@ -777,14 +844,14 @@ export function ProfessionalImageEditor({
             {/* Text Panel */}
             {activeTool === 'text' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-bold">Text Settings</h3>
+                <h3 className="text-lg font-bold text-gray-900">Text Settings</h3>
                 
                 <div>
-                  <label className="text-sm font-medium block mb-2">Font Family</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">Font Family</label>
                   <select
                     value={fontFamily}
                     onChange={(e) => setFontFamily(e.target.value)}
-                    className="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
+                    className="w-full p-2 border border-gray-200 rounded-lg bg-white text-gray-900"
                   >
                     <option value="Arial">Arial</option>
                     <option value="Helvetica">Helvetica</option>
@@ -800,19 +867,19 @@ export function ProfessionalImageEditor({
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium block mb-2">Font Size: {fontSize}px</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">Font Size: {fontSize}px</label>
                   <input
                     type="range"
                     min="12"
                     max="120"
                     value={fontSize}
                     onChange={(e) => setFontSize(parseInt(e.target.value))}
-                    className="w-full"
+                    className="w-full accent-blue-500"
                   />
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium block mb-2">Text Style</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">Text Style</label>
                   <div className="grid grid-cols-3 gap-2">
                     <Button
                       onClick={() => setTextBold(!textBold)}
@@ -851,7 +918,7 @@ export function ProfessionalImageEditor({
             {/* Shape Panel */}
             {activeTool === 'shape' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-bold">Add Shapes</h3>
+                <h3 className="text-lg font-bold text-gray-900">Add Shapes</h3>
                 <div className="grid grid-cols-2 gap-2">
                   <Button onClick={() => addShape('rect')} variant="outline" className="h-20 flex-col">
                     <Square size={24} className="mb-2" />
@@ -884,10 +951,10 @@ export function ProfessionalImageEditor({
             {/* Filter Panel */}
             {activeTool === 'filter' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-bold">Filters & Adjustments</h3>
+                <h3 className="text-lg font-bold text-gray-900">Filters & Adjustments</h3>
                 
                 <div>
-                  <label className="text-sm font-medium block mb-2">Photo Filters</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">Photo Filters</label>
                   <div className="grid grid-cols-2 gap-2 mb-4">
                     {[
                       { name: 'None', value: 'none' },
@@ -915,57 +982,57 @@ export function ProfessionalImageEditor({
                   </div>
                 </div>
                 
-                <div className="h-px bg-gray-200 dark:bg-slate-700 my-4" />
+                <div className="h-px bg-gray-200 my-4" />
                 
                 <div>
-                  <label className="text-sm font-medium block mb-2">Manual Adjustments</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">Manual Adjustments</label>
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium block mb-2">Brightness: {brightness}</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">Brightness: {brightness}</label>
                   <input
                     type="range"
                     min="-100"
                     max="100"
                     value={brightness}
                     onChange={(e) => setBrightness(parseInt(e.target.value))}
-                    className="w-full"
+                    className="w-full accent-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium block mb-2">Contrast: {contrast}</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">Contrast: {contrast}</label>
                   <input
                     type="range"
                     min="-100"
                     max="100"
                     value={contrast}
                     onChange={(e) => setContrast(parseInt(e.target.value))}
-                    className="w-full"
+                    className="w-full accent-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium block mb-2">Saturation: {saturation}</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">Saturation: {saturation}</label>
                   <input
                     type="range"
                     min="-100"
                     max="100"
                     value={saturation}
                     onChange={(e) => setSaturation(parseInt(e.target.value))}
-                    className="w-full"
+                    className="w-full accent-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium block mb-2">Blur: {blur}</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">Blur: {blur}</label>
                   <input
                     type="range"
                     min="0"
                     max="100"
                     value={blur}
                     onChange={(e) => setBlur(parseInt(e.target.value))}
-                    className="w-full"
+                    className="w-full accent-blue-500"
                   />
                 </div>
 
@@ -988,8 +1055,8 @@ export function ProfessionalImageEditor({
             {/* Resize Panel */}
             {activeTool === 'resize' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-bold">Resize Image</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Choose a preset size:</p>
+                <h3 className="text-lg font-bold text-gray-900">Resize Image</h3>
+                <p className="text-sm text-gray-600">Choose a preset size:</p>
                 <div className="space-y-2">
                   {SIZE_PRESETS.map((preset) => (
                     <Button

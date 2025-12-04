@@ -231,324 +231,312 @@ export default function EmployeeManagementClient() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1E222A] p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-[#ECEFF4] flex items-center gap-3">
-              <Users className="h-8 w-8 text-[#88C0D0]" />
-              Team Management
-            </h1>
-            <p className="text-[#D8DEE9]/70 mt-2">
-              Manage employees, roles, and permissions
-            </p>
-          </div>
-
-          <Button
-            onClick={() => setShowNewEmployeeForm(!showNewEmployeeForm)}
-            className="bg-gradient-to-r from-[#88C0D0] to-[#8FBCBB]"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Employee
-          </Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
+            <Users className="h-6 w-6 text-primary" />
+            Team Management
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Manage employees, roles, and permissions
+          </p>
         </div>
 
-        {/* Notifications */}
-        {success && (
-          <div className="glass p-4 rounded-xl border-2 border-[#A3BE8C] bg-[#A3BE8C]/10 flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-[#A3BE8C]" />
-            <span className="text-[#A3BE8C]">{success}</span>
-          </div>
-        )}
+        <Button onClick={() => setShowNewEmployeeForm(!showNewEmployeeForm)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Employee
+        </Button>
+      </div>
 
-        {error && (
-          <div className="glass p-4 rounded-xl border-2 border-[#BF616A] bg-[#BF616A]/10 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-[#BF616A]" />
-            <span className="text-[#BF616A]">{error}</span>
-          </div>
-        )}
+      {/* Notifications */}
+      {success && (
+        <div className="p-4 rounded-lg border border-green-200 bg-green-50 flex items-center gap-3">
+          <CheckCircle2 className="h-5 w-5 text-green-600" />
+          <span className="text-green-700">{success}</span>
+        </div>
+      )}
 
-        {/* New Employee Form */}
-        {showNewEmployeeForm && (
-          <Card className="glass border-2 border-[#3B4252]">
-            <CardHeader>
-              <CardTitle className="text-[#ECEFF4] flex items-center gap-2">
-                <Plus className="h-5 w-5 text-[#88C0D0]" />
-                Create New Employee
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCreateEmployee} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username *</Label>
-                    <Input
-                      id="username"
-                      value={newEmployee.username}
-                      onChange={(e) =>
-                        setNewEmployee({ ...newEmployee, username: e.target.value })
-                      }
-                      placeholder="employee123"
-                      required
-                      className="bg-[#2E3440]/50 border-[#3B4252]"
-                    />
-                  </div>
+      {error && (
+        <div className="p-4 rounded-lg border border-red-200 bg-red-50 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-red-600" />
+          <span className="text-red-700">{error}</span>
+        </div>
+      )}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password *</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={newEmployee.password}
-                      onChange={(e) =>
-                        setNewEmployee({ ...newEmployee, password: e.target.value })
-                      }
-                      placeholder="••••••••"
-                      required
-                      className="bg-[#2E3440]/50 border-[#3B4252]"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name *</Label>
-                    <Input
-                      id="fullName"
-                      value={newEmployee.fullName}
-                      onChange={(e) =>
-                        setNewEmployee({ ...newEmployee, fullName: e.target.value })
-                      }
-                      placeholder="John Doe"
-                      required
-                      className="bg-[#2E3440]/50 border-[#3B4252]"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={newEmployee.email}
-                      onChange={(e) =>
-                        setNewEmployee({ ...newEmployee, email: e.target.value })
-                      }
-                      placeholder="john@example.com"
-                      className="bg-[#2E3440]/50 border-[#3B4252]"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="roleId">Role</Label>
-                    <select
-                      id="roleId"
-                      value={newEmployee.roleId}
-                      onChange={(e) =>
-                        setNewEmployee({ ...newEmployee, roleId: e.target.value })
-                      }
-                      className="w-full px-4 py-3 rounded-lg bg-[#2E3440]/50 border-2 border-[#3B4252] text-[#ECEFF4] focus:outline-none focus:border-[#88C0D0]"
-                    >
-                      <option value="">No Role</option>
-                      {roles.map((role) => (
-                        <option key={role.id} value={role.id}>
-                          {role.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Creating..." : "Create Employee"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowNewEmployeeForm(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Employees List */}
-        <Card className="glass border-2 border-[#3B4252]">
+      {/* New Employee Form */}
+      {showNewEmployeeForm && (
+        <Card>
           <CardHeader>
-            <CardTitle className="text-[#ECEFF4] flex items-center gap-2">
-              <Users className="h-5 w-5 text-[#88C0D0]" />
-              Employees ({employees.length})
+            <CardTitle className="text-foreground flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Create New Employee
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {employees.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="h-12 w-12 text-[#4C566A] mx-auto mb-4" />
-                <p className="text-[#D8DEE9]/60">No employees yet</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {employees.map((employee) => (
-                  <div
-                    key={employee.id}
-                    className="p-4 rounded-xl bg-[#2E3440]/30 border-2 border-[#3B4252] hover:border-[#88C0D0]/50 transition-all"
+            <form onSubmit={handleCreateEmployee} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username *</Label>
+                  <Input
+                    id="username"
+                    value={newEmployee.username}
+                    onChange={(e) =>
+                      setNewEmployee({ ...newEmployee, username: e.target.value })
+                    }
+                    placeholder="employee123"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password *</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={newEmployee.password}
+                    onChange={(e) =>
+                      setNewEmployee({ ...newEmployee, password: e.target.value })
+                    }
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name *</Label>
+                  <Input
+                    id="fullName"
+                    value={newEmployee.fullName}
+                    onChange={(e) =>
+                      setNewEmployee({ ...newEmployee, fullName: e.target.value })
+                    }
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={newEmployee.email}
+                    onChange={(e) =>
+                      setNewEmployee({ ...newEmployee, email: e.target.value })
+                    }
+                    placeholder="john@example.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="roleId">Role</Label>
+                  <select
+                    id="roleId"
+                    value={newEmployee.roleId}
+                    onChange={(e) =>
+                      setNewEmployee({ ...newEmployee, roleId: e.target.value })
+                    }
+                    className="w-full px-4 py-2 rounded-lg bg-background border border-border text-foreground focus:outline-none focus:border-primary"
                   >
-                    {editingEmployee?.id === employee.id ? (
-                      <form onSubmit={handleUpdateEmployee} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Full Name</Label>
-                            <Input
-                              value={editForm.fullName}
-                              onChange={(e) =>
-                                setEditForm({ ...editForm, fullName: e.target.value })
-                              }
-                              className="bg-[#2E3440]/50 border-[#3B4252]"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label>Email</Label>
-                            <Input
-                              type="email"
-                              value={editForm.email}
-                              onChange={(e) =>
-                                setEditForm({ ...editForm, email: e.target.value })
-                              }
-                              className="bg-[#2E3440]/50 border-[#3B4252]"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label>Role</Label>
-                            <select
-                              value={editForm.roleId}
-                              onChange={(e) =>
-                                setEditForm({ ...editForm, roleId: e.target.value })
-                              }
-                              className="w-full px-4 py-3 rounded-lg bg-[#2E3440]/50 border-2 border-[#3B4252] text-[#ECEFF4] focus:outline-none focus:border-[#88C0D0]"
-                            >
-                              <option value="">No Role</option>
-                              {roles.map((role) => (
-                                <option key={role.id} value={role.id}>
-                                  {role.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label>New Password (leave blank to keep current)</Label>
-                            <Input
-                              type="password"
-                              value={editForm.newPassword}
-                              onChange={(e) =>
-                                setEditForm({ ...editForm, newPassword: e.target.value })
-                              }
-                              placeholder="••••••••"
-                              className="bg-[#2E3440]/50 border-[#3B4252]"
-                            />
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              id={`active-${employee.id}`}
-                              checked={editForm.isActive}
-                              onChange={(e) =>
-                                setEditForm({ ...editForm, isActive: e.target.checked })
-                              }
-                              className="rounded"
-                            />
-                            <Label htmlFor={`active-${employee.id}`}>Active</Label>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                          <Button type="submit" size="sm" disabled={loading}>
-                            Save Changes
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setEditingEmployee(null)}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      </form>
-                    ) : (
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2 flex-1">
-                          <div className="flex items-center gap-3">
-                            <h3 className="text-lg font-semibold text-[#ECEFF4]">
-                              {employee.fullName}
-                            </h3>
-                            {employee.isActive ? (
-                              <Badge variant="outline" className="bg-[#A3BE8C]/10 text-[#A3BE8C] border-[#A3BE8C] font-semibold">
-                                Active
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="bg-[#BF616A]/10 text-[#BF616A] border-[#BF616A] font-semibold">
-                                Inactive
-                              </Badge>
-                            )}
-                          </div>
-
-                          <div className="flex flex-wrap gap-4 text-sm text-[#D8DEE9]/70">
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4" />
-                              {employee.username}
-                            </div>
-                            {employee.email && (
-                              <div className="flex items-center gap-2">
-                                <Mail className="h-4 w-4" />
-                                {employee.email}
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2">
-                              <Shield className="h-4 w-4" />
-                              {getRoleName(employee.roleId)}
-                            </div>
-                            {employee.lastLogin && (
-                              <div className="flex items-center gap-2">
-                                <Activity className="h-4 w-4" />
-                                Last login: {new Date(employee.lastLogin).toLocaleDateString()}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => startEdit(employee)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteEmployee(employee.id)}
-                            className="text-[#BF616A] hover:bg-[#BF616A]/20"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                    <option value="">No Role</option>
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            )}
+
+              <div className="flex gap-3">
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Creating..." : "Create Employee"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowNewEmployeeForm(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
-      </div>
+      )}
+
+      {/* Employees List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-foreground flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            Employees ({employees.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {employees.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-muted-foreground">No employees yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {employees.map((employee) => (
+                <div
+                  key={employee.id}
+                  className="p-4 rounded-lg bg-muted/30 border border-border hover:border-primary/30 transition-all"
+                >
+                  {editingEmployee?.id === employee.id ? (
+                    <form onSubmit={handleUpdateEmployee} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Full Name</Label>
+                          <Input
+                            value={editForm.fullName}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, fullName: e.target.value })
+                            }
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Email</Label>
+                          <Input
+                            type="email"
+                            value={editForm.email}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, email: e.target.value })
+                            }
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Role</Label>
+                          <select
+                            value={editForm.roleId}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, roleId: e.target.value })
+                            }
+                            className="w-full px-4 py-2 rounded-lg bg-background border border-border text-foreground focus:outline-none focus:border-primary"
+                          >
+                            <option value="">No Role</option>
+                            {roles.map((role) => (
+                              <option key={role.id} value={role.id}>
+                                {role.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>New Password (leave blank to keep current)</Label>
+                          <Input
+                            type="password"
+                            value={editForm.newPassword}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, newPassword: e.target.value })
+                            }
+                            placeholder="••••••••"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`active-${employee.id}`}
+                            checked={editForm.isActive}
+                            onChange={(e) =>
+                              setEditForm({ ...editForm, isActive: e.target.checked })
+                            }
+                            className="rounded"
+                          />
+                          <Label htmlFor={`active-${employee.id}`}>Active</Label>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <Button type="submit" size="sm" disabled={loading}>
+                          Save Changes
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingEmployee(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-base font-semibold text-foreground">
+                            {employee.fullName}
+                          </h3>
+                          {employee.isActive ? (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              Active
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                              Inactive
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            {employee.username}
+                          </div>
+                          {employee.email && (
+                            <div className="flex items-center gap-2">
+                              <Mail className="h-4 w-4" />
+                              {employee.email}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
+                            {getRoleName(employee.roleId)}
+                          </div>
+                          {employee.lastLogin && (
+                            <div className="flex items-center gap-2">
+                              <Activity className="h-4 w-4" />
+                              Last login: {new Date(employee.lastLogin).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => startEdit(employee)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteEmployee(employee.id)}
+                          className="text-red-600 hover:bg-red-50 border-red-200"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

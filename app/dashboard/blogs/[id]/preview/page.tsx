@@ -68,13 +68,13 @@ export default async function PreviewBlogPage({
       {/* Blog Preview */}
       <article className="rounded-2xl border bg-card shadow-sm overflow-hidden">
         {/* Article Header */}
-        <div className="border-b bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 px-8 py-10">
+        <div className="border-b bg-gradient-to-r from-blue-50 to-purple-50 px-8 py-10">
           <div className="max-w-3xl">
             <div className="flex items-start justify-between gap-4">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
                 {blog.title}
               </h1>
-              <span className={`inline-flex h-6 items-center rounded-full border px-2 text-xs font-medium ${blog.status === 'published' ? 'border-green-500 text-green-600 dark:text-green-400' : 'border-amber-500 text-amber-600 dark:text-amber-400'}`}>
+              <span className={`inline-flex h-6 items-center rounded-full border px-2 text-xs font-medium ${blog.status === 'published' ? 'border-green-500 text-green-600' : 'border-amber-500 text-amber-600'}`}>
                 {blog.status === 'published' ? 'Saved' : 'Draft'}
               </span>
             </div>
@@ -102,7 +102,7 @@ export default async function PreviewBlogPage({
         <div className="px-8 py-12">
           {blog.htmlContent || blog.content ? (
             <div
-              className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-h2:text-3xl prose-h2:mt-10 prose-h2:mb-5 prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4 prose-p:leading-relaxed prose-p:mb-6 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-strong:font-semibold prose-img:rounded-xl prose-img:shadow-md"
+              className="prose prose-lg max-w-none prose-headings:font-bold prose-h2:text-3xl prose-h2:mt-10 prose-h2:mb-5 prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4 prose-p:leading-relaxed prose-p:mb-6 prose-a:text-blue-600 prose-strong:font-semibold prose-img:rounded-xl prose-img:shadow-md"
               dangerouslySetInnerHTML={{
                 __html: blog.htmlContent || blog.content || "",
               }}
@@ -127,7 +127,7 @@ export default async function PreviewBlogPage({
           <div className="border-t bg-muted/30 px-8 py-6">
             <div className="flex flex-wrap gap-2">
               <span className="text-sm text-muted-foreground">Keywords:</span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                 {blog.primaryKeyword}
               </span>
               {blog.secondaryKeywords && Array.isArray(blog.secondaryKeywords) && blog.secondaryKeywords.map((keyword: string, index: number) => (
@@ -173,7 +173,7 @@ export default async function PreviewBlogPage({
             ) : null}
             {blog.aeoScore !== null && blog.aeoScore !== undefined && (
               <div className="text-center p-5 rounded-xl border bg-muted/30">
-                <div className="text-3xl font-bold text-[hsl(var(--secondary))]">
+                <div className="text-3xl font-bold text-blue-500">
                   {blog.aeoScore}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1">
@@ -184,7 +184,7 @@ export default async function PreviewBlogPage({
             )}
             {blog.geoScore !== null && blog.geoScore !== undefined && (
               <div className="text-center p-5 rounded-xl border bg-muted/30">
-                <div className="text-3xl font-bold text-[hsl(var(--accent))]">
+                <div className="text-3xl font-bold text-purple-500">
                   {blog.geoScore}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1 inline-flex items-center gap-1">

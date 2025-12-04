@@ -4,62 +4,63 @@
 
 @layer base {
   :root {
-    /* Default Dark Theme — primary teal + secondary violet */
-    color-scheme: dark;
-    --background: 222 44% 6%;          /* Deep navy canvas */
-    --foreground: 215 40% 96%;         /* High-contrast text */
-    --card: 222 40% 12%;
-    --card-foreground: 215 40% 96%;
-    --popover: 223 38% 14%;
-    --popover-foreground: 215 40% 96%;
-    --primary: 168 78% 52%;            /* Vibrant teal */
-    --primary-foreground: 222 60% 8%;
-    --secondary: 257 86% 70%;          /* Electric violet */
-    --secondary-foreground: 222 60% 8%;
-    --muted: 223 32% 20%;
-    --muted-foreground: 220 18% 74%;
-    --accent: 203 89% 64%;             /* Cyan accent */
-    --accent-foreground: 222 60% 8%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 96%;
-    --border: 223 32% 22%;
-    --input: 223 32% 22%;
-    --ring: 168 78% 52%;
-    --radius: 0.75rem;
+    /* Clean Black, White & Blue Light Theme */
+    color-scheme: light;
+    --background: 0 0% 99%;              /* Almost white */
+    --foreground: 0 0% 9%;               /* Near black text */
+    --card: 0 0% 100%;                   /* Pure white cards */
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 217 91% 50%;              /* Clean blue #2563eb */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;            /* Light gray */
+    --secondary-foreground: 0 0% 9%;
+    --muted: 220 14% 96%;                /* Light gray for muted */
+    --muted-foreground: 0 0% 45%;        /* Medium gray text */
+    --accent: 220 14% 96%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;               /* Light gray border */
+    --input: 220 13% 91%;
+    --ring: 217 91% 50%;
+    --radius: 0.5rem;
 
-    /* Gradient Stops */
-    --gradient-from: hsl(var(--primary));
-    --gradient-via: hsl(var(--secondary));
-    --gradient-to: hsl(var(--accent));
-    --gradient-soft: hsl(222 35% 12%);
+    /* Simplified Gradients */
+    --gradient-from: hsl(217, 91%, 50%);
+    --gradient-via: hsl(217, 91%, 60%);
+    --gradient-to: hsl(217, 91%, 70%);
+    --gradient-soft: hsl(220, 14%, 98%);
   }
 
   .dark {
-    color-scheme: dark;
-    --background: 222 44% 6%;
-    --foreground: 215 40% 96%;
-    --card: 222 40% 12%;
-    --card-foreground: 215 40% 96%;
-    --popover: 223 38% 14%;
-    --popover-foreground: 215 40% 96%;
-    --primary: 168 78% 52%;
-    --primary-foreground: 222 60% 8%;
-    --secondary: 257 86% 70%;
-    --secondary-foreground: 222 60% 8%;
-    --muted: 223 32% 20%;
-    --muted-foreground: 220 18% 74%;
-    --accent: 203 89% 64%;
-    --accent-foreground: 222 60% 8%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 96%;
-    --border: 223 32% 22%;
-    --input: 223 32% 22%;
-    --ring: 168 78% 52%;
+    /* Force light theme even with dark class */
+    color-scheme: light;
+    --background: 0 0% 99%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 217 91% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 50%;
 
-    --gradient-from: hsl(var(--primary));
-    --gradient-via: hsl(var(--secondary));
-    --gradient-to: hsl(var(--accent));
-    --gradient-soft: hsl(222 35% 12%);
+    --gradient-from: hsl(217, 91%, 50%);
+    --gradient-via: hsl(217, 91%, 60%);
+    --gradient-to: hsl(217, 91%, 70%);
+    --gradient-soft: hsl(220, 14%, 98%);
   }
 }
 
@@ -72,68 +73,105 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: hsl(var(--background));
-    background-image:
-      radial-gradient(1200px 600px at 5% -10%, color-mix(in oklab, var(--gradient-via), transparent 87%), transparent 75%),
-      radial-gradient(900px 500px at 90% 10%, color-mix(in oklab, var(--gradient-to), transparent 86%), transparent 75%),
-      radial-gradient(1000px 600px at 50% 120%, color-mix(in oklab, var(--gradient-from), transparent 88%), transparent 70%),
-      linear-gradient(180deg, rgba(4,10,24,0.9), rgba(4,10,24,0.95));
-    background-attachment: fixed;
   }
   
-  /* Custom scrollbar */
+  /* Custom scrollbar - Light Theme */
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
   }
   
-  ::-webkit-scrollbar-track { background: hsl(var(--card)); border-radius: 5px; }
+  ::-webkit-scrollbar-track { background: hsl(var(--muted)); border-radius: 4px; }
   
-  ::-webkit-scrollbar-thumb { background: hsl(var(--primary)); border-radius: 5px; }
+  ::-webkit-scrollbar-thumb { background: hsl(0, 0%, 75%); border-radius: 4px; }
   
-  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--secondary)); }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary)); }
 }
 
 @layer components {
-  /* Glass morphism effect */
-  .glass { background: color-mix(in oklab, hsl(var(--card)) 70%, transparent); backdrop-filter: blur(10px); border: 1px solid color-mix(in oklab, hsl(var(--ring)) 20%, transparent); }
+  /* Clean card style */
+  .glass { 
+    background: hsl(var(--card)); 
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+  }
   
-  /* Gradient text */
-  .gradient-text { background: linear-gradient(135deg, var(--gradient-from), var(--gradient-via), var(--gradient-to)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-
-  /* App-wide bright gradient helpers */
-  .bg-app-soft {
-    background-image:
-      radial-gradient(1000px 500px at 10% -10%, color-mix(in oklab, var(--gradient-via), transparent 85%), transparent 70%),
-      radial-gradient(900px 450px at 100% 0%, color-mix(in oklab, var(--gradient-to), transparent 88%), transparent 70%),
-      radial-gradient(900px 450px at 30% 120%, color-mix(in oklab, var(--gradient-from), transparent 88%), transparent 70%);
+  /* Gradient text - blue only */
+  .gradient-text { 
+    background: linear-gradient(135deg, hsl(217, 91%, 50%), hsl(217, 91%, 40%)); 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    background-clip: text; 
   }
 
-  .bg-card-bright { background: linear-gradient(180deg, color-mix(in oklab, hsl(var(--card)), transparent 0%), color-mix(in oklab, hsl(var(--primary)), transparent 92%)); }
-  
-  /* Gradient border */
-  .gradient-border { position: relative; background: hsl(var(--card)); border-radius: var(--radius); }
-  
-  .gradient-border::before { content: ''; position: absolute; inset: 0; border-radius: var(--radius); padding: 2px; background: linear-gradient(135deg, var(--gradient-from), var(--gradient-via), var(--gradient-to)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .bg-app-soft {
+    background: hsl(var(--background));
+  }
 
-  /* Brand heading & paragraph classes (can be dynamically themed later) */
-  .brand-primary-heading { color: hsl(var(--primary)); font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.75rem; line-height: 1.25; }
-  .brand-secondary-heading { color: hsl(var(--secondary)); font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; line-height: 1.3; }
+  .bg-card-bright { 
+    background: hsl(var(--card)); 
+  }
+  
+  /* Gradient border - blue */
+  .gradient-border { 
+    position: relative; 
+    background: hsl(var(--card)); 
+    border-radius: var(--radius); 
+  }
+  
+  .gradient-border::before { 
+    content: ''; 
+    position: absolute; 
+    inset: 0; 
+    border-radius: var(--radius); 
+    padding: 1px; 
+    background: linear-gradient(135deg, hsl(217, 91%, 50%), hsl(217, 91%, 70%)); 
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); 
+    -webkit-mask-composite: xor; 
+    mask-composite: exclude; 
+  }
+
+  /* Brand heading & paragraph classes */
+  .brand-primary-heading { color: hsl(var(--foreground)); font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.75rem; line-height: 1.25; }
+  .brand-secondary-heading { color: hsl(var(--foreground)); font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; line-height: 1.3; }
   .brand-accent-heading { color: hsl(var(--foreground)); font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem; line-height: 1.35; }
   .brand-paragraph { margin-bottom: 1rem; line-height: 1.7; color: hsl(var(--muted-foreground)); }
   .brand-paragraph strong { color: hsl(var(--foreground)); }
-  blockquote { border-left: 4px solid hsl(var(--primary)); padding: 0.75rem 1rem; background: color-mix(in oklab, hsl(var(--primary)) 12%, transparent); border-radius: 0.5rem; margin: 1rem 0; }
+  blockquote { border-left: 3px solid hsl(var(--primary)); padding: 0.75rem 1rem; background: hsl(var(--muted)); border-radius: 0.25rem; margin: 1rem 0; }
   ul, ol { padding-left: 1.5rem; margin-bottom: 1.25rem; }
   li { margin-bottom: 0.4rem; }
-  a { color: hsl(var(--primary)); text-decoration: underline; }
-  a:hover { color: hsl(var(--secondary)); }
+  a { color: hsl(var(--primary)); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  
   .toc-highlight { animation: tocPulse 1.2s ease-in-out; }
   @keyframes tocPulse {
-    0% { background-color: color-mix(in oklab, hsl(var(--primary)) 35%, transparent); }
+    0% { background-color: hsl(217, 91%, 95%); }
     100% { background-color: transparent; }
   }
-  /* Style headings inside the editor even if classes are stripped by the editor schema */
-  .prose h1 { color: hsl(var(--primary)); font-weight: 800; margin-top: 1.75rem; margin-bottom: 0.75rem; font-size: 2rem; }
-  .prose h2 { color: hsl(var(--accent)); font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.5rem; }
+  
+  /* Prose styles */
+  .prose h1 { color: hsl(var(--foreground)); font-weight: 800; margin-top: 1.75rem; margin-bottom: 0.75rem; font-size: 2rem; }
+  .prose h2 { color: hsl(var(--foreground)); font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.5rem; }
   .prose h3 { color: hsl(var(--foreground)); font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.25rem; }
   .prose p { margin-bottom: 1rem; line-height: 1.8; }
+  
+  /* Processing card animations */
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  
+  @keyframes progress {
+    0% { width: 0%; }
+    50% { width: 100%; }
+    100% { width: 0%; }
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+  
+  .animate-progress {
+    animation: progress 2s ease-in-out infinite;
+  }
 }

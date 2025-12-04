@@ -57,8 +57,8 @@ export function DeleteBlogButton({ blogId, blogTitle }: DeleteBlogButtonProps) {
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <Trash2 className="h-4 w-4 text-[#BF616A]" />
+        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50">
+          <Trash2 className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
@@ -77,7 +77,7 @@ export function DeleteBlogButton({ blogId, blogTitle }: DeleteBlogButtonProps) {
               handleDelete();
             }}
             disabled={deleting}
-            className="bg-gradient-to-r from-[#BF616A] to-[#D08770] hover:from-[#BF616A]/90 hover:to-[#D08770]/90 focus:ring-[#BF616A]"
+            className="bg-red-600 hover:bg-red-700 text-white focus:ring-red-500"
           >
             {deleting ? (
               <>

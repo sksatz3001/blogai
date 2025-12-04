@@ -2,11 +2,12 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DeleteBlogButton } from "@/components/delete-blog-button";
+import { toast } from "sonner";
 import { 
   FileText, 
   Plus, 
@@ -43,11 +44,34 @@ type FilterOption = 'all' | 'saved' | 'draft' | 'processing';
 
 export function BlogsClientPage({ blogs: initialBlogs }: BlogsClientPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [blogs, setBlogs] = useState(initialBlogs);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [filterStatus, setFilterStatus] = useState<FilterOption>('all');
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const initialFetchDone = useRef(false);
+
+  // Fetch fresh data on mount to catch newly created processing blogs
+  useEffect(() => {
+    if (initialFetchDone.current) return;
+    initialFetchDone.current = true;
+    
+    // Small delay to allow server to process the status update
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/blogs/list');
+        if (res.ok) {
+          const freshBlogs = await res.json();
+          setBlogs(freshBlogs);
+        }
+      } catch (error) {
+        console.error('Failed to fetch fresh blogs:', error);
+      }
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Poll for processing blogs - only update status, don't cause re-render flicker
   const checkProcessingBlogs = useCallback(async () => {
@@ -60,10 +84,16 @@ export function BlogsClientPage({ blogs: initialBlogs }: BlogsClientPageProps) {
         if (res.ok) {
           const data = await res.json();
           if (data.status !== 'processing') {
-            // Blog is done, update local state without causing flicker
+            // Blog is done, update local state with full content
             setBlogs(prev => prev.map(b => 
-              b.id === blog.id ? { ...b, status: data.status, content: data.content || b.content } : b
+              b.id === blog.id ? { 
+                ...b, 
+                status: data.status, 
+                content: data.content || b.content,
+              } : b
             ));
+            // Show toast when generation completes
+            toast.success(`"${blog.title}" has been generated!`);
           }
         }
       } catch (error) {
@@ -72,7 +102,7 @@ export function BlogsClientPage({ blogs: initialBlogs }: BlogsClientPageProps) {
     }
   }, [blogs]);
 
-  // Poll every 10 seconds for processing blogs (increased from 5s to reduce flicker)
+  // Poll every 5 seconds for processing blogs
   useEffect(() => {
     const hasProcessing = blogs.some(b => b.status === 'processing');
     if (!hasProcessing) {
@@ -83,8 +113,11 @@ export function BlogsClientPage({ blogs: initialBlogs }: BlogsClientPageProps) {
     // Clear existing interval
     if (pollingRef.current) clearInterval(pollingRef.current);
     
-    // Set new interval - 10 seconds to reduce load
-    pollingRef.current = setInterval(checkProcessingBlogs, 10000);
+    // Check immediately on first processing blog detected
+    checkProcessingBlogs();
+    
+    // Set new interval - 5 seconds for responsive updates
+    pollingRef.current = setInterval(checkProcessingBlogs, 5000);
     
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
@@ -95,13 +128,20 @@ export function BlogsClientPage({ blogs: initialBlogs }: BlogsClientPageProps) {
   useEffect(() => {
     setBlogs(prev => {
       // Merge new data while preserving local processing state
-      return initialBlogs.map(newBlog => {
+      const merged = initialBlogs.map(newBlog => {
         const existingBlog = prev.find(b => b.id === newBlog.id);
         if (existingBlog && existingBlog.status === 'processing' && newBlog.status === 'processing') {
           return existingBlog; // Keep existing to prevent flicker
         }
         return newBlog;
       });
+      
+      // Check for any processing blogs in prev that are not in initialBlogs (newly added)
+      const newProcessingBlogs = prev.filter(b => 
+        b.status === 'processing' && !initialBlogs.find(ib => ib.id === b.id)
+      );
+      
+      return [...merged, ...newProcessingBlogs];
     });
   }, [initialBlogs]);
 

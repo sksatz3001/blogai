@@ -3,13 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { users, creditTransactions } from "@/db/schema";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
-
-// Credit costs
-export const CREDIT_COSTS = {
-  BLOG_GENERATION: 10,
-  IMAGE_GENERATION: 1,
-  IMAGE_EDIT: 2,
-};
+import { CREDIT_COSTS } from "@/lib/credits";
 
 // GET - Fetch user credits and summary
 export async function GET(request: NextRequest) {

@@ -1,17 +1,67 @@
 "use client";
 
-import { useState } from "react";
-import { X, Sparkles, Wand2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Sparkles, Wand2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ImagePromptModalProps {
   onClose: () => void;
   onSubmit: (prompt: string) => void;
   isGenerating?: boolean;
+  // Blog context for AI-generated suggestions
+  blogTitle?: string;
+  blogContent?: string;
 }
 
-export function ImagePromptModal({ onClose, onSubmit, isGenerating = false }: ImagePromptModalProps) {
+export function ImagePromptModal({ 
+  onClose, 
+  onSubmit, 
+  isGenerating = false,
+  blogTitle,
+  blogContent,
+}: ImagePromptModalProps) {
   const [prompt, setPrompt] = useState("");
+  const [placeholder, setPlaceholder] = useState("A professional, high-quality image that captures the essence of your blog topic. Be specific about style, colors, composition, and mood for best results...");
+  const [suggestions, setSuggestions] = useState<string[]>([
+    "Professional business illustration",
+    "Modern technology concept",
+    "Creative abstract design",
+    "Team collaboration scene",
+  ]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+  // Fetch AI-generated suggestions when modal opens
+  useEffect(() => {
+    if (blogTitle || blogContent) {
+      fetchSuggestions();
+    }
+  }, [blogTitle, blogContent]);
+
+  const fetchSuggestions = async () => {
+    setLoadingSuggestions(true);
+    try {
+      const response = await fetch("/api/images/suggestions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: blogTitle, content: blogContent }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.placeholder) {
+          setPlaceholder(data.placeholder);
+        }
+        if (data.suggestions && Array.isArray(data.suggestions)) {
+          setSuggestions(data.suggestions);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch suggestions:", error);
+      // Keep default suggestions on error
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,13 +69,6 @@ export function ImagePromptModal({ onClose, onSubmit, isGenerating = false }: Im
       onSubmit(prompt);
     }
   };
-
-  const examplePrompts = [
-    "A serene mountain landscape at sunset",
-    "Modern office with plants",
-    "Professional product photography",
-    "Abstract geometric pattern",
-  ];
 
   return (
     <div 
@@ -71,7 +114,7 @@ export function ImagePromptModal({ onClose, onSubmit, isGenerating = false }: Im
               id="image-prompt"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="A serene mountain landscape at sunset with vibrant orange and pink hues reflecting on a calm lake, surrounded by pine trees..."
+              placeholder={placeholder}
               className="w-full p-4 border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground resize-vertical min-h-[120px] max-h-[250px] transition-all focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background disabled:opacity-60 disabled:cursor-not-allowed"
               rows={5}
               autoFocus
@@ -83,21 +126,26 @@ export function ImagePromptModal({ onClose, onSubmit, isGenerating = false }: Im
             </p>
           </div>
 
-          {/* Example prompts */}
+          {/* AI-generated example prompts */}
           <div className="mt-6">
-            <p className="text-xs font-medium text-muted-foreground mb-3">
-              Quick examples:
-            </p>
+            <div className="flex items-center gap-2 mb-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                Quick examples:
+              </p>
+              {loadingSuggestions && (
+                <Loader2 size={12} className="animate-spin text-primary" />
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
-              {examplePrompts.map((example, index) => (
+              {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
                   type="button"
-                  onClick={() => setPrompt(example)}
-                  disabled={isGenerating}
-                  className="px-3 py-1.5 text-xs font-medium bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-border"
+                  onClick={() => setPrompt(suggestion)}
+                  disabled={isGenerating || loadingSuggestions}
+                  className="px-3 py-1.5 text-xs font-medium bg-muted hover:bg-primary/10 hover:text-primary text-foreground rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-border hover:border-primary/30"
                 >
-                  {example}
+                  {suggestion}
                 </button>
               ))}
             </div>

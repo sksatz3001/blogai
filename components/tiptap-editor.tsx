@@ -34,11 +34,15 @@ interface TiptapEditorProps {
   editable?: boolean;
   // Optional blogId to enable server-side persistence of edited images
   blogId?: number | string;
-  // Optional callback to trigger auto-save after image edit
-  onAutoSave?: () => void;
+  // Optional blog title for AI-generated image suggestions
+  blogTitle?: string;
+  // Optional callback to trigger auto-save after image edit - receives the current HTML content
+  onAutoSave?: (htmlContent: string) => void;
+  // Optional callback to refresh credits after image generation/edit
+  onCreditsUsed?: () => void;
 }
 
-export function TiptapEditor({ content, onChange, editable = true, blogId, onAutoSave }: TiptapEditorProps) {
+export function TiptapEditor({ content, onChange, editable = true, blogId, blogTitle, onAutoSave, onCreditsUsed }: TiptapEditorProps) {
   const [showImagePromptModal, setShowImagePromptModal] = useState(false);
   const [showImageEditorModal, setShowImageEditorModal] = useState(false);
     const [selectedImageSrc, setSelectedImageSrc] = useState<string>("");
@@ -183,6 +187,9 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, onAut
         // Debug visibility: which backend served this image
         console.info("Image provider:", data.provider);
       }
+
+      // Refresh credits after successful image generation
+      onCreditsUsed?.();
 
       // Determine whether to proxy: skip proxy for direct S3 bucket images (storage base)
       const storageBase = (process.env.NEXT_PUBLIC_IMAGE_STORAGE_BASE || process.env.IMAGE_STORAGE_BASE || '').replace(/\/$/, '');
@@ -376,81 +383,109 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, onAut
   const handleImageSave = async (editedImageSrc: string) => {
     if (!editor || !selectedImageSrc) return;
 
-    try {
-      let finalUrl = editedImageSrc;
-      let uploadSucceeded = false;
-      
-      // If blogId is present, attempt server upload + persistence
-      if (blogId) {
-        try {
-          const res = await fetch("/api/images/upload", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ imageData: editedImageSrc, blogId }),
-          });
-          
-          if (res.ok) {
-            const up = await res.json();
-            if (up?.imageUrl) {
-              finalUrl = up.imageUrl;
-              uploadSucceeded = true;
-              console.log("Image uploaded successfully:", finalUrl);
-            }
-          } else {
-            const errorData = await res.json().catch(() => ({}));
-            console.warn("Image upload failed:", res.status, errorData);
-            // If upload fails due to backend not configured, show warning
-            if (errorData?.code === 'NO_BACKEND') {
-              toast.error("Image storage not configured. Please contact admin to set up IMAGE_BACKEND_BASE.");
-              // Don't insert the base64 - it will cause save issues
-              return;
-            }
+    let finalUrl = editedImageSrc;
+    let uploadSucceeded = false;
+    
+    // If blogId is present, attempt S3 upload + persistence
+    if (blogId) {
+      try {
+        const res = await fetch("/api/images/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            imageData: editedImageSrc, 
+            blogId,
+          }),
+        });
+        
+        if (res.ok) {
+          const up = await res.json();
+          if (up?.imageUrl) {
+            finalUrl = up.imageUrl;
+            uploadSucceeded = true;
+            console.log("Image uploaded to S3 successfully:", finalUrl);
           }
-        } catch (uploadError) {
-          console.error("Image upload error:", uploadError);
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          console.warn("Image upload failed:", res.status, errorData);
+          // If upload fails due to S3 not configured, throw error
+          if (errorData?.code === 'NO_S3') {
+            throw new Error("S3 storage not configured. Please contact admin.");
+          }
+          // Throw for other errors
+          throw new Error(errorData?.error || `Upload failed: ${res.status}`);
         }
+      } catch (uploadError) {
+        console.error("Image upload error:", uploadError);
+        throw uploadError;
       }
+    }
 
-      // If upload failed and we still have base64, warn and don't proceed
-      if (!uploadSucceeded && editedImageSrc.startsWith('data:')) {
-        // Check size - base64 images over 500KB will likely cause issues
-        const sizeKB = Math.round(editedImageSrc.length / 1024);
-        if (sizeKB > 500) {
-          toast.error(`Image too large (${sizeKB}KB). Image storage backend required for edited images.`);
-          console.error("Image too large for inline storage:", sizeKB, "KB");
-          return;
-        }
-        toast.warning("Image saved locally. Configure image backend for permanent storage.");
+    // If no blogId, can't upload - show warning
+    if (!uploadSucceeded && editedImageSrc.startsWith('data:')) {
+      const sizeKB = Math.round(editedImageSrc.length / 1024);
+      if (sizeKB > 2000) {
+        throw new Error(`Image too large (${Math.round(sizeKB/1024)}MB). Please save the blog first to enable image uploads.`);
       }
+      if (!blogId) {
+        toast.warning("Save the blog first to enable permanent image storage.");
+      }
+    }
 
-      // Find and replace the image in the editor
-      const { state } = editor;
-      const { doc } = state;
+    // Find and replace the image in the editor
+    const { state } = editor;
+    const { doc } = state;
 
-      // Proxy edited image only if it's an external URL (not base64)
-      const storageBase = (process.env.NEXT_PUBLIC_IMAGE_STORAGE_BASE || process.env.IMAGE_STORAGE_BASE || '').replace(/\/$/, '');
-      const isAbs = /^https?:\/\//i.test(finalUrl);
-      const isStorage = storageBase && isAbs && finalUrl.startsWith(storageBase);
-      const proxiedEditedUrl = isAbs && !isStorage
-        ? `/api/images/proxy?url=${encodeURIComponent(finalUrl)}`
-        : finalUrl;
+    // Use the actual S3 URL for storage (not proxied) so it persists correctly
+    const storageBase = (process.env.NEXT_PUBLIC_IMAGE_STORAGE_BASE || process.env.IMAGE_STORAGE_BASE || '').replace(/\/$/, '');
+    const isAbs = /^https?:\/\//i.test(finalUrl);
+    const isStorage = storageBase && isAbs && finalUrl.startsWith(storageBase);
+    
+    // For S3 URLs, save the direct URL. For display, we may proxy it, but for saving we want the real URL.
+    const urlToSave = finalUrl;
+    
+    console.log('Image save debug:', {
+      finalUrl,
+      isStorage,
+      urlToSave,
+      selectedImageOriginalSrc,
+      selectedImageSrc
+    });
 
-      // Find and preserve original image alt text
-      let originalAlt: string | undefined;
-      
-      doc.descendants((node) => {
-        if (node.type.name === 'image' && (node.attrs.src === selectedImageOriginalSrc || node.attrs.src === selectedImageSrc)) {
+    // Find and preserve original image alt text
+    let originalAlt: string | undefined;
+    let foundImage = false;
+    
+    doc.descendants((node) => {
+      if (node.type.name === 'image') {
+        const nodeSrc = node.attrs.src;
+        // Check various forms the source could be in
+        const isMatch = nodeSrc === selectedImageOriginalSrc || 
+                       nodeSrc === selectedImageSrc ||
+                       (nodeSrc.includes('/api/images/proxy') && decodeURIComponent(nodeSrc).includes(selectedImageOriginalSrc));
+        if (isMatch) {
           originalAlt = node.attrs.alt;
+          foundImage = true;
           return false;
         }
-        return true;
-      });
+      }
+      return true;
+    });
+    
+    console.log('Found image to replace:', foundImage, 'alt:', originalAlt);
 
-      doc.descendants((node, pos) => {
-        if (node.type.name === 'image' && (node.attrs.src === selectedImageOriginalSrc || node.attrs.src === selectedImageSrc)) {
-          // Build attrs
-          const newAttrs: Record<string, any> = { src: proxiedEditedUrl };
+    doc.descendants((node, pos) => {
+      if (node.type.name === 'image') {
+        const nodeSrc = node.attrs.src;
+        const isMatch = nodeSrc === selectedImageOriginalSrc || 
+                       nodeSrc === selectedImageSrc ||
+                       (nodeSrc.includes('/api/images/proxy') && decodeURIComponent(nodeSrc).includes(selectedImageOriginalSrc));
+        if (isMatch) {
+          // Build attrs - save the actual S3 URL
+          const newAttrs: Record<string, any> = { src: urlToSave };
           if (originalAlt) newAttrs.alt = originalAlt;
+          
+          console.log('Replacing image at pos', pos, 'with URL:', urlToSave);
           
           editor
             .chain()
@@ -462,27 +497,32 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, onAut
             .run();
           return false;
         }
-        return true;
-      });
-      
-      // Show success message
-      if (uploadSucceeded) {
-        toast.success("Image edited and saved!");
       }
-    } catch (e) {
-      console.error("Failed to handle edited image:", e);
-      toast.error("Failed to save edited image");
-    } finally {
-      setShowImageEditorModal(false);
-      setSelectedImageSrc("");
-      setSelectedImageOriginalSrc("");
-      
-      // Trigger auto-save after image is replaced (only if upload succeeded)
-      if (onAutoSave) {
-        setTimeout(() => {
-          onAutoSave();
-        }, 500);
-      }
+      return true;
+    });
+    
+    // Show success message
+    if (uploadSucceeded) {
+      toast.success("Image edited and saved!");
+    }
+    
+    // Close modal
+    setShowImageEditorModal(false);
+    setSelectedImageSrc("");
+    setSelectedImageOriginalSrc("");
+    
+    // Get the current HTML content from editor
+    const currentHtml = editor.getHTML();
+    
+    // Sync to parent state
+    onChange(currentHtml);
+    
+    // Trigger auto-save with the current HTML content directly
+    // This avoids race condition where React state hasn't updated yet
+    if (onAutoSave) {
+      setTimeout(() => {
+        onAutoSave(currentHtml);
+      }, 100);
     }
   };
 
@@ -494,9 +534,9 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, onAut
   };
 
   return (
-    <div className="glass border-2 border-[hsl(var(--border))] rounded-2xl overflow-hidden flex flex-col max-h-[70vh]">
+    <div className="glass border-2 border-[hsl(var(--border))] rounded-2xl overflow-visible flex flex-col">
       {editable && (
-        <div className="flex-shrink-0 border-b-2 border-[hsl(var(--border))] p-3 flex flex-wrap gap-1.5 bg-[hsl(var(--card))]/50 backdrop-blur-sm shadow-lg sticky top-0 z-10">
+        <div className="flex-shrink-0 border-b-2 border-[hsl(var(--border))] p-3 flex flex-wrap gap-1.5 bg-white dark:bg-slate-900 shadow-md sticky top-0 z-50 rounded-t-2xl">
           <Button
             type="button"
             variant="ghost"
@@ -619,23 +659,22 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, onAut
             <ImageIcon className="h-4 w-4" />
           </Button>
 
-          {/* Edit Image button hidden for now - backend upload endpoint not available
           {selectedImageSrc && (
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => setShowImageEditorModal(true)}
-              className="bg-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]"
+              className="bg-blue-100 text-blue-600 hover:bg-blue-200"
             >
-              <Edit3 className="h-4 w-4" />
+              <Edit3 className="h-4 w-4 mr-1" />
+              Edit Image
             </Button>
           )}
-          */}
         </div>
       )}
 
-      <div ref={scrollContainerRef} onClick={handleImageClick} className="flex-1 overflow-y-auto">
+      <div ref={scrollContainerRef} onClick={handleImageClick} className="flex-1">
         <EditorContent editor={editor} />
       </div>
 
@@ -644,6 +683,8 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, onAut
           onClose={() => setShowImagePromptModal(false)}
           onSubmit={handleImagePromptSubmit}
           isGenerating={isGeneratingImage}
+          blogTitle={blogTitle}
+          blogContent={content}
         />
       )}
 
@@ -658,6 +699,7 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, onAut
             setSelectedImageOriginalSrc("");
           }}
           onSave={handleImageSave}
+          onCreditsUsed={onCreditsUsed}
         />
       )}
     </div>

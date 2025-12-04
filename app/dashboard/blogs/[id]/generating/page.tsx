@@ -57,7 +57,16 @@ export default function GeneratingPage() {
             companyProfileId: ctx.companyProfileId === "self" ? null : Number(ctx.companyProfileId),
           }),
         });
-        if (!res.ok) throw new Error(await res.text());
+        if (!res.ok) {
+          // Check for insufficient credits error
+          if (res.status === 402) {
+            const data = await res.json();
+            setError(`Insufficient credits. You need ${data.creditsRequired} credits but only have ${data.currentBalance}.`);
+            setTimeout(() => router.push(`/dashboard/blogs`), 3000);
+            return;
+          }
+          throw new Error(await res.text());
+        }
         await res.json();
         if (!mounted) return;
         router.replace(`/dashboard/blogs/${blogId}/edit`);

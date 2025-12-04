@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { blogs, users, blogImages, companyProfiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { externalGenerateSingleImage, isExternalBackendConfigured } from "@/lib/image-backend";
+import { deductCredits, CREDIT_COSTS } from "@/lib/credits";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, organization: process.env.OPENAI_ORG_ID });
 
@@ -41,6 +42,35 @@ export async function POST(request: Request) {
 
     const blog = await db.query.blogs.findFirst({ where: eq(blogs.id, Number(blogId)) });
     if (!blog || blog.userId !== dbUser.id) return new Response("Blog not found", { status: 404 });
+
+    // Calculate total credits needed
+    // 1 credit for blog generation + 0.5 credits per image
+    let imageCount = 0;
+    if (isExternalBackendConfigured()) {
+      // Featured image if enabled
+      if (featuredImage) imageCount += 1;
+      // Section images (one per section where sectionImage is not false)
+      imageCount += outline.filter((s: any) => s.sectionImage !== false).length;
+    }
+    const totalCreditsNeeded = CREDIT_COSTS.BLOG_GENERATION + (imageCount * CREDIT_COSTS.IMAGE_GENERATION);
+
+    // Deduct credits upfront
+    const creditResult = await deductCredits({
+      userId: dbUser.id,
+      amount: totalCreditsNeeded,
+      type: 'blog_generation',
+      description: `Blog generation with ${imageCount} images: ${title}`,
+      metadata: { blogId: blog.id, blogTitle: title },
+    });
+
+    if (!creditResult.success) {
+      return new Response(JSON.stringify({
+        error: "Insufficient credits",
+        message: creditResult.error,
+        creditsRequired: totalCreditsNeeded,
+        currentBalance: creditResult.newBalance,
+      }), { status: 402, headers: { "Content-Type": "application/json" } });
+    }
 
     let company: any = null;
     if (companyProfileId) {

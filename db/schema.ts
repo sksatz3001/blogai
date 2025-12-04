@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, jsonb, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, serial, timestamp, integer, jsonb, boolean, real } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const users = pgTable('users', {
@@ -11,8 +11,29 @@ export const users = pgTable('users', {
   companyDescription: text('company_description'),
   authorName: text('author_name'),
   onboardingCompleted: boolean('onboarding_completed').default(false),
+  // Credits system
+  credits: real('credits').default(500), // Default 500 credits for new users
+  totalCreditsUsed: real('total_credits_used').default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Credit transactions for tracking usage
+export const creditTransactions = pgTable('credit_transactions', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  amount: real('amount').notNull(), // Positive for additions, negative for deductions
+  balanceAfter: real('balance_after').notNull(),
+  type: text('type').notNull(), // 'blog_generation', 'image_generation', 'image_edit', 'admin_add', 'admin_deduct'
+  description: text('description'),
+  metadata: jsonb('metadata').$type<{
+    blogId?: number;
+    blogTitle?: string;
+    imageId?: number;
+    imagePrompt?: string;
+    adminNote?: string;
+  }>(),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 export const companyProfiles = pgTable('company_profiles', {
@@ -129,6 +150,8 @@ export type Role = typeof roles.$inferSelect;
 export type NewRole = typeof roles.$inferInsert;
 export type Permission = typeof permissions.$inferSelect;
 export type RolePermission = typeof rolePermissions.$inferSelect;
+export type CreditTransaction = typeof creditTransactions.$inferSelect;
+export type NewCreditTransaction = typeof creditTransactions.$inferInsert;
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -136,6 +159,14 @@ export const usersRelations = relations(users, ({ many }) => ({
   companyProfiles: many(companyProfiles),
   employees: many(employees),
   roles: many(roles),
+  creditTransactions: many(creditTransactions),
+}));
+
+export const creditTransactionsRelations = relations(creditTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [creditTransactions.userId],
+    references: [users.id],
+  }),
 }));
 
 export const companyProfilesRelations = relations(companyProfiles, ({ one, many }) => ({

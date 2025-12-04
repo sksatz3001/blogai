@@ -10,7 +10,6 @@ import {
   User, 
   Building2, 
   Globe, 
-  Palette, 
   Mail,
   Save,
   CheckCircle2,
@@ -18,7 +17,6 @@ import {
   Sparkles,
   Plus,
   Trash2,
-  Edit,
   Briefcase,
   FileText
 } from "lucide-react";
@@ -30,22 +28,12 @@ interface UserSettings {
   companyName: string;
   companyWebsite: string;
   companyDescription: string;
-  brandColors: {
-    primary: string;
-    secondary: string;
-    accent: string;
-  };
 }
 
 interface CompanyProfile {
   id: number;
   companyName: string;
   companyWebsite: string | null;
-  brandColors: {
-    primary: string;
-    secondary: string;
-    accent: string;
-  } | null;
   description: string | null;
 }
 
@@ -67,18 +55,12 @@ export function SettingsClient({ user, companyProfiles }: SettingsClientProps) {
     companyName: user.companyName,
     companyWebsite: user.companyWebsite,
     companyDescription: user.companyDescription,
-    primaryColor: user.brandColors.primary || "#88C0D0",
-    secondaryColor: user.brandColors.secondary || "#8FBCBB",
-    accentColor: user.brandColors.accent || "#D08770",
   });
 
   const [newProfile, setNewProfile] = useState({
     companyName: "",
     companyWebsite: "",
     description: "",
-    primaryColor: "#88C0D0",
-    secondaryColor: "#8FBCBB",
-    accentColor: "#D08770",
   });
 
   const [fetchingDescription, setFetchingDescription] = useState(false);
@@ -142,11 +124,6 @@ export function SettingsClient({ user, companyProfiles }: SettingsClientProps) {
           companyName: formData.companyName,
           companyWebsite: formData.companyWebsite,
           companyDescription: formData.companyDescription,
-          brandColors: {
-            primary: formData.primaryColor,
-            secondary: formData.secondaryColor,
-            accent: formData.accentColor,
-          },
         }),
       });
 
@@ -182,11 +159,6 @@ export function SettingsClient({ user, companyProfiles }: SettingsClientProps) {
           companyName: newProfile.companyName,
           companyWebsite: newProfile.companyWebsite,
           description: newProfile.description,
-          brandColors: {
-            primary: newProfile.primaryColor,
-            secondary: newProfile.secondaryColor,
-            accent: newProfile.accentColor,
-          },
         }),
       });
 
@@ -200,9 +172,6 @@ export function SettingsClient({ user, companyProfiles }: SettingsClientProps) {
         companyName: "",
         companyWebsite: "",
         description: "",
-        primaryColor: "#88C0D0",
-        secondaryColor: "#8FBCBB",
-        accentColor: "#D08770",
       });
       router.refresh();
       
@@ -413,113 +382,6 @@ export function SettingsClient({ user, companyProfiles }: SettingsClientProps) {
           </CardContent>
         </Card>
 
-        {/* Brand Colors */}
-        <Card className="glass border">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-accent/20 to-accent/5">
-                <Palette className="h-5 w-5 text-accent" />
-              </div>
-              <div>
-                <CardTitle className="text-xl text-foreground">Brand Colors</CardTitle>
-                <CardDescription>Customize your brand&apos;s color palette</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Primary Color */}
-              <div className="space-y-3">
-                <Label htmlFor="primaryColor" className="text-foreground">
-                  Primary Color
-                </Label>
-                <div className="flex items-center gap-3">
-                  <input
-                    id="primaryColor"
-                    type="color"
-                    value={formData.primaryColor || "#88C0D0"}
-                    onChange={(e) => handleChange("primaryColor", e.target.value)}
-                    className="h-12 w-12 rounded-lg border border-border bg-card cursor-pointer"
-                  />
-                  <Input
-                    type="text"
-                    value={formData.primaryColor || "#88C0D0"}
-                    onChange={(e) => handleChange("primaryColor", e.target.value)}
-                    placeholder="#88C0D0"
-                    className="bg-card/50 border-border focus-visible:ring-2 focus-visible:ring-primary font-mono text-sm"
-                  />
-                </div>
-                <div 
-                  className="h-16 rounded-lg border border-border transition-colors"
-                  style={{ backgroundColor: formData.primaryColor || "#88C0D0" }}
-                />
-              </div>
-
-              {/* Secondary Color */}
-              <div className="space-y-3">
-                <Label htmlFor="secondaryColor" className="text-foreground">
-                  Secondary Color
-                </Label>
-                <div className="flex items-center gap-3">
-                  <input
-                    id="secondaryColor"
-                    type="color"
-                    value={formData.secondaryColor || "#8FBCBB"}
-                    onChange={(e) => handleChange("secondaryColor", e.target.value)}
-                    className="h-12 w-12 rounded-lg border border-border bg-card cursor-pointer"
-                  />
-                  <Input
-                    type="text"
-                    value={formData.secondaryColor || "#8FBCBB"}
-                    onChange={(e) => handleChange("secondaryColor", e.target.value)}
-                    placeholder="#8FBCBB"
-                    className="bg-card/50 border-border focus-visible:ring-2 focus-visible:ring-primary font-mono text-sm"
-                  />
-                </div>
-                <div 
-                  className="h-16 rounded-lg border border-border transition-colors"
-                  style={{ backgroundColor: formData.secondaryColor || "#8FBCBB" }}
-                />
-              </div>
-
-              {/* Accent Color */}
-              <div className="space-y-3">
-                <Label htmlFor="accentColor" className="text-foreground">
-                  Accent Color
-                </Label>
-                <div className="flex items-center gap-3">
-                  <input
-                    id="accentColor"
-                    type="color"
-                    value={formData.accentColor || "#D08770"}
-                    onChange={(e) => handleChange("accentColor", e.target.value)}
-                    className="h-12 w-12 rounded-lg border border-border bg-card cursor-pointer"
-                  />
-                  <Input
-                    type="text"
-                    value={formData.accentColor || "#D08770"}
-                    onChange={(e) => handleChange("accentColor", e.target.value)}
-                    placeholder="#D08770"
-                    className="bg-card/50 border-border focus-visible:ring-2 focus-visible:ring-primary font-mono text-sm"
-                  />
-                </div>
-                <div 
-                  className="h-16 rounded-lg border border-border transition-colors"
-                  style={{ backgroundColor: formData.accentColor || "#D08770" }}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-start gap-2 p-4 rounded-lg bg-primary/5 border border-primary/20">
-              <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-muted-foreground">
-                <p className="font-medium text-foreground mb-1">Pro Tip</p>
-                <p>These colors can be used to maintain brand consistency across your content. They&apos;ll be available for use in your blog designs and templates.</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Save Button */}
         <div className="flex items-center justify-center">
           <Button
@@ -620,57 +482,6 @@ export function SettingsClient({ user, companyProfiles }: SettingsClientProps) {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Primary Color</Label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={newProfile.primaryColor}
-                      onChange={(e) => setNewProfile(prev => ({ ...prev, primaryColor: e.target.value }))}
-                      className="h-10 w-10 rounded-lg border border-border bg-card cursor-pointer"
-                    />
-                    <Input
-                      value={newProfile.primaryColor}
-                      onChange={(e) => setNewProfile(prev => ({ ...prev, primaryColor: e.target.value }))}
-                      className="bg-card/50 border-border font-mono text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Secondary Color</Label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={newProfile.secondaryColor}
-                      onChange={(e) => setNewProfile(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                      className="h-10 w-10 rounded-lg border border-border bg-card cursor-pointer"
-                    />
-                    <Input
-                      value={newProfile.secondaryColor}
-                      onChange={(e) => setNewProfile(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                      className="bg-card/50 border-border font-mono text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Accent Color</Label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={newProfile.accentColor}
-                      onChange={(e) => setNewProfile(prev => ({ ...prev, accentColor: e.target.value }))}
-                      className="h-10 w-10 rounded-lg border border-border bg-card cursor-pointer"
-                    />
-                    <Input
-                      value={newProfile.accentColor}
-                      onChange={(e) => setNewProfile(prev => ({ ...prev, accentColor: e.target.value }))}
-                      className="bg-card/50 border-border font-mono text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-
               <div className="flex gap-3 justify-end">
                 <Button
                   type="button"
@@ -731,26 +542,6 @@ export function SettingsClient({ user, companyProfiles }: SettingsClientProps) {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  
-                  {profile.brandColors && (
-                    <div className="flex gap-2 mt-3">
-                      <div
-                        className="h-6 w-6 rounded border border-border"
-                        style={{ backgroundColor: profile.brandColors.primary }}
-                        title="Primary"
-                      />
-                      <div
-                        className="h-6 w-6 rounded border border-border"
-                        style={{ backgroundColor: profile.brandColors.secondary }}
-                        title="Secondary"
-                      />
-                      <div
-                        className="h-6 w-6 rounded border border-border"
-                        style={{ backgroundColor: profile.brandColors.accent }}
-                        title="Accent"
-                      />
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

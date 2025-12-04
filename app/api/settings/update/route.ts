@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     }
 
       const body = await req.json();
-      const { authorName, companyName, companyWebsite, companyDescription, brandColors } = body;
+      const { authorName, companyName, companyWebsite, companyDescription } = body;
 
       // Update user settings
       await db
@@ -26,7 +26,6 @@ export async function POST(req: Request) {
           companyName,
           companyWebsite,
           companyDescription,
-          brandColors,
           updatedAt: new Date(),
         })
         .where(eq(users.clerkId, user.id));    return NextResponse.json({ success: true });

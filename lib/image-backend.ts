@@ -240,9 +240,16 @@ export async function externalPromptEditImage(params: { sourceImageUrl: string; 
   throw err;
 }
 
-export async function externalUploadImage(params: { imageData: string; altText?: string; prompt?: string; blogId?: number | string; }): Promise<{ imageUrl: string; s3Key?: string; }> {
+export async function externalUploadImage(params: { imageData: string; altText?: string; prompt?: string; blogId?: number | string; userId?: string | number; }): Promise<{ imageUrl: string; s3Key?: string; }> {
   if (!BASE) throw new Error('IMAGE_BACKEND_BASE not configured');
   const base = BASE.replace(/\/$/, '');
+  
+  console.log('externalUploadImage called with:', { 
+    imageDataLength: params.imageData?.length, 
+    blogId: params.blogId, 
+    userId: params.userId,
+    altText: params.altText
+  });
   
   // Try multiple upload endpoints
   const uploadEndpoints = [
@@ -252,20 +259,33 @@ export async function externalUploadImage(params: { imageData: string; altText?:
     '/api/image/upload',
   ];
   
+  // Primary payload format - use underscore format for backend
+  const primaryPayload = {
+    image_data: params.imageData,
+    user_id: String(params.userId || ''),
+    blog_id: String(params.blogId || ''),
+    alt_text: params.altText || '',
+    prompt: params.prompt || '',
+  };
+  
   const uploadVariants = [
-    params,
-    { dataUrl: params.imageData, altText: params.altText, prompt: params.prompt, blogId: params.blogId },
-    { base64: params.imageData, altText: params.altText, prompt: params.prompt, blogId: params.blogId },
-    { image_data: params.imageData, alt_text: params.altText, prompt: params.prompt, blog_id: params.blogId },
+    primaryPayload,
+    { imageData: params.imageData, userId: String(params.userId || ''), blogId: String(params.blogId || ''), altText: params.altText },
+    { dataUrl: params.imageData, user_id: String(params.userId || ''), blog_id: String(params.blogId || '') },
+    { base64: params.imageData, user_id: String(params.userId || ''), blog_id: String(params.blogId || '') },
   ];
   
   let lastErr: any = null;
+  let triedUrls: string[] = [];
   
   // First, try dedicated upload endpoints
   for (const endpoint of uploadEndpoints) {
     const url = `${base}${endpoint}`;
-    for (const body of uploadVariants) {
+    for (let i = 0; i < uploadVariants.length; i++) {
+      const body = uploadVariants[i];
+      triedUrls.push(`${url} (variant ${i})`);
       try {
+        console.log(`Trying upload: ${url} variant ${i}`);
         const res = await fetch(url, {
           method: 'POST',
           headers: headersJson(),
@@ -274,24 +294,36 @@ export async function externalUploadImage(params: { imageData: string; altText?:
         });
         
         if (res.status === 404) {
+          console.log(`Endpoint not found: ${url}`);
           // Endpoint doesn't exist, skip to next
           break;
         }
         
+        const responseText = await res.text();
+        console.log(`Response from ${url}: status=${res.status}, body=${responseText.slice(0, 500)}`);
+        
         if (!res.ok) {
-          const errText = await safeText(res);
-          lastErr = new Error(`External upload failed: ${res.status} ${errText || ''}`.trim());
+          lastErr = new Error(`Upload failed at ${url}: ${res.status} - ${responseText.slice(0, 200)}`);
           if (res.status >= 500) break;
           continue;
         }
         
-        const data: GenerateResponse = await res.json();
+        let data: GenerateResponse;
+        try {
+          data = JSON.parse(responseText);
+        } catch (e) {
+          lastErr = new Error(`Invalid JSON response from ${url}: ${responseText.slice(0, 200)}`);
+          continue;
+        }
+        
         const outUrl = data.imageUrl || data.url || data?.data?.imageUrl || data?.data?.url;
         if (outUrl) {
+          console.log(`Upload successful: ${outUrl}`);
           return { imageUrl: outUrl, s3Key: data.s3Key || data.s3_key || data?.data?.s3Key || data?.data?.s3_key };
         }
         lastErr = new Error('External upload returned no imageUrl');
       } catch (e) {
+        console.error(`Error uploading to ${url}:`, e);
         lastErr = e;
         continue;
       }
@@ -307,10 +339,11 @@ export async function externalUploadImage(params: { imageData: string; altText?:
       source_image_url: params.imageData, // Send base64 as source
       editing_prompt: params.prompt || 'keep the image exactly as is without any changes',
       image_data: params.imageData,
-      dataUrl: params.imageData,
-      base64: params.imageData,
-      blog_id: String(params.blogId ?? ''),
+      user_id: String(params.userId || ''),
+      blog_id: String(params.blogId || ''),
     };
+    
+    console.log(`Trying fallback edit endpoint: ${editUrl} with user_id=${editBody.user_id}, blog_id=${editBody.blog_id}`);
     
     const res = await fetch(editUrl, {
       method: 'POST',
@@ -319,20 +352,33 @@ export async function externalUploadImage(params: { imageData: string; altText?:
       cache: 'no-store',
     });
     
+    const responseText = await res.text();
+    console.log(`Fallback response: status=${res.status}, body=${responseText.slice(0, 500)}`);
+    
     if (res.ok) {
-      const data: any = await res.json();
+      let data: any;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        lastErr = new Error(`Invalid JSON from fallback: ${responseText.slice(0, 200)}`);
+        throw lastErr;
+      }
       const outUrl = data.edited_image_url || data.imageUrl || data.url || data?.data?.imageUrl;
       if (outUrl) {
+        console.log(`Fallback successful: ${outUrl}`);
         return { imageUrl: outUrl, s3Key: data.s3_key || data.s3Key };
       }
+      lastErr = new Error(`Fallback returned no URL. Response: ${responseText.slice(0, 200)}`);
     } else {
-      const errText = await safeText(res);
-      lastErr = new Error(`Edit fallback failed: ${res.status} ${errText || ''}`.trim());
+      lastErr = new Error(`Edit fallback failed: ${res.status} - ${responseText.slice(0, 200)}`);
     }
   } catch (e) {
-    lastErr = e;
+    console.error('Fallback error:', e);
+    if (!lastErr) lastErr = e;
   }
   
+  const errorMsg = lastErr?.message || 'External upload failed';
+  console.error('All upload attempts failed:', errorMsg, 'Tried:', triedUrls);
   throw lastErr || new Error('External upload failed - no upload endpoint available');
 }
 

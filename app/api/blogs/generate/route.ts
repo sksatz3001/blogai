@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { db } from "@/db";
 import { blogs, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { deductCredits, CREDIT_COSTS } from "@/lib/credits";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -35,6 +36,29 @@ export async function POST(request: Request) {
 
     if (!blog || blog.userId !== dbUser.id) {
       return new Response("Blog not found", { status: 404 });
+    }
+
+    // Check and deduct credits before generation
+    const creditResult = await deductCredits({
+      userId: dbUser.id,
+      amount: CREDIT_COSTS.BLOG_GENERATION,
+      type: 'blog_generation',
+      description: 'Blog content generation',
+      metadata: {
+        blogId: blogId,
+        blogTitle: title,
+      },
+    });
+
+    if (!creditResult.success) {
+      return new Response(JSON.stringify({ 
+        error: creditResult.error || "Insufficient credits",
+        creditsRequired: CREDIT_COSTS.BLOG_GENERATION,
+        currentCredits: creditResult.newBalance,
+      }), { 
+        status: 402,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     // Get company details (either from profile or user)

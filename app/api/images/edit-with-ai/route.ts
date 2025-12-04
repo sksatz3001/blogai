@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { externalPromptEditImage, isExternalBackendConfigured } from "@/lib/image-backend";
 import { db } from "@/db";
-import { blogs } from "@/db/schema";
+import { blogs, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { auth } from "@clerk/nextjs/server";
+import { deductCredits, CREDIT_COSTS } from "@/lib/credits";
 
 export async function POST(request: NextRequest) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const dbUser = await db.query.users.findFirst({
+      where: eq(users.clerkId, userId),
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     const { sourceImageUrl, prompt, blogId } = await request.json();
 
     if (!sourceImageUrl || !prompt) {
@@ -13,6 +28,26 @@ export async function POST(request: NextRequest) {
         { error: "sourceImageUrl and prompt are required" },
         { status: 400 }
       );
+    }
+
+    // Check and deduct credits before AI edit
+    const creditResult = await deductCredits({
+      userId: dbUser.id,
+      amount: CREDIT_COSTS.IMAGE_EDIT,
+      type: 'image_edit',
+      description: 'AI image editing',
+      metadata: {
+        blogId: blogId ? Number(blogId) : undefined,
+        imagePrompt: prompt.substring(0, 200),
+      },
+    });
+
+    if (!creditResult.success) {
+      return NextResponse.json({ 
+        error: creditResult.error || "Insufficient credits",
+        creditsRequired: CREDIT_COSTS.IMAGE_EDIT,
+        currentCredits: creditResult.newBalance,
+      }, { status: 402 });
     }
 
     if (!isExternalBackendConfigured()) {

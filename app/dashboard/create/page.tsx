@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,8 +17,9 @@ interface CompanyProfile {
   companyWebsite: string | null;
 }
 
-export default function CreateBlogPage() {
+function CreateBlogContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [blogId, setBlogId] = useState<number | null>(null);
@@ -32,6 +33,22 @@ export default function CreateBlogPage() {
     wordCount: "1000",
     companyProfileId: "self" as string | "self",
   });
+
+  // Auto-fill from URL params (from Research page)
+  useEffect(() => {
+    const title = searchParams.get("title");
+    const primaryKeyword = searchParams.get("primaryKeyword");
+    const secondaryKeywords = searchParams.get("secondaryKeywords");
+    
+    if (title || primaryKeyword || secondaryKeywords) {
+      setFormData(prev => ({
+        ...prev,
+        title: title || prev.title,
+        primaryKeyword: primaryKeyword || prev.primaryKeyword,
+        secondaryKeywords: secondaryKeywords || prev.secondaryKeywords,
+      }));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchCompanyProfiles();
@@ -284,5 +301,17 @@ export default function CreateBlogPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function CreateBlogPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <CreateBlogContent />
+    </Suspense>
   );
 }

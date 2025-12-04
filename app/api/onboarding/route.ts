@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { companyName, companyWebsite, authorName, primaryColor, secondaryColor, accentColor } = body;
+    const { companyName, companyWebsite, authorName } = body;
 
     // Check if user already exists
     const existingUser = await db.query.users.findFirst({
@@ -29,11 +29,6 @@ export async function POST(request: Request) {
           companyName,
           companyWebsite,
           authorName,
-          brandColors: {
-            primary: primaryColor,
-            secondary: secondaryColor,
-            accent: accentColor,
-          },
           onboardingCompleted: true,
           updatedAt: new Date(),
         })
@@ -46,11 +41,6 @@ export async function POST(request: Request) {
         companyName,
         companyWebsite,
         authorName,
-        brandColors: {
-          primary: primaryColor,
-          secondary: secondaryColor,
-          accent: accentColor,
-        },
         onboardingCompleted: true,
       });
     }

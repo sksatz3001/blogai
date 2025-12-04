@@ -30,6 +30,8 @@ interface ProfessionalImageEditorProps {
   blogId?: number | string;
   onClose: () => void;
   onSave: (editedImageUrl: string) => void;
+  // Optional callback to refresh credits after AI edit
+  onCreditsUsed?: () => void;
 }
 
 export function ProfessionalImageEditor({
@@ -38,6 +40,7 @@ export function ProfessionalImageEditor({
   blogId,
   onClose,
   onSave,
+  onCreditsUsed,
 }: ProfessionalImageEditorProps) {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -353,6 +356,9 @@ export function ProfessionalImageEditor({
       
       if (!editedUrl) throw new Error('No edited image URL returned');
 
+      // Refresh credits after successful AI edit
+      onCreditsUsed?.();
+
       // Display edited image (proxy if needed for canvas safety)
       const storageBase = (process.env.NEXT_PUBLIC_IMAGE_STORAGE_BASE || process.env.IMAGE_STORAGE_BASE || '').replace(/\/$/, '');
       const isAbs = /^https?:\/\//i.test(editedUrl);
@@ -560,7 +566,6 @@ export function ProfessionalImageEditor({
       }
       
       await onSave(dataURL);
-      toast.success("Changes applied successfully!");
       
       // Close modal after successful save
       setTimeout(() => {
@@ -568,6 +573,8 @@ export function ProfessionalImageEditor({
       }, 500);
     } catch (error) {
       console.error("Failed to save image:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to save image";
+      toast.error(errorMessage);
       toast.error("Failed to apply changes");
       setSaving(false);
     }

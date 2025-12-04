@@ -46,11 +46,11 @@ export default function SuperAdminLoginPage() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <label className="text-sm text-muted-foreground">Username</label>
-              <Input value={username} onChange={(e)=>setUsername(e.target.value)} placeholder="superadmin" className="mt-1" />
+              <Input value={username} onChange={(e)=>setUsername(e.target.value)} className="mt-1" />
             </div>
             <div>
               <label className="text-sm text-muted-foreground">Password</label>
-              <Input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Edysor@123" className="mt-1" />
+              <Input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} className="mt-1" />
             </div>
             {error && <p className="text-destructive text-sm">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>

@@ -34,13 +34,15 @@ export async function POST(request: Request) {
         })
         .where(eq(users.id, existingUser.id));
     } else {
-      // Create new user
+      // Create new user with 0 credits
       await db.insert(users).values({
         clerkId: userId,
         email: user.emailAddresses[0]?.emailAddress || "",
         companyName,
         companyWebsite,
         authorName,
+        credits: 0,
+        totalCreditsUsed: 0,
         onboardingCompleted: true,
       });
     }

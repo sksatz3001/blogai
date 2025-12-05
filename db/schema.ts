@@ -12,7 +12,7 @@ export const users = pgTable('users', {
   authorName: text('author_name'),
   onboardingCompleted: boolean('onboarding_completed').default(false),
   // Credits system
-  credits: real('credits').default(500), // Default 500 credits for new users
+  credits: real('credits').default(0), // New users start with 0 credits
   totalCreditsUsed: real('total_credits_used').default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),

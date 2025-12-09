@@ -1,12 +1,17 @@
 import { auth } from "@clerk/nextjs/server";
 import OpenAI from "openai";
+import { NextResponse } from "next/server";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, organization: process.env.OPENAI_ORG_ID });
 
 export async function POST(request: Request) {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json({ error: "AI service not configured", section: { title: "", items: [] } }, { status: 500 });
+    }
+
     const { userId } = await auth();
-    if (!userId) return new Response("Unauthorized", { status: 401 });
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
     const { title, primaryKeyword, secondaryKeywords = [], targetWordCount = 1200, currentSectionTitle } = body;
@@ -27,13 +32,19 @@ Return ONLY JSON: { section: { title: string, items: [{ title: string }] } }
       model: "gpt-4o",
       temperature: 0.5,
       messages: [ { role: "system", content: sys }, { role: "user", content: usr } ],
-      response_format: { type: "json_object" } as any,
+      response_format: { type: "json_object" },
     });
 
     const content = completion.choices[0]?.message?.content || '{"section":{"title":"","items":[]}}';
-    return new Response(content, { status: 200, headers: { "Content-Type": "application/json" } });
-  } catch (e) {
-    console.error("regen section error", e);
-    return new Response("Internal server error", { status: 500 });
+    let json: any;
+    try { 
+      json = JSON.parse(content); 
+    } catch {
+      json = { section: { title: currentSectionTitle, items: [] } };
+    }
+    return NextResponse.json(json, { status: 200 });
+  } catch (e: any) {
+    console.error("regen section error:", e?.message || e);
+    return NextResponse.json({ error: e?.message || "Failed to regenerate section", section: { title: "", items: [] } }, { status: 500 });
   }
 }

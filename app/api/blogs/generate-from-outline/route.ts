@@ -5,8 +5,16 @@ import { blogs, users, blogImages, companyProfiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { externalGenerateSingleImage, isExternalBackendConfigured } from "@/lib/image-backend";
 import { deductCredits, CREDIT_COSTS } from "@/lib/credits";
+import { NextResponse } from "next/server";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, organization: process.env.OPENAI_ORG_ID });
+// Lazy initialize OpenAI client
+let openai: OpenAI | null = null;
+function getOpenAI() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, organization: process.env.OPENAI_ORG_ID });
+  }
+  return openai;
+}
 
 function slugify(text: string) { return text.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').substring(0,80); }
 
@@ -31,8 +39,19 @@ function injectImages(html: string, images: Array<{ afterH2: string; url: string
 
 export async function POST(request: Request) {
   try {
+    // Check if OpenAI is configured
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY is not configured");
+      return NextResponse.json({ error: "AI service not configured", success: false }, { status: 500 });
+    }
+    
+    const client = getOpenAI();
+    if (!client) {
+      return NextResponse.json({ error: "AI service initialization failed", success: false }, { status: 500 });
+    }
+
     const { userId } = await auth();
-    if (!userId) return new Response("Unauthorized", { status: 401 });
+    if (!userId) return NextResponse.json({ error: "Unauthorized", success: false }, { status: 401 });
 
     const dbUser = await db.query.users.findFirst({ where: eq(users.clerkId, userId) });
     if (!dbUser) return new Response("User not found", { status: 404 });
@@ -111,7 +130,7 @@ ${outlineText}
 - Do NOT include images or image placeholders
 - Output clean, production-ready HTML only`;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: "gpt-4o",
       temperature: 0.65,
       max_tokens: Math.ceil(targetWordCount * 2.5),
@@ -274,9 +293,24 @@ ${outlineText}
     }
 
     return new Response(JSON.stringify({ htmlContent: html, success: true }), { status: 200, headers: { "Content-Type": "application/json" } });
-  } catch (e) {
-    console.error("generate-from-outline error", e);
-    // Update status to failed on error
-    return new Response("Internal server error", { status: 500 });
+  } catch (e: any) {
+    console.error("generate-from-outline error:", e?.message || e);
+    
+    // Try to update blog status to failed
+    try {
+      const body = await request.clone().json().catch(() => ({}));
+      if (body?.blogId) {
+        await db.update(blogs)
+          .set({ status: 'failed', updatedAt: new Date() })
+          .where(eq(blogs.id, Number(body.blogId)));
+      }
+    } catch (statusErr) {
+      console.error("Failed to update blog status:", statusErr);
+    }
+    
+    return new Response(JSON.stringify({ 
+      error: e?.message || "Failed to generate blog",
+      success: false 
+    }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 }

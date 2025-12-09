@@ -54,9 +54,14 @@ export default function OutlineStepPage() {
             companyProfileId: ctx.companyProfileId === "self" ? null : Number(ctx.companyProfileId),
           }),
         });
-        if (!res.ok) throw new Error("Failed to generate outline");
         const data = await res.json();
         if (cancelled) return;
+        
+        if (!res.ok) {
+          console.error("Outline generation failed:", data?.error);
+          toast.error(data?.error || "Failed to generate outline. Try Regenerate.");
+        }
+        
         const mapped: OutlineItem[] = (data.outline || []).map((sec: any) => ({
           id: newId(),
           title: sec.title,
@@ -64,9 +69,9 @@ export default function OutlineStepPage() {
           sub: (sec.items || []).map((s: any) => ({ id: newId(), title: s.title })),
         }));
         setOutline(mapped);
-      } catch (e) {
-        console.error(e);
-        toast.error("Couldn't generate outline. Try Regenerate.");
+      } catch (e: any) {
+        console.error("Outline generation error:", e);
+        toast.error(e?.message || "Couldn't generate outline. Try Regenerate.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -100,8 +105,13 @@ export default function OutlineStepPage() {
           companyProfileId: ctx.companyProfileId === "self" ? null : Number(ctx.companyProfileId),
         }),
       });
-      if (!res.ok) throw new Error("Failed to generate outline");
       const data = await res.json();
+      
+      if (!res.ok) {
+        toast.error(data?.error || "Regeneration failed");
+        return;
+      }
+      
       const mapped: OutlineItem[] = (data.outline || []).map((sec: any) => ({
         id: newId(),
         title: sec.title,
@@ -109,8 +119,12 @@ export default function OutlineStepPage() {
         sub: (sec.items || []).map((s: any) => ({ id: newId(), title: s.title, isImage: false })),
       }));
       setOutline(mapped);
-    } catch (e) {
-      toast.error("Regeneration failed");
+      
+      if (mapped.length > 0) {
+        toast.success("Outline regenerated successfully!");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Regeneration failed");
     } finally {
       setRegeneratingOutline(false);
     }

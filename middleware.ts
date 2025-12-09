@@ -7,9 +7,8 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/sign-out(.*)',
   '/superadmin/login',
-  // allow superadmin APIs for login/logout
-  '/api/superadmin/login',
-  '/api/superadmin/logout',
+  // allow all superadmin APIs (they use cookie-based auth, not Clerk)
+  '/api/superadmin(.*)',
   '/superadmin(.*)', // pages protected below by our cookie check
 ]);
 
@@ -23,6 +22,16 @@ export default clerkMiddleware(async (auth, request) => {
     const sauth = request.cookies.get('sauth')?.value;
     if (sauth !== 'superadmin-ok') {
       return NextResponse.redirect(new URL('/superadmin/login', request.url));
+    }
+  }
+
+  // Superadmin API guard: protect API routes (except login/logout) with cookie
+  if (request.nextUrl.pathname.startsWith('/api/superadmin') && 
+      !request.nextUrl.pathname.includes('/login') && 
+      !request.nextUrl.pathname.includes('/logout')) {
+    const sauth = request.cookies.get('sauth')?.value;
+    if (sauth !== 'superadmin-ok') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }
 

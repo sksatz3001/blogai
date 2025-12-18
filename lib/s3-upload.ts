@@ -1,4 +1,5 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const s3Client = new S3Client({
   region: process.env.AWS_DEFAULT_REGION || "ap-south-1",
@@ -17,6 +18,31 @@ export function isS3Configured(): boolean {
     process.env.AWS_SECRET_ACCESS_KEY &&
     process.env.S3_BUCKET_NAME
   );
+}
+
+/**
+ * Generate a presigned URL for private S3 objects
+ * @param s3Key - The S3 key/path to the object
+ * @param expiresIn - URL expiration time in seconds (default: 1 hour)
+ * @returns Presigned URL that can access the private object
+ */
+export async function getPresignedUrl(s3Key: string, expiresIn: number = 3600): Promise<string> {
+  if (!isS3Configured()) {
+    throw new Error("S3 is not configured");
+  }
+
+  const command = new GetObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: s3Key,
+  });
+
+  try {
+    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn });
+    return presignedUrl;
+  } catch (error) {
+    console.error("Error generating presigned URL:", error);
+    throw new Error(`Failed to generate presigned URL: ${(error as Error).message}`);
+  }
 }
 
 /**

@@ -9,7 +9,7 @@ const s3Client = new S3Client({
   },
 });
 
-const BUCKET_NAME = process.env.S3_BUCKET_NAME || "jagratiblogai";
+const BUCKET_NAME = process.env.S3_BUCKET_NAME || "contendodev";
 const STORAGE_BASE = process.env.IMAGE_STORAGE_BASE || `https://${BUCKET_NAME}.s3.${process.env.AWS_DEFAULT_REGION || "ap-south-1"}.amazonaws.com`;
 
 export function isS3Configured(): boolean {

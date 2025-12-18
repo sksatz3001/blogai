@@ -10,7 +10,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "migrate:s3-urls": "tsx scripts/migrate-s3-urls.ts",
+    "migrate:blog-content": "tsx scripts/migrate-blog-content-urls.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.943.0",
@@ -77,6 +79,7 @@
     "eslint-config-next": "^15.0.3",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
+    "tsx": "^4.21.0",
     "typescript": "^5.6.3"
   }
 }

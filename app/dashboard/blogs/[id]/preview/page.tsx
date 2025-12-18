@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Edit, Download, ArrowLeft, User, Calendar as CalendarIcon, Clock, BookOpen, Info } from "lucide-react";
 import { notFound } from "next/navigation";
+import { BlogContent } from "@/components/blog-content";
 
 export default async function PreviewBlogPage({
   params,
@@ -101,11 +102,9 @@ export default async function PreviewBlogPage({
         {/* Article Content */}
         <div className="px-8 py-12">
           {blog.htmlContent || blog.content ? (
-            <div
+            <BlogContent
+              htmlContent={blog.htmlContent || blog.content || ""}
               className="prose prose-lg max-w-none prose-headings:font-bold prose-h2:text-3xl prose-h2:mt-10 prose-h2:mb-5 prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4 prose-p:leading-relaxed prose-p:mb-6 prose-a:text-blue-600 prose-strong:font-semibold prose-img:rounded-xl prose-img:shadow-md"
-              dangerouslySetInnerHTML={{
-                __html: blog.htmlContent || blog.content || "",
-              }}
             />
           ) : (
             <div className="text-center py-16">

@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -11,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ImagePromptModal } from "@/components/image-prompt-modal";
 import { ProfessionalImageEditor } from "@/components/professional-image-editor";
 import { ImageLoading } from "@/lib/tiptap/image-loading";
+import { S3Image } from "@/lib/tiptap/s3-image-extension";
 import { toast } from "sonner";
 import {
   Bold,
@@ -56,7 +56,7 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, blogT
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Image.configure({
+      S3Image.configure({
         HTMLAttributes: {
           class: "rounded-lg max-w-full h-auto cursor-pointer hover:opacity-80 transition-opacity",
         },

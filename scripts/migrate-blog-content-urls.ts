@@ -12,7 +12,7 @@ import { sql } from "drizzle-orm";
  * from the old bucket to the new bucket
  */
 
-const OLD_BUCKET = "jagratiblogai";
+const OLD_BUCKET = "";
 const NEW_BUCKET = process.env.S3_BUCKET_NAME || "contendodev";
 const AWS_REGION = process.env.AWS_DEFAULT_REGION || "ap-south-1";
 

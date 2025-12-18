@@ -232,12 +232,15 @@ ${outlineText}
           }
 
           const storageBase = process.env.IMAGE_STORAGE_BASE || process.env.IMAGE_S3_BASE;
+          console.log(`[DEBUG] Storage base for image URL: ${storageBase}`);
+          console.log(`[DEBUG] IMAGE_STORAGE_BASE env: ${process.env.IMAGE_STORAGE_BASE}`);
           if (!storageBase) {
             console.error("IMAGE_STORAGE_BASE or IMAGE_S3_BASE not set; cannot form image URL");
             break;
           }
 
           const imageUrl = `${storageBase.replace(/\/$/, "")}/${gen.s3Key}`;
+          console.log(`[DEBUG] Constructed image URL: ${imageUrl}`);
 
           await db.insert(blogImages).values({
             blogId: blog.id,

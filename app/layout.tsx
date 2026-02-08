@@ -7,7 +7,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Contendo - AI-Powered Blog Creation Platform",
+  title: "Blog AI - AI-Powered Blog Creation Platform",
   description: "Create amazing SEO-optimized blogs with AI assistance",
 };
 

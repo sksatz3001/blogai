@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { db } from "@/db";
 import { blogs, users, blogImages, companyProfiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { externalGenerateSingleImage, isExternalBackendConfigured } from "@/lib/image-backend";
+import { generateAndStoreImage, isExternalBackendConfigured } from "@/lib/image-backend";
 import { deductCredits, CREDIT_COSTS } from "@/lib/credits";
 import { NextResponse } from "next/server";
 
@@ -173,10 +173,62 @@ ${outlineText}
         prompts.push({
           type: 'featured',
           after: '', // Will be inserted at the beginning
-          prompt: `Professional blog header image for article titled "${title}". High-quality, modern, clean design with visual elements representing ${primaryKeyword}. Style: editorial photography or sleek illustration, vibrant colors, eye-catching composition suitable for social media sharing. No text overlay.`,
+          prompt: `Create a professional, high-impact hero image for a blog article about "${title}". 
+Topic focus: ${primaryKeyword}. 
+Style: Modern digital illustration or high-quality editorial photograph. 
+Design elements: Clean composition, vibrant colors with professional color palette, visual metaphors related to ${primaryKeyword}. 
+Mood: Authoritative, engaging, and forward-thinking. 
+Format: Landscape orientation, suitable for blog header and social media sharing. 
+IMPORTANT: No text, no letters, no words in the image.`,
         });
       }
       
+      // Determine image style based on section content
+      const getImageStyle = (sectionTitle: string): string => {
+        const title = sectionTitle.toLowerCase();
+        // Data/statistics related sections - use infographic style
+        if (title.includes('statistic') || title.includes('data') || title.includes('number') || 
+            title.includes('metric') || title.includes('growth') || title.includes('trend') ||
+            title.includes('analysis') || title.includes('comparison') || title.includes('percentage')) {
+          return 'infographic with data visualization, charts, and graphs';
+        }
+        // Process/how-to sections - use step diagram style
+        if (title.includes('how to') || title.includes('step') || title.includes('process') || 
+            title.includes('guide') || title.includes('tutorial') || title.includes('implement') ||
+            title.includes('workflow') || title.includes('method')) {
+          return 'process diagram or step-by-step visual flowchart';
+        }
+        // Benefits/advantages sections - use icon grid style
+        if (title.includes('benefit') || title.includes('advantage') || title.includes('feature') || 
+            title.includes('reason') || title.includes('why') || title.includes('pro')) {
+          return 'clean icon grid or visual benefits illustration';
+        }
+        // Challenges/problems sections - use conceptual illustration
+        if (title.includes('challenge') || title.includes('problem') || title.includes('issue') || 
+            title.includes('risk') || title.includes('pitfall') || title.includes('con')) {
+          return 'conceptual illustration showing obstacles or challenges';
+        }
+        // Future/prediction sections - use futuristic style
+        if (title.includes('future') || title.includes('predict') || title.includes('upcoming') || 
+            title.includes('next') || title.includes('evolution') || title.includes('2025') || title.includes('2026')) {
+          return 'futuristic, forward-looking illustration with modern tech aesthetic';
+        }
+        // Examples/case study sections - use realistic style
+        if (title.includes('example') || title.includes('case') || title.includes('real-world') || 
+            title.includes('application') || title.includes('use case')) {
+          return 'realistic professional photograph or real-world scenario illustration';
+        }
+        // Default - professional illustration
+        return 'professional illustration with modern design elements';
+      };
+
+      // Get subsections for context
+      const getSubsectionContext = (sec: any): string => {
+        const items = (sec.items || []).filter((x: any) => !x.isImage).map((x: any) => x.title);
+        if (items.length === 0) return '';
+        return `Subtopics covered: ${items.slice(0, 3).join(', ')}.`;
+      };
+
       // One image for each section where sectionImage is true
       outline.forEach((sec: any, secIdx: number) => {
         // Match section title to H2 by finding the H2 that contains the section title
@@ -191,10 +243,18 @@ ${outlineText}
         }
         // Generate one image per section if sectionImage is true
         if (sec.sectionImage !== false) {
+          const imageStyle = getImageStyle(sec.title);
+          const subsectionContext = getSubsectionContext(sec);
           prompts.push({
             type: 'section',
             after: h2,
-            prompt: `Illustrative image for blog section: "${sec.title}". Context: Article about ${primaryKeyword}. Style: professional, modern, clean graphic or photograph. Visual should complement and enhance the written content. Suitable for web blog post. No text overlay.`,
+            prompt: `Create an informative, visually engaging image for the blog section "${sec.title}".
+Main article topic: ${title} (${primaryKeyword}).
+${subsectionContext}
+Visual style: ${imageStyle}.
+Color scheme: Professional, cohesive with modern web design.
+Layout: Clean, well-organized, easy to understand at a glance.
+IMPORTANT: No text, no letters, no words, no numbers in the image. Visual elements only.`,
           });
         }
       });
@@ -220,38 +280,15 @@ ${outlineText}
       for (const p of prompts) {
         try {
           console.log(`Generating ${p.type} image${p.after ? ` for: "${p.after}"` : ''} with prompt: "${p.prompt.substring(0, 60)}..."`);
-          const gen = await externalGenerateSingleImage({
+          
+          // Generate and store image directly in database
+          const { imageId, imageUrl } = await generateAndStoreImage({
             prompt: p.prompt,
-            userId: String(dbUser.id),
             blogId: blog.id,
-          });
-          console.log(`Image generation result:`, gen ? { s3Key: gen.s3Key } : 'null/undefined');
-          if (!gen || !gen.s3Key) {
-            console.error(`Skipping image - gen result was null or missing s3Key`);
-            continue;
-          }
-
-          const storageBase = process.env.IMAGE_STORAGE_BASE || process.env.IMAGE_S3_BASE;
-          console.log(`[DEBUG] Storage base for image URL: ${storageBase}`);
-          console.log(`[DEBUG] IMAGE_STORAGE_BASE env: ${process.env.IMAGE_STORAGE_BASE}`);
-          if (!storageBase) {
-            console.error("IMAGE_STORAGE_BASE or IMAGE_S3_BASE not set; cannot form image URL");
-            break;
-          }
-
-          const imageUrl = `${storageBase.replace(/\/$/, "")}/${gen.s3Key}`;
-          console.log(`[DEBUG] Constructed image URL: ${imageUrl}`);
-
-          await db.insert(blogImages).values({
-            blogId: blog.id,
-            imageUrl,
-            s3Key: gen.s3Key,
-            imagePrompt: p.prompt,
             altText: p.prompt,
-            position: 0 as any,
-            width: null as any,
-            height: null as any,
-          }).returning();
+          });
+          
+          console.log(`Image generation result: imageId=${imageId}, imageUrl=${imageUrl}`);
           
           if (p.type === 'featured') {
             featuredImageUrl = imageUrl;

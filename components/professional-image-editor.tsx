@@ -53,8 +53,6 @@ export function ProfessionalImageEditor({
   const [contrast, setContrast] = useState(0);
   const [saturation, setSaturation] = useState(0);
   const [blur, setBlur] = useState(0);
-  const [aiPrompt, setAiPrompt] = useState("");
-  const [isAiEditing, setIsAiEditing] = useState(false);
   const [fontSize, setFontSize] = useState(32);
   const [fontFamily, setFontFamily] = useState('Arial');
   const [textBold, setTextBold] = useState(false);
@@ -331,82 +329,8 @@ export function ProfessionalImageEditor({
   };
 
   const handleAiEdit = async () => {
-    if (!aiPrompt.trim() || isAiEditing) return;
-    if (!originalImageUrl) {
-      toast.error('Original image URL missing');
-      return;
-    }
-
-    setIsAiEditing(true);
-    try {
-      const response = await fetch('/api/images/edit-with-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          sourceImageUrl: originalImageUrl, 
-          prompt: aiPrompt, 
-          blogId 
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to edit image with AI");
-
-      const data = await response.json();
-      const editedUrl = data.editedImageUrl || data.imageUrl;
-      
-      if (!editedUrl) throw new Error('No edited image URL returned');
-
-      // Refresh credits after successful AI edit
-      onCreditsUsed?.();
-
-      // Display edited image (proxy if needed for canvas safety)
-      const storageBase = (process.env.NEXT_PUBLIC_IMAGE_STORAGE_BASE || process.env.IMAGE_STORAGE_BASE || '').replace(/\/$/, '');
-      const isAbs = /^https?:\/\//i.test(editedUrl);
-      const isStorage = storageBase && isAbs && editedUrl.startsWith(storageBase);
-      const displayUrl = isStorage ? `/api/images/proxy?url=${encodeURIComponent(editedUrl)}` : editedUrl;
-      
-      const canvas = fabricCanvasRef.current;
-      if (!canvas) return;
-
-      // Remove old image
-      const objects = canvas.getObjects();
-      const imageObj = objects.find((obj: any) => obj.type === 'image');
-      if (imageObj) {
-        canvas.remove(imageObj);
-      }
-
-      // Load and add the AI-edited image
-      fabric.Image.fromURL(displayUrl, (img: any) => {
-        if (!img) {
-          toast.error("Failed to load edited image");
-          setIsAiEditing(false);
-          return;
-        }
-        
-        // Use the same scale as the original image to maintain size
-        const scale = originalImageScaleRef.current;
-        
-        img.scale(scale);
-        img.set({
-          left: canvas.width! / 2,
-          top: canvas.height! / 2,
-          originX: 'center',
-          originY: 'center',
-          selectable: false,
-        });
-        
-        canvas.insertAt(img, 0); // Insert at bottom layer
-        canvas.renderAll();
-        toast.success("AI editing complete!");
-        setIsAiEditing(false);
-      }, { crossOrigin: 'anonymous' });
-
-      setAiPrompt("");
-    } catch (error) {
-      console.error("AI edit error:", error);
-      toast.error("Failed to edit image with AI");
-      setIsAiEditing(false);
-    }
+    // AI-based image editing has been removed
+    toast.error("AI-based image editing has been removed. Please use manual editing tools instead.");
   };
 
   const handleRotate = (angle: number) => {
@@ -779,54 +703,36 @@ export function ProfessionalImageEditor({
 
           {/* Right Panel - Tool Options */}
           <div className="w-80 bg-white border-l border-gray-200 p-6 overflow-y-auto">
-            {/* AI Edit Panel */}
+            {/* AI Edit Panel - Feature Removed */}
             {activeTool === 'ai' && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Wand2 className="text-purple-500" size={24} />
+                  <Wand2 className="text-gray-400" size={24} />
                   <h3 className="text-lg font-bold text-gray-900">AI Image Edit</h3>
                 </div>
                 
-                <p className="text-sm text-gray-600">
-                  Describe how you want to modify this image
-                </p>
-                
-                <textarea
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  placeholder="E.g., make it brighter, add sunlight, change background to beach, make colors more vibrant..."
-                  className="w-full p-3 border-2 border-gray-200 rounded-lg text-sm resize-none min-h-[140px] focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 bg-white text-gray-900 placeholder:text-gray-400"
-                  disabled={isAiEditing}
-                />
-                
-                <Button
-                  onClick={handleAiEdit}
-                  disabled={!aiPrompt.trim() || isAiEditing}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
-                  size="lg"
-                >
-                  {isAiEditing ? (
-                    <>
-                      <Loader2 size={18} className="mr-2 animate-spin" />
-                      AI Working...
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 size={18} className="mr-2" />
-                      Apply AI Edit
-                    </>
-                  )}
-                </Button>
-
-                <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                  <h4 className="text-sm font-semibold text-purple-700 mb-2">💡 Examples:</h4>
-                  <ul className="text-xs text-purple-600 space-y-1">
-                    <li>• &quot;Make it brighter and add warmth&quot;</li>
-                    <li>• &quot;Change background to sunset&quot;</li>
-                    <li>• &quot;Add professional lighting&quot;</li>
-                    <li>• &quot;Make colors more saturated&quot;</li>
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <h4 className="text-sm font-semibold text-amber-700 mb-2">⚠️ Feature Removed</h4>
+                  <p className="text-sm text-amber-600">
+                    AI-based image editing has been removed from this version. 
+                    Please use the manual editing tools instead:
+                  </p>
+                  <ul className="text-xs text-amber-600 space-y-1 mt-2">
+                    <li>• <strong>Filter tab</strong> - Adjust brightness, contrast, saturation</li>
+                    <li>• <strong>Draw tab</strong> - Free-hand drawing and annotations</li>
+                    <li>• <strong>Text tab</strong> - Add text overlays</li>
+                    <li>• <strong>Shape tab</strong> - Add shapes and elements</li>
                   </ul>
                 </div>
+
+                <Button
+                  onClick={() => setActiveTool('filter')}
+                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                  size="lg"
+                >
+                  <Sliders size={18} className="mr-2" />
+                  Use Manual Filters
+                </Button>
               </div>
             )}
 

@@ -62,15 +62,11 @@ export default function ImageFeaturesPage() {
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                 <Wand2 size={20} className="text-white" />
               </div>
-              <CardTitle>7-Tab Image Editor</CardTitle>
+              <CardTitle>Professional Image Editor</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <ul className="space-y-3 text-muted-foreground">
-              <li className="flex items-start gap-3">
-                <Wand2 size={18} className="text-primary mt-0.5 flex-shrink-0" />
-                <span><strong className="text-foreground">AI Edit:</strong> Natural language modifications with Gemini Vision</span>
-              </li>
               <li className="flex items-start gap-3">
                 <Type size={18} className="text-primary mt-0.5 flex-shrink-0" />
                 <span><strong className="text-foreground">Text:</strong> Multiple overlays with custom fonts and colors</span>
@@ -86,6 +82,10 @@ export default function ImageFeaturesPage() {
               <li className="flex items-start gap-3">
                 <Sparkles size={18} className="text-primary mt-0.5 flex-shrink-0" />
                 <span><strong className="text-foreground">Transform:</strong> Rotate, flip horizontal/vertical</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Wand2 size={18} className="text-primary mt-0.5 flex-shrink-0" />
+                <span><strong className="text-foreground">Draw:</strong> Freehand drawing and annotations</span>
               </li>
             </ul>
           </CardContent>
@@ -105,7 +105,7 @@ export default function ImageFeaturesPage() {
                 <li>• React 18 with TypeScript</li>
                 <li>• Tiptap rich text editor</li>
                 <li>• Custom node extensions</li>
-                <li>• Canvas API for editing</li>
+                <li>• Fabric.js canvas editing</li>
                 <li>• Radix UI primitives</li>
                 <li>• Tailwind CSS styling</li>
               </ul>
@@ -115,8 +115,8 @@ export default function ImageFeaturesPage() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>• Next.js 15 App Router</li>
                 <li>• Server-side API routes</li>
-                <li>• Gemini AI integration</li>
-                <li>• Pollinations API calls</li>
+                <li>• OpenAI DALL-E 3 integration</li>
+                <li>• Database image storage</li>
                 <li>• Base64 image handling</li>
                 <li>• Error handling & logging</li>
               </ul>
@@ -124,12 +124,12 @@ export default function ImageFeaturesPage() {
             <div>
               <h3 className="text-base font-semibold text-primary mb-3">AI Services</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• Gemini 2.0-flash-exp</li>
-                <li>• Prompt enhancement</li>
-                <li>• Vision-based editing</li>
-                <li>• Pollinations generation</li>
-                <li>• Async/await patterns</li>
-                <li>• Fallback strategies</li>
+                <li>• OpenAI DALL-E 3</li>
+                <li>• Smart prompt generation</li>
+                <li>• Topic-aware images</li>
+                <li>• Infographic styles</li>
+                <li>• Section-specific visuals</li>
+                <li>• 1024×1024 resolution</li>
               </ul>
             </div>
           </div>
@@ -193,12 +193,12 @@ export default function ImageFeaturesPage() {
             <ol className="space-y-1 text-muted-foreground text-sm">
               <li>a) Click on any image in the editor</li>
               <li>b) Click the <strong className="text-foreground">Edit button (✏️)</strong> that appears</li>
-              <li>c) Choose from 7 editing tabs:</li>
-              <li className="pl-6">• AI Edit: &quot;Add sunlight&quot;, &quot;Make it darker&quot;</li>
+              <li>c) Choose from editing tools:</li>
               <li className="pl-6">• Text: Add custom text overlays</li>
               <li className="pl-6">• Adjust: Fine-tune brightness, contrast, etc.</li>
               <li className="pl-6">• Filters: Apply preset effects</li>
               <li className="pl-6">• Transform: Rotate and flip</li>
+              <li className="pl-6">• Draw: Freehand annotations</li>
               <li className="pl-6">• Resize: Change aspect ratio</li>
               <li>d) Click &quot;Save Changes&quot; when done</li>
             </ol>

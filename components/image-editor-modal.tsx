@@ -40,11 +40,7 @@ interface Adjustments {
 export function ImageEditorModal({ imageSrc, originalImageUrl, blogId, onClose, onSave }: ImageEditorModalProps) {
   const [mounted, setMounted] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<EditorTab>("ai");
-  const [aiPrompt, setAiPrompt] = useState("");
-  const [externalEditedUrl, setExternalEditedUrl] = useState<string | null>(null);
-  const [externalEditedS3Key, setExternalEditedS3Key] = useState<string | null>(null);
-  const [isAiEditing, setIsAiEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState<EditorTab>("adjust");
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
 
@@ -246,65 +242,8 @@ export function ImageEditorModal({ imageSrc, originalImageUrl, blogId, onClose, 
   }, [drawCanvas]);
 
   const handleAiEdit = async () => {
-    if (!aiPrompt.trim() || isAiEditing) return;
-    if (!originalImageUrl) {
-      alert('Original image URL missing');
-      return;
-    }
-
-    setIsAiEditing(true);
-    try {
-      // Get current canvas as base64
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const response = await fetch('/api/images/edit-with-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceImageUrl: originalImageUrl, prompt: aiPrompt, blogId }),
-      });
-
-      if (!response.ok) throw new Error("Failed to edit image with AI");
-
-      const data = await response.json();
-      const editedUrl = data.editedImageUrl || data.imageUrl;
-      if (!editedUrl) throw new Error('No edited image URL returned');
-      setExternalEditedUrl(editedUrl);
-      setExternalEditedS3Key(data.s3Key || data.s3_key || null);
-      // Auto-persist edit when possible so changes reflect immediately in blog
-      try {
-        if (blogId && originalImageUrl && editedUrl) {
-          await fetch('/api/images/apply-edit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ blogId, originalImageUrl, editedImageUrl: editedUrl, s3Key: data.s3Key || data.s3_key || undefined }),
-          });
-          // Inform parent editor to replace the image immediately
-          onSave(editedUrl);
-        }
-      } catch (persistErr) {
-        console.warn('Auto-save of AI edit failed, changes still visible locally.', persistErr);
-      }
-      // Display edited image (proxy if needed for canvas safety)
-      const storageBase = (process.env.NEXT_PUBLIC_IMAGE_STORAGE_BASE || process.env.IMAGE_STORAGE_BASE || '').replace(/\/$/, '');
-      const isAbs = /^https?:\/\//i.test(editedUrl);
-      const isStorage = storageBase && isAbs && editedUrl.startsWith(storageBase);
-      const displayUrl = isStorage ? `/api/images/proxy?url=${encodeURIComponent(editedUrl)}` : editedUrl;
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = displayUrl;
-      img.onload = () => {
-        imageRef.current = img;
-        drawCanvas();
-      };
-
-      setAiPrompt("");
-    } catch (error) {
-      console.error("AI edit error:", error);
-      alert("Failed to edit image with AI. Please try again.");
-    } finally {
-      setIsAiEditing(false);
-    }
+    // AI-based image editing has been removed
+    alert("AI-based image editing has been removed. Please use manual editing tools instead.");
   };
 
   const addTextOverlay = () => {
@@ -344,24 +283,7 @@ export function ImageEditorModal({ imageSrc, originalImageUrl, blogId, onClose, 
   };
 
   const handleSave = async () => {
-    // If we have an external edited URL, persist change and update blog image
-    if (externalEditedUrl) {
-      try {
-        if (blogId) {
-          await fetch('/api/images/apply-edit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ blogId, originalImageUrl, editedImageUrl: externalEditedUrl, s3Key: externalEditedS3Key }),
-          });
-        }
-        // Pass edited URL back (not base64) so editor replaces original
-        onSave(externalEditedUrl);
-        return;
-      } catch (e) {
-        console.error('Failed to persist external edit; falling back to canvas data.', e);
-      }
-    }
-    // Fallback: manual canvas edits -> base64
+    // Manual canvas edits -> base64
     const canvas = canvasRef.current;
     if (!canvas) return;
     const editedImageSrc = canvas.toDataURL('image/png');
@@ -436,38 +358,29 @@ export function ImageEditorModal({ imageSrc, originalImageUrl, blogId, onClose, 
 
             {/* Controls Panel */}
             <div className="px-4 pb-4">
-            {/* AI Edit Tab */}
+            {/* AI Edit Tab - Feature Removed */}
             {activeTab === "ai" && (
               <div className="space-y-4">
                 <div className="text-xs font-bold text-[#88C0D0] uppercase tracking-wide mb-3">
                   AI-Powered Editing
                 </div>
-                <p className="text-sm text-[#D8DEE9] mb-3">
-                  Describe how you want to modify this image
-                </p>
-                <textarea
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  placeholder="Add sunlight, make it darker, add snow..."
-                  className="w-full p-3 border-2 border-[#434C5E] rounded-xl text-sm resize-none min-h-[120px] focus:outline-none focus:border-[#88C0D0] focus:ring-2 focus:ring-[#88C0D0]/20 bg-[#3B4252] text-[#ECEFF4] placeholder:text-[#4C566A] transition-all"
-                  disabled={isAiEditing}
-                />
+                <div className="p-4 bg-amber-900/30 border border-amber-600/50 rounded-xl">
+                  <p className="text-sm text-amber-300 font-semibold mb-2">⚠️ Feature Removed</p>
+                  <p className="text-sm text-amber-200/80">
+                    AI-based image editing has been removed. Please use manual editing tools:
+                  </p>
+                  <ul className="text-xs text-amber-200/70 space-y-1 mt-2">
+                    <li>• <strong>Adjust</strong> - Brightness, contrast, saturation</li>
+                    <li>• <strong>Text</strong> - Add text overlays</li>
+                    <li>• <strong>Crop</strong> - Resize and crop</li>
+                  </ul>
+                </div>
                 <Button
-                  onClick={handleAiEdit}
-                  disabled={!aiPrompt.trim() || isAiEditing}
+                  onClick={() => setActiveTab('adjust')}
                   className="w-full"
                 >
-                  {isAiEditing ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-[#2E3440] border-t-transparent rounded-full animate-spin mr-2" />
-                      Editing...
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 size={16} className="mr-2" />
-                      Apply AI Edit
-                    </>
-                  )}
+                  <Sliders size={16} className="mr-2" />
+                  Use Manual Adjustments
                 </Button>
               </div>
             )}

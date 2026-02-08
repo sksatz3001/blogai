@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { externalGenerateSingleImage, isExternalBackendConfigured } from "@/lib/image-backend";
+import { generateAndStoreImage, isExternalBackendConfigured } from "@/lib/image-backend";
 import { db } from "@/db";
 import { blogs, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -30,6 +30,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!blogId) {
+      return NextResponse.json(
+        { error: "blogId is required" },
+        { status: 400 }
+      );
+    }
+
     // Check and deduct credits before generation
     const creditResult = await deductCredits({
       userId: dbUser.id,
@@ -37,7 +44,7 @@ export async function POST(request: NextRequest) {
       type: 'image_generation',
       description: 'AI image generation',
       metadata: {
-        blogId: blogId ? Number(blogId) : undefined,
+        blogId: Number(blogId),
         imagePrompt: prompt.substring(0, 200),
       },
     });
@@ -50,36 +57,28 @@ export async function POST(request: NextRequest) {
       }, { status: 402 });
     }
 
-    // Try external backend first if configured, else fall back
+    // Check if OpenAI API key is configured
     if (!isExternalBackendConfigured()) {
       return NextResponse.json(
-        { error: "External image backend not configured (set IMAGE_BACKEND_BASE)", code: "NO_BACKEND" },
+        { error: "OPENAI_API_KEY not configured for image generation", code: "NO_BACKEND" },
         { status: 501 }
       );
     }
 
-    // Resolve numeric userId from blog if provided (to pass to backend)
-    let ownerUserId: string | undefined = undefined;
-    let resolvedBlogId: string | undefined = undefined;
-    if (blogId) {
-      const b = await db.query.blogs.findFirst({ where: eq(blogs.id, Number(blogId)) });
-      if (b) {
-        ownerUserId = String(b.userId);
-        resolvedBlogId = String(b.id);
-      }
+    // Verify blog exists and user owns it
+    const blog = await db.query.blogs.findFirst({ where: eq(blogs.id, Number(blogId)) });
+    if (!blog || blog.userId !== dbUser.id) {
+      return NextResponse.json({ error: "Blog not found" }, { status: 404 });
     }
 
-    // Use external backend only (contract returns s3_key)
-    const { s3Key } = await externalGenerateSingleImage({ prompt, userId: ownerUserId, blogId: resolvedBlogId });
+    // Generate image and store in database
+    const { imageId, imageUrl } = await generateAndStoreImage({
+      prompt,
+      blogId: Number(blogId),
+      altText: prompt,
+    });
 
-    // Strict: require S3 base configured; do NOT fall back to by-key proxy
-    const storageBase = process.env.IMAGE_STORAGE_BASE || process.env.IMAGE_S3_BASE;
-    if (!storageBase) {
-      return NextResponse.json({ error: 'IMAGE_STORAGE_BASE not set; configure it to form final image URL', code: 'NO_STORAGE_BASE' }, { status: 500 });
-    }
-    const imageUrl = `${storageBase.replace(/\/$/, '')}/${s3Key}`;
-
-    return NextResponse.json({ imageUrl, s3Key, provider: "external" });
+    return NextResponse.json({ imageUrl, imageId, provider: "openai" });
   } catch (error) {
     console.error("Error generating image:", error);
     const message = (error as Error)?.message || "Failed to generate image";

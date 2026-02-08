@@ -102,7 +102,11 @@ export const blogImages = pgTable('blog_images', {
   id: serial('id').primaryKey(),
   blogId: integer('blog_id').notNull().references(() => blogs.id, { onDelete: 'cascade' }),
   imageUrl: text('image_url').notNull(),
-  // Optional storage key when image is persisted to S3 or external storage
+  // Base64 image data stored directly in DB
+  imageData: text('image_data'),
+  // Content type (e.g., 'image/png', 'image/jpeg')
+  contentType: text('content_type').default('image/png'),
+  // Optional storage key when image is persisted to S3 or external storage (deprecated)
   s3Key: text('s3_key'),
   imagePrompt: text('image_prompt'),
   altText: text('alt_text'),

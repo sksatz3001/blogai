@@ -386,7 +386,14 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, blogT
     let finalUrl = editedImageSrc;
     let uploadSucceeded = false;
     
-    // If blogId is present, attempt S3 upload + persistence
+    // Check if we're editing an existing DB image - extract imageId from URL
+    let existingImageId: number | null = null;
+    const serveUrlMatch = selectedImageOriginalSrc.match(/\/api\/images\/serve\/(\d+)/);
+    if (serveUrlMatch) {
+      existingImageId = parseInt(serveUrlMatch[1], 10);
+    }
+    
+    // If blogId is present, save to database
     if (blogId) {
       try {
         const res = await fetch("/api/images/upload", {
@@ -395,24 +402,24 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, blogT
           body: JSON.stringify({ 
             imageData: editedImageSrc, 
             blogId,
+            imageId: existingImageId, // Pass imageId if updating existing image
           }),
         });
         
         if (res.ok) {
           const up = await res.json();
           if (up?.imageUrl) {
-            finalUrl = up.imageUrl;
+            // Add cache-busting parameter to force browser to reload the image
+            finalUrl = existingImageId 
+              ? `${up.imageUrl}?t=${Date.now()}` 
+              : up.imageUrl;
             uploadSucceeded = true;
-            console.log("Image uploaded to S3 successfully:", finalUrl);
+            console.log("Image saved to database successfully:", finalUrl);
           }
         } else {
           const errorData = await res.json().catch(() => ({}));
           console.warn("Image upload failed:", res.status, errorData);
-          // If upload fails due to S3 not configured, throw error
-          if (errorData?.code === 'NO_S3') {
-            throw new Error("S3 storage not configured. Please contact admin.");
-          }
-          // Throw for other errors
+          // Throw for errors
           throw new Error(errorData?.error || `Upload failed: ${res.status}`);
         }
       } catch (uploadError) {
@@ -456,13 +463,18 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, blogT
     let originalAlt: string | undefined;
     let foundImage = false;
     
+    // Helper to normalize URLs for comparison (strip query params)
+    const normalizeUrl = (url: string) => url.split('?')[0];
+    
     doc.descendants((node) => {
       if (node.type.name === 'image') {
         const nodeSrc = node.attrs.src;
         // Check various forms the source could be in
-        const isMatch = nodeSrc === selectedImageOriginalSrc || 
-                       nodeSrc === selectedImageSrc ||
-                       (nodeSrc.includes('/api/images/proxy') && decodeURIComponent(nodeSrc).includes(selectedImageOriginalSrc));
+        const isMatch = normalizeUrl(nodeSrc) === normalizeUrl(selectedImageOriginalSrc) || 
+                       normalizeUrl(nodeSrc) === normalizeUrl(selectedImageSrc) ||
+                       (nodeSrc.includes('/api/images/proxy') && decodeURIComponent(nodeSrc).includes(normalizeUrl(selectedImageOriginalSrc))) ||
+                       (nodeSrc.includes('/api/images/serve/') && selectedImageOriginalSrc.includes('/api/images/serve/') && 
+                        normalizeUrl(nodeSrc) === normalizeUrl(selectedImageOriginalSrc));
         if (isMatch) {
           originalAlt = node.attrs.alt;
           foundImage = true;
@@ -477,11 +489,13 @@ export function TiptapEditor({ content, onChange, editable = true, blogId, blogT
     doc.descendants((node, pos) => {
       if (node.type.name === 'image') {
         const nodeSrc = node.attrs.src;
-        const isMatch = nodeSrc === selectedImageOriginalSrc || 
-                       nodeSrc === selectedImageSrc ||
-                       (nodeSrc.includes('/api/images/proxy') && decodeURIComponent(nodeSrc).includes(selectedImageOriginalSrc));
+        const isMatch = normalizeUrl(nodeSrc) === normalizeUrl(selectedImageOriginalSrc) || 
+                       normalizeUrl(nodeSrc) === normalizeUrl(selectedImageSrc) ||
+                       (nodeSrc.includes('/api/images/proxy') && decodeURIComponent(nodeSrc).includes(normalizeUrl(selectedImageOriginalSrc))) ||
+                       (nodeSrc.includes('/api/images/serve/') && selectedImageOriginalSrc.includes('/api/images/serve/') && 
+                        normalizeUrl(nodeSrc) === normalizeUrl(selectedImageOriginalSrc));
         if (isMatch) {
-          // Build attrs - save the actual S3 URL
+          // Build attrs - save the new URL
           const newAttrs: Record<string, any> = { src: urlToSave };
           if (originalAlt) newAttrs.alt = originalAlt;
           

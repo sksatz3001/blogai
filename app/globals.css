@@ -4,63 +4,63 @@
 
 @layer base {
   :root {
-    /* Clean Black, White & Blue Light Theme */
+    /* Clean Black & White Theme */
     color-scheme: light;
-    --background: 0 0% 99%;              /* Almost white */
-    --foreground: 0 0% 9%;               /* Near black text */
+    --background: 0 0% 100%;             /* Pure white */
+    --foreground: 0 0% 0%;               /* Pure black text */
     --card: 0 0% 100%;                   /* Pure white cards */
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 217 91% 50%;              /* Clean blue #2563eb */
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;                  /* Black as primary */
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;            /* Light gray */
-    --secondary-foreground: 0 0% 9%;
-    --muted: 220 14% 96%;                /* Light gray for muted */
-    --muted-foreground: 0 0% 45%;        /* Medium gray text */
-    --accent: 220 14% 96%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84% 60%;
+    --secondary: 0 0% 96%;               /* Light gray */
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 96%;                   /* Light gray for muted */
+    --muted-foreground: 0 0% 40%;        /* Medium gray text */
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 0% 30%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;               /* Light gray border */
-    --input: 220 13% 91%;
-    --ring: 217 91% 50%;
+    --border: 0 0% 90%;                  /* Light gray border */
+    --input: 0 0% 90%;
+    --ring: 0 0% 0%;
     --radius: 0.5rem;
 
-    /* Simplified Gradients */
-    --gradient-from: hsl(217, 91%, 50%);
-    --gradient-via: hsl(217, 91%, 60%);
-    --gradient-to: hsl(217, 91%, 70%);
-    --gradient-soft: hsl(220, 14%, 98%);
+    /* Black & White Gradients */
+    --gradient-from: hsl(0, 0%, 0%);
+    --gradient-via: hsl(0, 0%, 20%);
+    --gradient-to: hsl(0, 0%, 40%);
+    --gradient-soft: hsl(0, 0%, 98%);
   }
 
   .dark {
     /* Force light theme even with dark class */
     color-scheme: light;
-    --background: 0 0% 99%;
-    --foreground: 0 0% 9%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 217 91% 50%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 220 14% 96%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84% 60%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 0% 30%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 217 91% 50%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 0%;
 
-    --gradient-from: hsl(217, 91%, 50%);
-    --gradient-via: hsl(217, 91%, 60%);
-    --gradient-to: hsl(217, 91%, 70%);
-    --gradient-soft: hsl(220, 14%, 98%);
+    --gradient-from: hsl(0, 0%, 0%);
+    --gradient-via: hsl(0, 0%, 20%);
+    --gradient-to: hsl(0, 0%, 40%);
+    --gradient-soft: hsl(0, 0%, 98%);
   }
 }
 
@@ -98,7 +98,7 @@
   
   /* Gradient text - blue only */
   .gradient-text { 
-    background: linear-gradient(135deg, hsl(217, 91%, 50%), hsl(217, 91%, 40%)); 
+    background: linear-gradient(135deg, hsl(0, 0%, 0%), hsl(0, 0%, 30%)); 
     -webkit-background-clip: text; 
     -webkit-text-fill-color: transparent; 
     background-clip: text; 
@@ -125,7 +125,7 @@
     inset: 0; 
     border-radius: var(--radius); 
     padding: 1px; 
-    background: linear-gradient(135deg, hsl(217, 91%, 50%), hsl(217, 91%, 70%)); 
+    background: linear-gradient(135deg, hsl(0, 0%, 0%), hsl(0, 0%, 40%)); 
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); 
     -webkit-mask-composite: xor; 
     mask-composite: exclude; 
@@ -145,7 +145,7 @@
   
   .toc-highlight { animation: tocPulse 1.2s ease-in-out; }
   @keyframes tocPulse {
-    0% { background-color: hsl(217, 91%, 95%); }
+    0% { background-color: hsl(0, 0%, 90%); }
     100% { background-color: transparent; }
   }
   

@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { blogs, users, blogImages } from "@/db/schema";
+import { blogs, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { externalGenerateSingleImage, isExternalBackendConfigured } from "@/lib/image-backend";
+import { generateAndStoreImage, isExternalBackendConfigured } from "@/lib/image-backend";
 
 export async function POST(
   request: Request,
@@ -32,7 +32,7 @@ export async function POST(
       return new Response("Blog not found", { status: 404 });
     }
 
-  const body = await request.json();
+    const body = await request.json();
     const { content } = body;
 
     // Extract image placeholder markers from content
@@ -57,45 +57,26 @@ export async function POST(
 
     if (!isExternalBackendConfigured()) {
       return Response.json(
-        { error: "External image backend not configured (set IMAGE_BACKEND_BASE)", code: "NO_BACKEND" },
+        { error: "OPENAI_API_KEY not configured for image generation", code: "NO_BACKEND" },
         { status: 501 }
       );
     }
 
-  const generatedImages: Array<{ id: number; url: string; s3Key?: string; prompt: string; position: number; placeholder: string; }> = [];
+    const generatedImages: Array<{ id: number; url: string; prompt: string; position: number; placeholder: string; }> = [];
 
     for (const placeholder of placeholders) {
       try {
-        // Prefer external backend generation when configured
-        const res = await externalGenerateSingleImage({ prompt: placeholder.description, userId: String(dbUser.id), blogId: String(blog.id) });
-        const s3Key = res.s3Key;
-        const storageBase = process.env.IMAGE_STORAGE_BASE || process.env.IMAGE_S3_BASE;
-        if (!storageBase) {
-          throw new Error('IMAGE_STORAGE_BASE not set');
-        }
-        const imageUrl = `${storageBase.replace(/\/$/, '')}/${s3Key}`;
-  const width = undefined;
-  const height = undefined;
-        
-        // Save to database
-        const [savedImage] = await db
-          .insert(blogImages)
-          .values({
-            blogId: blog.id,
-            imageUrl,
-            s3Key,
-            imagePrompt: placeholder.description,
-            altText: placeholder.description,
-            position: placeholder.position,
-            width: null as any,
-            height: null as any,
-          })
-          .returning();
+        // Generate image and store directly in database
+        const { imageId, imageUrl } = await generateAndStoreImage({
+          prompt: placeholder.description,
+          blogId: blog.id,
+          altText: placeholder.description,
+          position: placeholder.position,
+        });
 
         generatedImages.push({
-          id: savedImage.id,
+          id: imageId,
           url: imageUrl,
-          s3Key: savedImage.s3Key || s3Key,
           prompt: placeholder.description,
           position: placeholder.position,
           placeholder: placeholder.match,
@@ -106,7 +87,7 @@ export async function POST(
     }
 
     if (generatedImages.length === 0) {
-      return Response.json({ error: "Failed to generate images via external backend" }, { status: 502 });
+      return Response.json({ error: "Failed to generate images" }, { status: 502 });
     }
 
     return Response.json({ message: "Images generated", images: generatedImages });

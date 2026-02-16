@@ -150,7 +150,7 @@ Write like a human expert, NOT like AI. Use conversational tone, contractions, v
 - Title: ${title}
 - Primary Keyword: ${primaryKeyword} (MUST appear 8-15 times for optimal density)
 - Secondary Keywords: ${secondaryKeywords?.join(", ") || "None"}
-- Target Word Count: ${targetWordCount} words (±5%)
+- **STRICT Word Count: ${targetWordCount} words** (MANDATORY — you must write at least ${Math.floor(targetWordCount * 0.9)} words and no more than ${Math.ceil(targetWordCount * 1.1)} words of actual text content, not counting HTML tags)
 - Company: ${companyName}
 - Company Website: ${companyWebsite}
 - Company Description: ${companyDescription}
@@ -238,7 +238,9 @@ Write like a human expert, NOT like AI. Use conversational tone, contractions, v
 - No images, no inline styles, no div/section/article tags
 - External links: <a href="URL" target="_blank" rel="noopener">text</a>
 
-Write the complete, optimized blog post now:`;
+Write the complete, optimized blog post now.
+
+**⚠️ FINAL REMINDER — WORD COUNT IS NON-NEGOTIABLE:** You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWordCount * 0.9)} words). Each H2 section needs substantial content with 3-5 detailed paragraphs per subsection. Do NOT write a short article. Expand each point with examples, statistics, practical advice, and real-world scenarios.`;
 
           const completion = await openai.chat.completions.create({
             model: "gpt-4o",
@@ -253,7 +255,7 @@ Write the complete, optimized blog post now:`;
               },
             ],
             temperature: 0.7,
-            max_tokens: Math.ceil(targetWordCount * 2.5),
+            max_tokens: Math.max(8000, Math.ceil(targetWordCount * 3)),
             stream: true,
           });
 

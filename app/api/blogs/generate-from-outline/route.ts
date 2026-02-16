@@ -173,15 +173,29 @@ CRITICAL WRITING STYLE RULES (Content Quality):
 - Include surprising facts, counterintuitive insights, or "myth-busting" moments
 - Reference real tools, platforms, methodologies, and brands where relevant
 
-Your content must satisfy E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) criteria.`;
-    const outlineText = outline.map((s: any, i: number) => `H2 ${i+1}. ${s.title}${(s.items||[]).length?"\n"+ (s.items||[]).filter((x:any)=>!x.isImage).map((x:any,j:number)=>`  H3 ${i+1}.${j+1}. ${x.title}`).join("\n"):""}`).join("\n");
+Your content must satisfy E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) criteria.
+
+CRITICAL WORD COUNT RULE:
+- You MUST write the EXACT number of words requested. If the user asks for 2500 words, you write 2500 words of actual content (not counting HTML tags).
+- Each H2 section should be substantial with 3-5 detailed paragraphs per H3 subsection.
+- NEVER produce a short article. A 2500-word article means roughly 300-400 words per H2 section.
+- If you run out of things to say, add more examples, case studies, comparisons, practical tips, and real-world scenarios.
+- Treat the word count as a hard requirement, not a suggestion.`;
+    const sectionCount = outline.length || 1;
+    const wordsPerSection = Math.ceil(targetWordCount / (sectionCount + 2)); // +2 for intro + conclusion/FAQ
+    const outlineText = outline.map((s: any, i: number) => {
+      const subsections = (s.items||[]).filter((x:any)=>!x.isImage);
+      const subsectionText = subsections.length ? "\n" + subsections.map((x:any,j:number)=>`  H3 ${i+1}.${j+1}. ${x.title}`).join("\n") : "";
+      return `H2 ${i+1}. ${s.title} [Write ~${wordsPerSection} words for this section]${subsectionText}`;
+    }).join("\n");
     const usr = `Write a comprehensive, SEO-optimized blog article that reads like it was written by a human expert, NOT by AI.
 
 **ARTICLE DETAILS:**
 - Title: ${title}
 - Primary Keyword: ${primaryKeyword} (use this keyword 5-8 times naturally throughout the content)
 - Secondary Keywords: ${secondaryKeywords.join(", ")} (use each 2-3 times)
-- Target Word Count: ${targetWordCount} words
+- **STRICT Word Count: ${targetWordCount} words** (THIS IS MANDATORY — you must write at least ${Math.floor(targetWordCount * 0.9)} words and no more than ${Math.ceil(targetWordCount * 1.1)} words of actual content, not counting HTML tags)
+- Words Per Section: Write approximately ${wordsPerSection} words for EACH H2 section (${sectionCount} sections + intro + FAQ/conclusion)
 - Company/Author: ${(company?.companyName) || (dbUser.companyName || "Our Company")}
 - Current Date Context: ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
 
@@ -236,12 +250,15 @@ ${outlineText}
 - Add id attributes to all headings (slugified from text)
 - For key-takeaways-box and fact-callout divs, use the exact class names specified above
 - Do NOT include images or image placeholders
-- Output clean, production-ready HTML only`;
+- Output clean, production-ready HTML only
+
+**⚠️ FINAL REMINDER — WORD COUNT IS NON-NEGOTIABLE:**
+You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWordCount * 0.9)} words). Each H2 section needs ~${wordsPerSection} words. Each H3 subsection needs 3-5 substantial paragraphs (100-150 words each). Do NOT write a short article. Expand each point with examples, data, practical advice, comparisons, and real-world scenarios. If a section feels thin, add more depth — more examples, more statistics, more actionable tips. Count your words as you write. The article must be comprehensive and thorough.`;
 
     const completion = await client.chat.completions.create({
       model: "gpt-4o",
       temperature: 0.65,
-      max_tokens: Math.ceil(targetWordCount * 2.5),
+      max_tokens: Math.max(8000, Math.ceil(targetWordCount * 3)),
       messages: [ { role: "system", content: sys }, { role: "user", content: usr } ],
       stream: false,
     });

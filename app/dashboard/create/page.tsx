@@ -29,8 +29,7 @@ function CreateBlogContent() {
   // Keyword research state
   const [keywordResearch, setKeywordResearch] = useState<any>(null);
   const [researchingKeywords, setResearchingKeywords] = useState(false);
-  const [showKeywordResults, setShowKeywordResults] = useState(false);
-  const [keywordSearchInput, setKeywordSearchInput] = useState("");
+  const [showKeywordResults, setShowKeywordResults] = useState(true);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -75,9 +74,9 @@ function CreateBlogContent() {
   };
 
   const handleKeywordResearch = async () => {
-    const searchTerm = keywordSearchInput || formData.primaryKeyword;
+    const searchTerm = formData.title || formData.primaryKeyword;
     if (!searchTerm) {
-      toast.error("Enter a keyword to research");
+      toast.error("Enter a blog title first to research keywords");
       return;
     }
 
@@ -230,113 +229,59 @@ function CreateBlogContent() {
               <Label htmlFor="title" className="text-base text-foreground">
                 Blog Title <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="title"
-                placeholder="10 Best Practices for Modern Web Development"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="h-12 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary text-lg"
-              />
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="primaryKeyword" className="text-base text-foreground">
-                  Primary Keyword <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="primaryKeyword"
-                  placeholder="web development"
-                  value={formData.primaryKeyword}
-                  onChange={(e) =>
-                    setFormData({ ...formData, primaryKeyword: e.target.value })
-                  }
-                  className="h-11 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="wordCount" className="text-base text-foreground">
-                  Target Word Count
-                </Label>
-                <Input
-                  id="wordCount"
-                  type="number"
-                  min="500"
-                  max="5000"
-                  step="100"
-                  value={formData.wordCount}
-                  onChange={(e) =>
-                    setFormData({ ...formData, wordCount: e.target.value })
-                  }
-                  className="h-11 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="secondaryKeywords" className="text-base text-foreground">
-                Secondary Keywords
-                <span className="text-sm text-muted-foreground ml-2">
-                  (comma-separated)
-                </span>
-              </Label>
-              <Input
-                id="secondaryKeywords"
-                placeholder="javascript, react, best practices"
-                value={formData.secondaryKeywords}
-                onChange={(e) =>
-                  setFormData({ ...formData, secondaryKeywords: e.target.value })
-                }
-                className="h-11 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
-              />
-            </div>
-
-            {/* Keyword Research Section */}
-            <div className="border-t border-border pt-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-base text-foreground flex items-center gap-2">
-                  <Search className="h-4 w-4 text-primary" />
-                  Keyword Research
-                </Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowKeywordResults(!showKeywordResults)}
-                  className="text-xs"
-                  disabled={!keywordResearch}
-                >
-                  {showKeywordResults ? <ChevronUp className="h-3 w-3 mr-1" /> : <ChevronDown className="h-3 w-3 mr-1" />}
-                  {keywordResearch ? (showKeywordResults ? "Hide" : "Show") + " Results" : "No Results"}
-                </Button>
-              </div>
-              
               <div className="flex gap-2">
                 <Input
-                  placeholder="Enter a topic or keyword to research..."
-                  value={keywordSearchInput}
-                  onChange={(e) => setKeywordSearchInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleKeywordResearch()}
-                  className="h-10 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary"
+                  id="title"
+                  placeholder="10 Best Practices for Modern Web Development"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="h-12 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary text-lg"
                 />
                 <Button
                   type="button"
                   onClick={handleKeywordResearch}
-                  disabled={researchingKeywords}
+                  disabled={researchingKeywords || !formData.title}
                   variant="secondary"
-                  className="gap-1.5 whitespace-nowrap"
+                  className="h-12 gap-1.5 whitespace-nowrap px-4"
                 >
                   {researchingKeywords ? (
                     <><Loader2 className="h-4 w-4 animate-spin" /> Researching...</>
                   ) : (
-                    <><TrendingUp className="h-4 w-4" /> Research</>
+                    <><Search className="h-4 w-4" /> Research Keywords</>
                   )}
                 </Button>
               </div>
+            </div>
 
-              <AnimatePresence>
-                {showKeywordResults && keywordResearch && (
+            {/* Keyword Research Results - shown inline after title */}
+            <AnimatePresence>
+              {keywordResearch && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-muted/30 rounded-lg border border-border p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                        <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                        Keyword Research Results
+                      </h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowKeywordResults(!showKeywordResults)}
+                        className="text-xs h-7"
+                      >
+                        {showKeywordResults ? <ChevronUp className="h-3 w-3 mr-1" /> : <ChevronDown className="h-3 w-3 mr-1" />}
+                        {showKeywordResults ? "Hide" : "Show"}
+                      </Button>
+                    </div>
+
+                    <AnimatePresence>
+                {showKeywordResults && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
@@ -494,7 +439,63 @@ function CreateBlogContent() {
                     )}
                   </motion.div>
                 )}
-              </AnimatePresence>
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="primaryKeyword" className="text-base text-foreground">
+                  Primary Keyword <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="primaryKeyword"
+                  placeholder="web development"
+                  value={formData.primaryKeyword}
+                  onChange={(e) =>
+                    setFormData({ ...formData, primaryKeyword: e.target.value })
+                  }
+                  className="h-11 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="wordCount" className="text-base text-foreground">
+                  Target Word Count
+                </Label>
+                <Input
+                  id="wordCount"
+                  type="number"
+                  min="500"
+                  max="5000"
+                  step="100"
+                  value={formData.wordCount}
+                  onChange={(e) =>
+                    setFormData({ ...formData, wordCount: e.target.value })
+                  }
+                  className="h-11 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="secondaryKeywords" className="text-base text-foreground">
+                Secondary Keywords
+                <span className="text-sm text-muted-foreground ml-2">
+                  (comma-separated)
+                </span>
+              </Label>
+              <Input
+                id="secondaryKeywords"
+                placeholder="javascript, react, best practices"
+                value={formData.secondaryKeywords}
+                onChange={(e) =>
+                  setFormData({ ...formData, secondaryKeywords: e.target.value })
+                }
+                className="h-11 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
+              />
             </div>
 
             <div className="pt-4">

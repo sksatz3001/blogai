@@ -488,6 +488,7 @@ export default function EmployeeBlogEditor({
               onChange={setContent}
               editable={!streaming}
               blogId={blogId}
+              blogTitle={blog?.title}
             />
           </div>
           <div className="lg:col-span-3 space-y-4">

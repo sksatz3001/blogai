@@ -20,10 +20,10 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">Contendo</span>
+              <span className="text-xl font-bold text-gray-900">Blog AI</span>
             </Link>
             
             <div className="hidden md:flex items-center gap-8">
@@ -39,7 +39,7 @@ export default async function Home() {
                 </Button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5">
+                <Button className="bg-black hover:bg-gray-800 text-white rounded-lg px-5">
                   Get Started
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -54,7 +54,7 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-4xl mx-auto">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-medium mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 text-gray-900 text-sm font-medium mb-8">
               <Sparkles className="w-4 h-4" />
               AI-Powered Content Creation Platform
             </div>
@@ -62,7 +62,7 @@ export default async function Home() {
             {/* Headline */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight mb-6">
               Create SEO-Optimized
-              <span className="block text-blue-600">Blogs in Minutes</span>
+              <span className="block text-black">Blogs in Minutes</span>
             </h1>
             
             {/* Subheadline */}
@@ -74,7 +74,7 @@ export default async function Home() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
               <SignUpButton mode="modal">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-8 py-6 text-lg shadow-lg shadow-blue-600/25">
+                <Button size="lg" className="bg-black hover:bg-gray-800 text-white rounded-xl px-8 py-6 text-lg shadow-lg shadow-gray-900/25">
                   Start Creating for Free
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
@@ -86,25 +86,25 @@ export default async function Home() {
           <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
             <Card className="border border-gray-200 shadow-sm bg-white rounded-2xl">
               <CardContent className="p-5 text-center">
-                <div className="text-2xl font-bold text-blue-600 mb-1">SEO</div>
+                <div className="text-2xl font-bold text-black mb-1">SEO</div>
                 <div className="text-sm text-gray-600">Optimized</div>
               </CardContent>
             </Card>
             <Card className="border border-gray-200 shadow-sm bg-white rounded-2xl">
               <CardContent className="p-5 text-center">
-                <div className="text-2xl font-bold text-green-600 mb-1">AEO</div>
+                <div className="text-2xl font-bold text-gray-700 mb-1">AEO</div>
                 <div className="text-sm text-gray-600">AI Engine Ready</div>
               </CardContent>
             </Card>
             <Card className="border border-gray-200 shadow-sm bg-white rounded-2xl">
               <CardContent className="p-5 text-center">
-                <div className="text-2xl font-bold text-purple-600 mb-1">GEO</div>
+                <div className="text-2xl font-bold text-gray-600 mb-1">GEO</div>
                 <div className="text-sm text-gray-600">Generative Ready</div>
               </CardContent>
             </Card>
             <Card className="border border-gray-200 shadow-sm bg-white rounded-2xl">
               <CardContent className="p-5 text-center">
-                <div className="text-2xl font-bold text-orange-600 mb-1">E-E-A-T</div>
+                <div className="text-2xl font-bold text-gray-800 mb-1">E-E-A-T</div>
                 <div className="text-sm text-gray-600">Compliant</div>
               </CardContent>
             </Card>
@@ -118,7 +118,7 @@ export default async function Home() {
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Everything You Need to Create
-              <span className="text-blue-600"> Amazing Content</span>
+              <span className="text-black"> Amazing Content</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Powerful AI tools designed to supercharge your content creation workflow
@@ -130,8 +130,8 @@ export default async function Home() {
             {/* Feature 1 */}
             <Card className="border border-gray-100 shadow-sm hover:shadow-md transition-all rounded-2xl bg-white">
               <CardContent className="p-8">
-                <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center mb-6">
-                  <Bot className="w-7 h-7 text-blue-600" />
+                <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center mb-6">
+                  <Bot className="w-7 h-7 text-black" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">AI Content Generation</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -143,8 +143,8 @@ export default async function Home() {
             {/* Feature 2 */}
             <Card className="border border-gray-100 shadow-sm hover:shadow-md transition-all rounded-2xl bg-white">
               <CardContent className="p-8">
-                <div className="w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center mb-6">
-                  <TrendingUp className="w-7 h-7 text-green-600" />
+                <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center mb-6">
+                  <TrendingUp className="w-7 h-7 text-gray-700" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">SEO Optimization</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -156,8 +156,8 @@ export default async function Home() {
             {/* Feature 3 */}
             <Card className="border border-gray-100 shadow-sm hover:shadow-md transition-all rounded-2xl bg-white">
               <CardContent className="p-8">
-                <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center mb-6">
-                  <ImageIcon className="w-7 h-7 text-purple-600" />
+                <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center mb-6">
+                  <ImageIcon className="w-7 h-7 text-gray-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">AI Image Generation</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -172,8 +172,8 @@ export default async function Home() {
             {/* Feature 4 */}
             <Card className="border border-gray-100 shadow-sm hover:shadow-md transition-all rounded-2xl bg-white">
               <CardContent className="p-8">
-                <div className="w-14 h-14 rounded-xl bg-orange-100 flex items-center justify-center mb-6">
-                  <Wand2 className="w-7 h-7 text-orange-600" />
+                <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center mb-6">
+                  <Wand2 className="w-7 h-7 text-gray-700" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Smart Outlines</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -185,8 +185,8 @@ export default async function Home() {
             {/* Feature 5 */}
             <Card className="border border-gray-100 shadow-sm hover:shadow-md transition-all rounded-2xl bg-white">
               <CardContent className="p-8">
-                <div className="w-14 h-14 rounded-xl bg-rose-100 flex items-center justify-center mb-6">
-                  <LineChart className="w-7 h-7 text-rose-600" />
+                <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center mb-6">
+                  <LineChart className="w-7 h-7 text-gray-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Analytics Dashboard</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -204,7 +204,7 @@ export default async function Home() {
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Create Blogs in
-              <span className="text-blue-600"> 3 Simple Steps</span>
+              <span className="text-black"> 3 Simple Steps</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               From idea to published blog in minutes, not hours
@@ -215,7 +215,7 @@ export default async function Home() {
             {/* Step 1 */}
             <div className="relative">
               <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-blue-600 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6">
+                <div className="w-16 h-16 rounded-full bg-black text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6">
                   1
                 </div>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-4">Enter Your Topic</h3>
@@ -228,7 +228,7 @@ export default async function Home() {
             {/* Step 2 */}
             <div className="relative">
               <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-blue-600 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6">
+                <div className="w-16 h-16 rounded-full bg-black text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6">
                   2
                 </div>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-4">Review & Customize</h3>
@@ -241,7 +241,7 @@ export default async function Home() {
             {/* Step 3 */}
             <div className="relative">
               <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-blue-600 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6">
+                <div className="w-16 h-16 rounded-full bg-black text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6">
                   3
                 </div>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-4">Publish & Track</h3>
@@ -255,16 +255,16 @@ export default async function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 px-6 bg-blue-600">
+      <section className="py-24 px-6 bg-black">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             Ready to Transform Your Content?
           </h2>
-          <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-            Join thousands of content creators who are saving time and creating better content with Contendo.
+          <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+            Join thousands of content creators who are saving time and creating better content with Blog AI.
           </p>
           <SignUpButton mode="modal">
-            <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50 rounded-xl px-10 py-6 text-lg font-semibold shadow-lg">
+            <Button size="lg" className="bg-white text-black hover:bg-gray-100 rounded-xl px-10 py-6 text-lg font-semibold shadow-lg">
               Get Started for Free
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
@@ -279,10 +279,10 @@ export default async function Home() {
             {/* Brand */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-black" />
                 </div>
-                <span className="text-xl font-bold">Contendo</span>
+                <span className="text-xl font-bold">Blog AI</span>
               </div>
               <p className="text-gray-400 max-w-sm leading-relaxed">
                 AI-powered content creation platform that helps you create SEO-optimized blogs in minutes.
@@ -312,7 +312,7 @@ export default async function Home() {
 
           <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between">
             <p className="text-gray-500 text-sm">
-              © {new Date().getFullYear()} Contendo. All rights reserved.
+              © {new Date().getFullYear()} Blog AI. All rights reserved.
             </p>
             <div className="flex items-center gap-6 mt-4 md:mt-0">
               <a href="#" className="text-gray-500 hover:text-white text-sm transition-colors">Privacy Policy</a>

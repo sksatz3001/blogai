@@ -35,9 +35,13 @@ export default async function SettingsPage() {
         companyName: dbUser.companyName || "",
         companyWebsite: dbUser.companyWebsite || "",
         companyDescription: dbUser.companyDescription || "",
-        brandColors: dbUser.brandColors || { primary: "", secondary: "", accent: "" },
       }}
-      companyProfiles={profiles}
+      companyProfiles={profiles.map(p => ({
+        id: p.id,
+        companyName: p.companyName,
+        companyWebsite: p.companyWebsite,
+        description: p.description,
+      }))}
     />
   );
 }

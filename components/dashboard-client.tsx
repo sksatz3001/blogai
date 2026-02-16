@@ -233,8 +233,8 @@ export function DashboardClient({ userName, stats, recentBlogs, monthlyData }: D
         <Card>
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-3">
-              <div className="p-2 rounded-lg bg-blue-50">
-                <BookOpen className="h-4 w-4 text-blue-600" />
+              <div className="p-2 rounded-lg bg-gray-100">
+                <BookOpen className="h-4 w-4 text-gray-700" />
               </div>
               <Badge variant="secondary" className="text-xs">
                 Content

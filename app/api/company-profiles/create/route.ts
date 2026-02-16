@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { companyName, companyWebsite, description, brandColors } = body;
+    const { companyName, companyWebsite, description } = body;
 
     if (!companyName) {
       return NextResponse.json(
@@ -41,7 +41,6 @@ export async function POST(req: Request) {
       companyName,
       companyWebsite: companyWebsite || null,
       description: description || null,
-      brandColors,
     });
 
     return NextResponse.json({ success: true });

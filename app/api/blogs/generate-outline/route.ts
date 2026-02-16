@@ -3,16 +3,23 @@ import OpenAI from "openai";
 import { db } from "@/db";
 import { blogs, companyProfiles, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { NextResponse } from "next/server";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, organization: process.env.OPENAI_ORG_ID });
 
 export async function POST(request: Request) {
   try {
+    // Check if OpenAI is configured
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY is not configured");
+      return NextResponse.json({ error: "AI service not configured", outline: [] }, { status: 500 });
+    }
+
     const { userId } = await auth();
-    if (!userId) return new Response("Unauthorized", { status: 401 });
+    if (!userId) return NextResponse.json({ error: "Unauthorized", outline: [] }, { status: 401 });
 
     const dbUser = await db.query.users.findFirst({ where: eq(users.clerkId, userId) });
-    if (!dbUser) return new Response("User not found", { status: 404 });
+    if (!dbUser) return NextResponse.json({ error: "User not found", outline: [] }, { status: 404 });
 
     const body = await request.json();
     const { blogId, title, primaryKeyword, secondaryKeywords = [], targetWordCount = 1200, companyProfileId } = body;
@@ -20,7 +27,7 @@ export async function POST(request: Request) {
     // Validate blog ownership if blogId provided
     if (blogId) {
       const blog = await db.query.blogs.findFirst({ where: eq(blogs.id, Number(blogId)) });
-      if (!blog || blog.userId !== dbUser.id) return new Response("Blog not found", { status: 404 });
+      if (!blog || blog.userId !== dbUser.id) return NextResponse.json({ error: "Blog not found", outline: [] }, { status: 404 });
     }
 
     let company: any = null;
@@ -47,16 +54,26 @@ Rules:
       model: "gpt-4o",
       temperature: 0.4,
       messages: [ { role: "system", content: sys }, { role: "user", content: usr } ],
-      response_format: { type: "json_object" } as any,
+      response_format: { type: "json_object" },
     });
 
     const content = completion.choices[0]?.message?.content || "{\"outline\":[]}";
     let json: any = { outline: [] };
-    try { json = JSON.parse(content); } catch {}
+    try { json = JSON.parse(content); } catch (parseError) {
+      console.error("Failed to parse OpenAI response:", content);
+    }
 
-    return new Response(JSON.stringify(json), { status: 200, headers: { "Content-Type": "application/json" } });
-  } catch (e) {
-    console.error("generate-outline error", e);
-    return new Response("Internal server error", { status: 500 });
+    // Ensure outline is always an array
+    if (!Array.isArray(json.outline)) {
+      json.outline = [];
+    }
+
+    return NextResponse.json(json, { status: 200 });
+  } catch (e: any) {
+    console.error("generate-outline error:", e?.message || e);
+    return NextResponse.json({ 
+      error: e?.message || "Failed to generate outline", 
+      outline: [] 
+    }, { status: 500 });
   }
 }

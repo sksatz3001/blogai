@@ -15,6 +15,13 @@
       "when": 1763060742497,
       "tag": "0001_puzzling_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1763061000000,
+      "tag": "0004_add_image_data_to_blog_images",
+      "breakpoints": true
     }
   ]
 }

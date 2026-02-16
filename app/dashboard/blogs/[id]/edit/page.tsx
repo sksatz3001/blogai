@@ -20,12 +20,14 @@ const TiptapEditor = dynamic(() => import("@/components/tiptap-editor").then(m =
 import { BlogToc } from "@/components/blog-toc";
 import { ImagePromptModal } from "@/components/image-prompt-modal";
 import { ProfessionalImageEditor } from "@/components/professional-image-editor";
-import { ArrowLeft, Save, Eye, Download, BarChart3, Sparkles, Loader2, List, Info, ImagePlus } from "lucide-react";
+import { ArrowLeft, Save, Eye, Download, BarChart3, Sparkles, Loader2, List, Info, ImagePlus, Menu, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { useCredits } from "@/lib/credits-context";
 
 export default function EditBlogPage() {
   const params = useParams();
   const router = useRouter();
+  const { refreshCredits } = useCredits();
   const idParam = Array.isArray((params as any).id) ? (params as any).id[0] : (params as any).id;
   const blogId: string | null = idParam ? String(idParam) : null;
 
@@ -67,8 +69,8 @@ export default function EditBlogPage() {
       const newContent = data.htmlContent || data.content || "";
       setContent(newContent);
       
-      // Extract featured image if present
-      const featuredImgMatch = newContent.match(/<div class="featured-image-wrapper"[^>]*><img src="([^"]+)"/i);
+      // Extract featured image if present (support both old <div> and new <figure> wrappers)
+      const featuredImgMatch = newContent.match(/<(?:div|figure) class="featured-image-wrapper"[^>]*><img src="([^"]+)"/i);
       if (featuredImgMatch) {
         setFeaturedImageUrl(featuredImgMatch[1]);
       }
@@ -176,6 +178,8 @@ export default function EditBlogPage() {
               flush();
               // Final refresh to pull persisted version (already formatted server-side)
               await fetchBlog(false);
+              // Refresh credits after generation
+              refreshCredits();
               toast.success('Blog generated successfully!');
             } else if (payload.content) {
               accumulated += payload.content;
@@ -230,14 +234,17 @@ export default function EditBlogPage() {
     };
     void generateImages;
 
-    const saveBlog = async () => {
+    const saveBlog = async (htmlContentOverride?: string) => {
       if (!blogId) return;
       setSaving(true);
       try {
+        // Use override content if provided (e.g., from image edit auto-save)
+        // This ensures we save the latest content even if React state hasn't updated
+        const contentToSave = htmlContentOverride || content;
         const response = await fetch(`/api/blogs/${blogId}/save`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, metaDescription, content, htmlContent: content }),
+          body: JSON.stringify({ title, metaDescription, content: contentToSave, htmlContent: contentToSave }),
         });
         if (!response.ok) throw new Error("Failed to save blog");
         toast.success("Blog saved successfully!");
@@ -264,9 +271,11 @@ export default function EditBlogPage() {
       
       if (imageUrl) {
         setFeaturedImageUrl(imageUrl);
-        const featuredImgHtml = `<div class="featured-image-wrapper" style="margin: 2rem 0;"><img src="${imageUrl}" alt="${title}" style="width: 100%; height: auto; border-radius: 8px;" /></div>`;
-        let updatedContent = content.replace(/<div class="featured-image-wrapper"[^>]*>.*?<\/div>/i, '');
+        const featuredImgHtml = `<figure class="featured-image-wrapper" style="margin: 2rem 0; text-align: center;"><img src="${imageUrl}" alt="${title}" style="width: 100%; height: auto; border-radius: 8px; display: block;" loading="lazy" /></figure>`;
+        let updatedContent = content.replace(/<(?:div|figure) class="featured-image-wrapper"[^>]*>.*?<\/(?:div|figure)>/i, '');
         setContent(featuredImgHtml + updatedContent);
+        // Refresh credits after image generation
+        refreshCredits();
         toast.success("Featured image generated!");
       }
     } catch (error) {
@@ -280,8 +289,8 @@ export default function EditBlogPage() {
 
   const handleSaveFeaturedImage = async (editedImageUrl: string) => {
     setFeaturedImageUrl(editedImageUrl);
-    const featuredImgHtml = `<div class="featured-image-wrapper" style="margin: 2rem 0;"><img src="${editedImageUrl}" alt="${title}" style="width: 100%; height: auto; border-radius: 8px;" /></div>`;
-    let updatedContent = content.replace(/<div class="featured-image-wrapper"[^>]*>.*?<\/div>/i, '');
+    const featuredImgHtml = `<figure class="featured-image-wrapper" style="margin: 2rem 0; text-align: center;"><img src="${editedImageUrl}" alt="${title}" style="width: 100%; height: auto; border-radius: 8px; display: block;" loading="lazy" /></figure>`;
+    let updatedContent = content.replace(/<(?:div|figure) class="featured-image-wrapper"[^>]*>.*?<\/(?:div|figure)>/i, '');
     setContent(featuredImgHtml + updatedContent);
     setShowImageEditorModal(false);
     toast.success("Featured image updated!");
@@ -385,40 +394,50 @@ export default function EditBlogPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={exportHTML} disabled={!content || generating}>
-              <Download className="h-4 w-4 mr-2" />
-              Export HTML
+            <Button 
+              variant="outline" 
+              onClick={startGeneration} 
+              disabled={generating}
+              className="gap-2"
+            >
+              {generating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  {content ? 'Regenerate' : 'Generate'}
+                </>
+              )}
             </Button>
-            <Button variant="outline" onClick={calculateSEO} disabled={!content || calculatingSEO || generating}>
+            <Button variant="outline" onClick={calculateSEO} disabled={!content || calculatingSEO || generating} className="gap-2">
               {calculatingSEO ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   Calculating...
                 </>
               ) : (
                 <>
-                  <BarChart3 className="h-4 w-4 mr-2" />
+                  <BarChart3 className="h-4 w-4" />
                   Calculate SEO
                 </>
               )}
             </Button>
-            <Button asChild variant="outline">
+            <Button variant="outline" size="icon" onClick={exportHTML} disabled={!content || generating} title="Export HTML">
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button asChild variant="outline" size="icon" title="Preview">
               <Link href={`/dashboard/blogs/${blog.id}/preview`} prefetch={true}>
-                <Eye className="h-4 w-4 mr-2" />
-                Preview
+                <Eye className="h-4 w-4" />
               </Link>
             </Button>
-            <Button onClick={saveBlog} disabled={saving || generating}>
+            <Button onClick={() => saveBlog()} disabled={saving || generating} size="icon" title="Save Changes">
               {saving ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
-                  Saving...
-                </>
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </>
+                <Save className="h-4 w-4" />
               )}
             </Button>
           </div>
@@ -478,23 +497,52 @@ export default function EditBlogPage() {
         {/* Magic wand overlay removed per request */}
 
         {/* Editor */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* TOC Panel - Left Side */}
-          <div className="lg:col-span-3 space-y-4">
-            <Card className="sticky top-4">
-              <CardHeader className="flex flex-row items-center justify-between py-3 px-3">
-                <div className="flex items-center gap-2"><List className="h-4 w-4" /><span className="font-semibold">Structure</span></div>
-                <Button variant="ghost" size="sm" onClick={()=>setShowToc(!showToc)}>{showToc?"Hide":"Show"}</Button>
-              </CardHeader>
-              <CardContent className="pt-0 px-2">
-                {/* Table of Contents */}
-                {showToc ? <BlogToc html={content} /> : <p className="text-xs text-muted-foreground">TOC hidden</p>}
-              </CardContent>
+        <div className="flex gap-6">
+          {/* TOC Panel - Left Side - Collapsible */}
+          <div 
+            className={`transition-all duration-300 ease-in-out flex-shrink-0 ${
+              showToc ? 'w-[280px]' : 'w-[48px]'
+            }`}
+          >
+            <Card className="sticky top-4 h-fit overflow-hidden">
+              {showToc ? (
+                <>
+                  <CardHeader className="flex flex-row items-center justify-between py-3 px-3">
+                    <div className="flex items-center gap-2">
+                      <List className="h-4 w-4" />
+                      <span className="font-semibold">Structure</span>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setShowToc(false)}
+                      className="h-8 px-2"
+                    >
+                      Hide
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="pt-0 px-2 pb-3">
+                    <BlogToc html={content} />
+                  </CardContent>
+                </>
+              ) : (
+                <div className="flex flex-col items-center py-3">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setShowToc(true)}
+                    className="h-10 w-10"
+                    title="Show Structure"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </div>
+              )}
             </Card>
           </div>
           
-          {/* Editor + Controls - Right Side */}
-          <Card className="lg:col-span-9">
+          {/* Editor + Controls - Right Side - Takes remaining space */}
+          <Card className="flex-1 min-w-0">
           <CardHeader>
             <div className="space-y-4">
               <div>
@@ -521,25 +569,11 @@ export default function EditBlogPage() {
                   </Badge>
                 )}
               </div>
-              <TiptapEditor content={content} onChange={setContent} editable={!generating} blogId={blog.id} onAutoSave={saveBlog} />
+              <TiptapEditor content={content} onChange={setContent} editable={!generating} blogId={blog.id} blogTitle={title} onAutoSave={saveBlog} onCreditsUsed={refreshCredits} />
             </div>
           </CardContent>
           </Card>
         </div>
-
-        {/* Generate Button */}
-        {!content && (
-          <Button onClick={startGeneration} size="lg" className="w-full mt-6" disabled={generating}>
-            <Sparkles className="h-4 w-4 mr-2" />
-            Generate Content
-          </Button>
-        )}
-        {content && (
-          <Button onClick={startGeneration} variant="outline" size="lg" className="w-full mt-6" disabled={generating}>
-            <Sparkles className="h-4 w-4 mr-2" />
-            Regenerate Content
-          </Button>
-        )}
         
         {/* Image Modals */}
         {showImagePromptModal && (
@@ -559,6 +593,7 @@ export default function EditBlogPage() {
               setFeaturedImageEditSrc(null);
             }}
             onSave={handleSaveFeaturedImage}
+            onCreditsUsed={refreshCredits}
           />
         )}
       </div>

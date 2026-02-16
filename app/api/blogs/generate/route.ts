@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { db } from "@/db";
 import { blogs, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { deductCredits, CREDIT_COSTS } from "@/lib/credits";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -37,6 +38,29 @@ export async function POST(request: Request) {
       return new Response("Blog not found", { status: 404 });
     }
 
+    // Check and deduct credits before generation
+    const creditResult = await deductCredits({
+      userId: dbUser.id,
+      amount: CREDIT_COSTS.BLOG_GENERATION,
+      type: 'blog_generation',
+      description: 'Blog content generation',
+      metadata: {
+        blogId: blogId,
+        blogTitle: title,
+      },
+    });
+
+    if (!creditResult.success) {
+      return new Response(JSON.stringify({ 
+        error: creditResult.error || "Insufficient credits",
+        creditsRequired: CREDIT_COSTS.BLOG_GENERATION,
+        currentCredits: creditResult.newBalance,
+      }), { 
+        status: 402,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     // Get company details (either from profile or user)
     const companyName = companyProfile?.companyName || dbUser.companyName || "Our Company";
     const companyWebsite = companyProfile?.companyWebsite || dbUser.companyWebsite || "";
@@ -47,7 +71,19 @@ export async function POST(request: Request) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const systemPrompt = `You are a Senior Content Strategist and Expert Blog Creator with 15+ years of experience crafting authoritative, SEO-optimized, long-form content that ranks on the first page of Google and scores 85+ on SEO metrics.
+          const systemPrompt = `You are a Senior Content Writer and SEO Strategist who writes like a seasoned journalist, NOT like AI. You have 15+ years of experience crafting authoritative, SEO-optimized, long-form content that ranks on the first page of Google.
+
+CRITICAL WRITING STYLE (MUST follow — this is what makes content feel HUMAN):
+- Write conversationally — like explaining to a smart colleague, not writing a textbook
+- NEVER use these AI cliche phrases: "In today's fast-paced world", "It's important to note", "In conclusion", "Let's dive in", "game-changer", "landscape", "leverage", "unlock the power", "delve into", "Navigate the complexities", "It's worth noting", "In the realm of", "At the end of the day", "In today's digital age"
+- Use contractions naturally (don't, won't, can't, it's, you'll, we've)
+- Vary sentence length dramatically — mix 5-word punchy sentences with longer detailed ones
+- Start some paragraphs with "But", "And", "So", "Here's the thing"
+- Include personal observations: "I've seen teams struggle with...", "What most people miss is..."
+- Use specific examples, real tool names, and concrete numbers instead of vague generalizations
+- Write with confidence and opinion — avoid hedging everything
+- Avoid starting consecutive paragraphs the same way
+- Include surprising facts, counterintuitive insights, or myth-busting moments
 
 CRITICAL SEO REQUIREMENTS (Must achieve 85+ SEO Score):
 1. PRIMARY KEYWORD PLACEMENT:
@@ -101,13 +137,14 @@ WRITING STYLE RULES:
 OUTPUT REQUIREMENTS:
 - Generate ONLY the blog body HTML (NO <html>, <head>, <body> tags)
 - Start directly with <h1 class="brand-primary-heading">
-- Use ONLY: <h1>, <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <blockquote>, <a>
-- NO <article>, <section>, <div>, <span>, inline styles, or scripts
+- Use ONLY: <h1>, <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <blockquote>, <a>, <div>
+- NO <article>, <section>, <span>, or scripts
 - Every <p> must have class="brand-paragraph"
 - Headings must have appropriate brand classes
 - External links: <a href="URL" target="_blank" rel="noopener">Anchor Text</a>`;
 
-          const userPrompt = `Create a complete, production-ready, SEO-optimized blog post that will score 85+ on SEO metrics:
+          const userPrompt = `Create a complete, production-ready, SEO-optimized blog post that will score 85+ on SEO metrics.
+Write like a human expert, NOT like AI. Use conversational tone, contractions, varied sentence lengths, and specific examples.
 
 **Blog Details:**
 - Title: ${title}
@@ -118,49 +155,58 @@ OUTPUT REQUIREMENTS:
 - Company Website: ${companyWebsite}
 - Company Description: ${companyDescription}
 - Author: ${dbUser.authorName || "Content Team"}
+- Current Date Context: ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
 
 **MANDATORY STRUCTURE (Follow exactly for maximum SEO score):**
 
 1. **H1 Title** (Include "${primaryKeyword}" in first half)
    - Benefit-driven, solution-focused title
-   - Format: "[Primary Benefit]: [Solution Involving ${primaryKeyword}] [Year/Guide]"
 
 2. **Introduction** (200-250 words, "${primaryKeyword}" in first 2 sentences)
-   - Hook with compelling statistic or question
+   - Hook with a surprising statistic or provocative question
    - State the problem and solution clearly
-   - Include: "In my experience..." or "I've found that..." (E-E-A-T signal)
+   - Use natural E-E-A-T signals: "I've seen...", "From working with clients..."
    - Featured Snippet Box:
      <p class="brand-paragraph"><strong>Quick Answer:</strong> [40-60 word direct answer with "${primaryKeyword}"]</p>
-   - List 4-5 reader takeaways
-   - Smooth transition to main content
 
-3. **Why ${primaryKeyword} Matters** (H2 - Include keyword)
+3. **KEY TAKEAWAYS** (Right after introduction — MANDATORY):
+   <div class="key-takeaways-box">
+   <h3>⚡ Key Takeaways</h3>
+   <ul>
+   <li><strong>[Takeaway]</strong> - [Brief explanation]</li>
+   </ul>
+   </div>
+   Include 4-6 takeaways summarizing the article's most valuable insights.
+
+4. **Why ${primaryKeyword} Matters** (H2 - Include keyword)
    - 3-4 current statistics with sources (use specific numbers: "73%", "2.5x")
-   - Market context and relevance
+   - Include 1-2 fact callouts: <div class="fact-callout"><p class="brand-paragraph"><strong>[Stat]</strong> — [Source, year]</p></div>
+   - Reference current trends in ${new Date().getFullYear()}
    - Include: "Research shows..." or "According to studies..." (E-E-A-T)
 
-4. **Main Content Sections** (4-5 H2s with 2-3 H3 subsections each):
+5. **Main Content Sections** (4-5 H2s with 2-3 H3 subsections each):
    - **How to [Action with ${primaryKeyword}]** (H2)
    - **Key Benefits of ${primaryKeyword}** (H2 with bulleted list)
    - **Common ${primaryKeyword} Challenges and Solutions** (H2)
    - **Best Practices for ${primaryKeyword}** (H2 with numbered list)
    - **${primaryKeyword} Tools and Resources** (H2)
+   - Sprinkle 2-3 more <div class="fact-callout"> boxes in these sections with relevant statistics
 
-5. **Step-by-Step Implementation Guide** (H2)
+6. **Step-by-Step Implementation Guide** (H2)
    - 5-7 numbered steps with <ol> and <li>
    - Include "${primaryKeyword}" naturally in 2-3 steps
    - Add expected outcomes for each step
 
-6. **Expert Tips & Best Practices** (H2)
+7. **Expert Tips & Best Practices** (H2)
    - 6-8 tips using <ul> and <li>
    - Use <strong> to emphasize key phrases
-   - Include "Experts recommend..." phrases
+   - Reference real tools, platforms, and methodologies
 
-7. **Real-World Examples & Case Studies** (H2)
+8. **Real-World Examples & Case Studies** (H2)
    - 2-3 brief case studies with challenge → solution → result format
    - Include specific metrics: "increased by 45%", "reduced by 30%"
 
-8. **Conclusion & Next Steps** (H2 - Include "${primaryKeyword}")
+9. **Conclusion & Next Steps** (H2 - Include "${primaryKeyword}")
    - 4-5 key takeaways in a bulleted list
    - Reinforce value with "${primaryKeyword}"
    - Clear call-to-action (don't say "CTA")

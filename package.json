@@ -10,10 +10,14 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "migrate:s3-urls": "tsx scripts/migrate-s3-urls.ts",
+    "migrate:blog-content": "tsx scripts/migrate-blog-content-urls.ts"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.7.2",
+    "@aws-sdk/client-s3": "^3.943.0",
+    "@aws-sdk/s3-request-presigner": "^3.954.0",
+    "@clerk/nextjs": "^6.37.4",
     "@google/generative-ai": "^0.21.0",
     "@neondatabase/serverless": "^0.10.4",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -48,7 +52,7 @@
     "jose": "^6.1.1",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.454.0",
-    "next": "^15.0.3",
+    "next": "^16.1.6",
     "next-themes": "^0.4.6",
     "openai": "^4.73.0",
     "react": "^18.3.1",
@@ -75,6 +79,7 @@
     "eslint-config-next": "^15.0.3",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
+    "tsx": "^4.21.0",
     "typescript": "^5.6.3"
   }
 }

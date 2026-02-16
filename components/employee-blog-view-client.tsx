@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, FileText, Clock, BookOpen, User } from "lucide-react";
+import { BlogContent } from "@/components/blog-content";
 
 interface EmployeeBlogViewClientProps {
   employee: {
@@ -86,9 +87,9 @@ export default function EmployeeBlogViewClient({
             </div>
           </CardHeader>
           <CardContent>
-            <div
+            <BlogContent
+              htmlContent={blog.content}
               className="prose prose-lg prose-invert max-w-none prose-headings:font-bold prose-h2:text-3xl prose-h2:mt-10 prose-h2:mb-5 prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4 prose-p:leading-relaxed prose-p:mb-6 prose-a:text-[hsl(var(--primary))] prose-strong:font-semibold prose-img:rounded-xl prose-img:shadow-md"
-              dangerouslySetInnerHTML={{ __html: blog.content }}
             />
           </CardContent>
         </Card>

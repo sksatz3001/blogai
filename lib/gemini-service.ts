@@ -6,52 +6,34 @@ export async function enhancePromptWithGemini(userPrompt: string): Promise<strin
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
     
-    const enhancementPrompt = `You are a world-class professional image generation prompt engineer specializing in creating photorealistic, high-quality, commercial-grade visuals for blogs, websites, and marketing materials.
+    const enhancementPrompt = `You are a professional stock photography art director. Transform the user's prompt into a clean, professional image prompt that produces images suitable for a premium business blog — like something you'd find on Unsplash or in a high-end business magazine.
 
-**Your Task:** Transform the user's basic prompt into a detailed, professional image generation prompt that produces stunning, realistic, and visually compelling images.
+**CRITICAL RULES — the image must look like a REAL PHOTOGRAPH:**
+- The result should look like an actual photograph taken by a professional photographer
+- NEVER describe digital illustrations, 3D renders, infographics, or abstract art
+- NEVER include text, letters, words, icons, or UI elements in the image
+- NEVER use neon colors, glowing effects, lens flares, or dramatic lighting
+- NEVER describe floating objects, abstract shapes, or sci-fi elements
 
-**Enhancement Guidelines:**
-
-1. **Photography Style & Quality:**
-   - Specify camera type: "shot on Canon EOS R5", "Sony A7R IV", "professional DSLR"
-   - Add resolution markers: "8K", "ultra HD", "high resolution", "4K detailed"
-   - Include quality tags: "professional photography", "commercial quality", "magazine-worthy"
-
-2. **Lighting (Critical for Realism):**
-   - Specify lighting type: "soft natural daylight", "golden hour lighting", "studio lighting setup", "rim lighting", "soft diffused light"
-   - Add lighting details: "volumetric lighting", "three-point lighting", "backlighting with lens flare"
-
-3. **Composition & Framing:**
-   - Specify shot type: "close-up", "wide-angle", "medium shot", "bird's eye view", "eye-level"
-   - Add depth: "shallow depth of field", "bokeh background", "sharp focus on subject"
-   - Include rule of thirds, leading lines if applicable
-
-4. **Technical Details:**
-   - Lens specifications: "85mm portrait lens", "35mm wide-angle", "macro lens"
-   - Aperture hints: "f/1.8 aperture", "wide aperture bokeh"
-   - Add: "sharp focus", "intricate details", "highly detailed textures"
-
-5. **Style & Atmosphere:**
-   - Color palette: "vibrant colors", "muted earth tones", "high contrast", "color-graded"
-   - Mood: "professional", "modern", "clean", "sophisticated", "welcoming"
-   - Environment context when relevant
-
-6. **Negative Prompts to Avoid (implicitly guide away from):**
-   - Avoid cartoonish, artificial, blurry, low-quality elements
-   - Avoid oversaturated, unrealistic skin tones
-   - Avoid obvious AI artifacts
+**What makes a GOOD blog image:**
+- Real-world scenes: people working, offices, desks, meetings, nature, cities
+- Clean, simple composition with ONE clear subject
+- Lots of negative space (great for text overlay later)
+- Soft, natural lighting — window light, overcast sky, gentle studio light
+- Muted, professional color palette — whites, grays, soft blues, warm beiges
+- Feels like a premium stock photo, NOT AI-generated art
 
 **Output Format:**
-- Create ONE cohesive, detailed prompt (80-120 words)
-- Start with the main subject description
-- Flow naturally through lighting, composition, and technical details
-- End with quality/style modifiers
-- DO NOT include any explanations, just the enhanced prompt
-- DO NOT use bullet points or lists in the output
+- Create ONE cohesive prompt (60-100 words)
+- Start with the main real-world subject/scene
+- Include lighting (always soft/natural)
+- Include composition (always clean/simple)
+- End with "editorial stock photography, professional, clean, minimal"
+- Output ONLY the prompt text, nothing else
 
 **User's Original Prompt:** "${userPrompt}"
 
-**Enhanced Professional Prompt:**`;
+**Enhanced Prompt:**`;
 
     const result = await model.generateContent(enhancementPrompt);
     const response = result.response;
@@ -65,9 +47,9 @@ export async function enhancePromptWithGemini(userPrompt: string): Promise<strin
 }
 
 export async function generateImageWithPollinations(prompt: string): Promise<string> {
-  // Pollinations AI free image generation with enhanced quality settings
-  // Add quality modifiers to ensure high-quality output
-  const qualityEnhancedPrompt = `${prompt}, professional photography, 8K resolution, highly detailed, sharp focus, masterpiece quality`;
+  // Pollinations AI free image generation
+  // Add minimal quality modifiers that keep the image looking like a real photo
+  const qualityEnhancedPrompt = `${prompt}, clean editorial stock photography, soft natural lighting, minimal composition, professional, realistic photo`;
   const encodedPrompt = encodeURIComponent(qualityEnhancedPrompt);
   
   // Use larger dimensions and optimal settings for best quality

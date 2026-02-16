@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { companyName, companyWebsite, authorName, primaryColor, secondaryColor, accentColor } = body;
+    const { companyName, companyWebsite, authorName } = body;
 
     // Check if user already exists
     const existingUser = await db.query.users.findFirst({
@@ -29,28 +29,20 @@ export async function POST(request: Request) {
           companyName,
           companyWebsite,
           authorName,
-          brandColors: {
-            primary: primaryColor,
-            secondary: secondaryColor,
-            accent: accentColor,
-          },
           onboardingCompleted: true,
           updatedAt: new Date(),
         })
         .where(eq(users.id, existingUser.id));
     } else {
-      // Create new user
+      // Create new user with 0 credits
       await db.insert(users).values({
         clerkId: userId,
         email: user.emailAddresses[0]?.emailAddress || "",
         companyName,
         companyWebsite,
         authorName,
-        brandColors: {
-          primary: primaryColor,
-          secondary: secondaryColor,
-          accent: accentColor,
-        },
+        credits: 0,
+        totalCreditsUsed: 0,
         onboardingCompleted: true,
       });
     }

@@ -1,346 +1,276 @@
-type GenerateResponse = {
-  imageUrl?: string;
-  url?: string;
-  s3Key?: string;
-  s3_key?: string;
-  width?: number;
-  height?: number;
-  data?: {
-    imageUrl?: string;
-    url?: string;
-    s3Key?: string;
-    s3_key?: string;
-    width?: number;
-    height?: number;
-  };
-};
+import OpenAI from "openai";
+import { db } from "@/db";
+import { blogImages } from "@/db/schema";
 
-const BASE = process.env.IMAGE_BACKEND_BASE || process.env.EXTERNAL_IMAGE_API_BASE || process.env.IMAGE_API_BASE;
-const API_KEY = process.env.IMAGE_BACKEND_API_KEY || process.env.EXTERNAL_IMAGE_API_KEY || process.env.IMAGE_API_KEY;
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-function headersJson() {
-  const h: Record<string, string> = { 'Content-Type': 'application/json' };
-  h['Accept'] = 'application/json';
-  if (API_KEY) {
-    h['Authorization'] = `Bearer ${API_KEY}`;
-    h['x-api-key'] = API_KEY;
-  }
-  return h;
-}
-
+/**
+ * Check if OpenAI image generation is configured
+ */
 export function isExternalBackendConfigured(): boolean {
-  return Boolean(BASE);
+  return Boolean(process.env.OPENAI_API_KEY);
 }
 
-export async function externalGenerateSingleImage(params: { prompt: string; userId?: string; blogId?: string | number; }): Promise<{ s3Key: string; }> {
-  if (!BASE) throw new Error('IMAGE_BACKEND_BASE not configured');
-  const base = BASE.replace(/\/$/, '');
-  const absoluteOverride = process.env.IMAGE_BACKEND_GENERATE_URL?.trim();
-  // Allow override of path(s) via env, comma-separated
-  const overridePaths = (process.env.IMAGE_BACKEND_GENERATE_PATH || '')
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean);
-  const rawCandidates = [
-    ...overridePaths,
-    '',
-    '/generate-single-image',
-    '/v1/generate-single-image',
-    '/api/generate-single-image',
-    '/api/v1/generate-single-image',
-    '/image/generate-single',
-    '/image/generate',
-    '/images/generate'
-  ];
-  // Deduplicate & normalize
-  const seen = new Set<string>();
-  const candidates = rawCandidates
-    .map(p => (p ? (p.startsWith('/') ? p : '/' + p) : ''))
-    .filter(p => {
-      const key = p;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+/**
+ * Get the base URL for image serving
+ */
+function getImageBaseUrl(): string {
+  // Use environment variable or default to relative path
+  return process.env.NEXT_PUBLIC_APP_URL || "";
+}
 
-  const body = {
-    prompt: params.prompt,
-    user_id: String(params.userId ?? ''),
-    blog_id: String(params.blogId ?? '')
-  };
-
-  const tried: string[] = [];
-  let lastErr: any = null;
-
-  const attempt = async (url: string): Promise<{ s3Key?: string } | null> => {
-    tried.push(url);
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: headersJson(),
-      body: JSON.stringify(body),
-      cache: 'no-store'
-    });
-    if (!res.ok) {
-      const errText = await safeText(res);
-      lastErr = new Error(`External generate failed: ${res.status} ${errText || ''}`.trim());
-      return null;
-    }
-    try {
-      const data: GenerateResponse = await res.json();
-      const s3 = data.s3Key || data.s3_key || data?.data?.s3Key || data?.data?.s3_key;
-      if (!s3) {
-        if ((data as any)?.success === false) {
-          lastErr = new Error((data as any)?.error || 'External generate reported failure');
-          return null;
-        }
-        lastErr = new Error('External generate returned no s3_key');
-        return null;
-      }
-      return { s3Key: s3 };
-    } catch (e) {
-      lastErr = e;
-      return null;
-    }
-  };
-
-  if (absoluteOverride) {
-    const r = await attempt(absoluteOverride);
-    if (r?.s3Key) return { s3Key: r.s3Key };
-  } else {
-    for (const path of candidates) {
-      const url = path ? `${base}${path}` : `${base}`;
-      const r = await attempt(url);
-      if (r?.s3Key) return { s3Key: r.s3Key };
-    }
+/**
+ * Generate a single image using OpenAI DALL-E and store in database
+ * @param params - Prompt and required blogId
+ * @returns Object with imageId of the stored image
+ */
+export async function generateAndStoreImage(params: {
+  prompt: string;
+  blogId: number;
+  altText?: string;
+  position?: number;
+}): Promise<{ imageId: number; imageUrl: string }> {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY not configured");
   }
 
-  const hint = tried.length ? ` Tried: ${tried.join(', ')}` : '';
-  const err = lastErr || new Error('External generate failed');
-  err.message += hint;
-  throw err;
-}
+  console.log(`Generating image with OpenAI DALL-E for prompt: "${params.prompt.slice(0, 100)}..."`);
 
-export async function externalEditImage(params: { imageUrl?: string; imageData?: string; prompt: string; }): Promise<{ imageUrl: string; s3Key?: string; }> {
-  if (!BASE) throw new Error('IMAGE_BACKEND_BASE not configured');
-  const url = `${BASE.replace(/\/$/, '')}/image/edit`;
-  const variants = [
-    params,
-    { image: params.imageUrl, imageData: params.imageData, prompt: params.prompt },
-    { dataUrl: params.imageData, prompt: params.prompt },
-    { base64: params.imageData, prompt: params.prompt },
-  ];
-  let lastErr: any = null;
-  for (const body of variants) {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: headersJson(),
-      body: JSON.stringify(body),
-      cache: 'no-store',
+  try {
+    // Generate image using OpenAI DALL-E 3
+    // Use 'natural' style for more realistic, less over-processed images
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: params.prompt,
+      n: 1,
+      size: "1792x1024",
+      quality: "standard",
+      style: "natural",
+      response_format: "b64_json",
     });
-    try {
-      if (!res.ok) {
-        const errText = await safeText(res);
-        lastErr = new Error(`External edit failed: ${res.status} ${errText || ''}`.trim());
-        if (res.status >= 500) break;
-        continue;
-      }
-      const data: GenerateResponse = await res.json();
-      const outUrl = data.imageUrl || data.url || data?.data?.imageUrl || data?.data?.url;
-      if (!outUrl) {
-        lastErr = new Error('External edit returned no imageUrl');
-        continue;
-      }
-      return { imageUrl: outUrl, s3Key: data.s3Key || data.s3_key || data?.data?.s3Key || data?.data?.s3_key };
-    } catch (e) {
-      lastErr = e;
-      continue;
+
+    const imageData = response.data?.[0]?.b64_json;
+    if (!imageData) {
+      throw new Error("OpenAI returned no image data");
     }
+
+    // Store in database
+    const baseUrl = getImageBaseUrl();
+    const [savedImage] = await db
+      .insert(blogImages)
+      .values({
+        blogId: params.blogId,
+        imageUrl: "", // Will be updated after we get the ID
+        imageData: imageData, // Store base64 without data URL prefix
+        contentType: "image/png",
+        imagePrompt: params.prompt,
+        altText: params.altText || params.prompt,
+        position: params.position,
+        width: 1792,
+        height: 1024,
+      })
+      .returning();
+
+    // Update imageUrl with the proper API endpoint
+    const imageUrl = `${baseUrl}/api/images/serve/${savedImage.id}`;
+    
+    // Update the imageUrl in the database
+    await db
+      .update(blogImages)
+      .set({ imageUrl })
+      .where(require("drizzle-orm").eq(blogImages.id, savedImage.id));
+
+    console.log(`Successfully generated and stored image in DB with ID: ${savedImage.id}`);
+
+    return { imageId: savedImage.id, imageUrl };
+  } catch (error) {
+    console.error("OpenAI image generation failed:", error);
+    throw new Error(`Image generation failed: ${(error as Error).message}`);
   }
-  throw lastErr || new Error('External edit failed');
 }
 
-// New prompt-based edit contract:
-// Request: { source_image_url, editing_prompt, user_id, blog_id }
-// Response: { success, edited_image_url, s3_key, error }
-export async function externalPromptEditImage(params: { sourceImageUrl: string; prompt: string; userId?: string; blogId?: string | number; }): Promise<{ editedImageUrl: string; s3Key?: string; }> {
-  if (!BASE) throw new Error('IMAGE_BACKEND_BASE not configured');
-  const base = BASE.replace(/\/$/, '');
-  const absoluteOverride = process.env.IMAGE_BACKEND_EDIT_URL?.trim();
-  // Similar path probing to generation (keep minimal set)
-  const overridePaths = (process.env.IMAGE_BACKEND_EDIT_PATH || '')
-    .split(',').map(s => s.trim()).filter(Boolean);
-  const rawCandidates = [
-    ...overridePaths,
-    '/image/edit',
-    '/images/edit',
-    '/v1/image/edit',
-    '/api/image/edit',
-  ];
-  const seen = new Set<string>();
-  const candidates = rawCandidates.filter(p => {
-    const key = p;
-    if (seen.has(key)) return false; seen.add(key); return true;
+/**
+ * Store an image in the database (for manual image uploads)
+ * No AI processing - just stores the provided image data
+ */
+export async function storeImageInDb(params: {
+  imageData: string;
+  blogId: number;
+  altText?: string;
+  prompt?: string;
+  position?: number;
+}): Promise<{ imageId: number; imageUrl: string }> {
+  console.log("storeImageInDb called with:", {
+    imageDataLength: params.imageData?.length,
+    blogId: params.blogId,
+    altText: params.altText,
   });
 
-  const payload = {
-    source_image_url: params.sourceImageUrl,
-    editing_prompt: params.prompt,
-    user_id: String(params.userId ?? ''),
-    blog_id: String(params.blogId ?? ''),
-  };
-
-  const tried: string[] = [];
-  let lastErr: any = null;
-
-  const attempt = async (url: string) => {
-    tried.push(url);
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: headersJson(),
-      body: JSON.stringify(payload),
-      cache: 'no-store',
-    });
-    if (!res.ok) {
-      const t = await safeText(res);
-      lastErr = new Error(`External prompt edit failed: ${res.status} ${t || ''}`.trim());
-      return null;
-    }
-    try {
-      const data: any = await res.json();
-      if (data.success === false) {
-        lastErr = new Error(data.error || 'External edit reported failure');
-        return null;
+  try {
+    // Extract base64 data and content type
+    let base64Data = params.imageData;
+    let contentType = "image/png";
+    
+    if (params.imageData.startsWith("data:")) {
+      const matches = params.imageData.match(/^data:([^;]+);base64,(.+)$/);
+      if (matches) {
+        contentType = matches[1];
+        base64Data = matches[2];
       }
-      const edited = data.edited_image_url || data.imageUrl || data.url;
-      const s3 = data.s3_key || data.s3Key;
-      if (!edited) {
-        lastErr = new Error('External edit returned no edited_image_url');
-        return null;
-      }
-      return { editedImageUrl: edited, s3Key: s3 };
-    } catch (e) {
-      lastErr = e;
-      return null;
     }
-  };
 
-  if (absoluteOverride) {
-    const r = await attempt(absoluteOverride);
-    if (r) return r;
-  } else {
-    for (const path of candidates) {
-      const url = `${base}${path}`;
-      const r = await attempt(url);
-      if (r) return r;
-    }
+    const baseUrl = getImageBaseUrl();
+    
+    // Store in database
+    const [savedImage] = await db
+      .insert(blogImages)
+      .values({
+        blogId: params.blogId,
+        imageUrl: "", // Will be updated after we get the ID
+        imageData: base64Data,
+        contentType,
+        imagePrompt: params.prompt,
+        altText: params.altText,
+        position: params.position,
+      })
+      .returning();
+
+    // Update imageUrl with the proper API endpoint
+    const imageUrl = `${baseUrl}/api/images/serve/${savedImage.id}`;
+    
+    // Update the imageUrl in the database
+    await db
+      .update(blogImages)
+      .set({ imageUrl })
+      .where(require("drizzle-orm").eq(blogImages.id, savedImage.id));
+
+    console.log(`Successfully stored image in DB with ID: ${savedImage.id}`);
+
+    return { imageId: savedImage.id, imageUrl };
+  } catch (error) {
+    console.error("Image storage failed:", error);
+    throw new Error(`Image storage failed: ${(error as Error).message}`);
   }
-  const hint = tried.length ? ` Tried: ${tried.join(', ')}` : '';
-  const err = lastErr || new Error('External prompt edit failed');
-  err.message += hint;
-  throw err;
 }
 
-export async function externalUploadImage(params: { imageData: string; altText?: string; prompt?: string; blogId?: number | string; }): Promise<{ imageUrl: string; s3Key?: string; }> {
-  if (!BASE) throw new Error('IMAGE_BACKEND_BASE not configured');
-  const base = BASE.replace(/\/$/, '');
-  
-  // Try multiple upload endpoints
-  const uploadEndpoints = [
-    '/image/upload',
-    '/images/upload',
-    '/upload',
-    '/api/image/upload',
-  ];
-  
-  const uploadVariants = [
-    params,
-    { dataUrl: params.imageData, altText: params.altText, prompt: params.prompt, blogId: params.blogId },
-    { base64: params.imageData, altText: params.altText, prompt: params.prompt, blogId: params.blogId },
-    { image_data: params.imageData, alt_text: params.altText, prompt: params.prompt, blog_id: params.blogId },
-  ];
-  
-  let lastErr: any = null;
-  
-  // First, try dedicated upload endpoints
-  for (const endpoint of uploadEndpoints) {
-    const url = `${base}${endpoint}`;
-    for (const body of uploadVariants) {
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: headersJson(),
-          body: JSON.stringify(body),
-          cache: 'no-store',
-        });
-        
-        if (res.status === 404) {
-          // Endpoint doesn't exist, skip to next
-          break;
-        }
-        
-        if (!res.ok) {
-          const errText = await safeText(res);
-          lastErr = new Error(`External upload failed: ${res.status} ${errText || ''}`.trim());
-          if (res.status >= 500) break;
-          continue;
-        }
-        
-        const data: GenerateResponse = await res.json();
-        const outUrl = data.imageUrl || data.url || data?.data?.imageUrl || data?.data?.url;
-        if (outUrl) {
-          return { imageUrl: outUrl, s3Key: data.s3Key || data.s3_key || data?.data?.s3Key || data?.data?.s3_key };
-        }
-        lastErr = new Error('External upload returned no imageUrl');
-      } catch (e) {
-        lastErr = e;
-        continue;
-      }
-    }
-  }
-  
-  // Fallback: Use /image/edit endpoint with a "keep as is" prompt
-  // This will upload the image and return a URL even without real editing
-  console.log('No upload endpoint found, trying /image/edit as fallback...');
+/**
+ * Update an existing image in the database (for edited images)
+ */
+export async function updateImageInDb(params: {
+  imageId: number;
+  imageData: string;
+}): Promise<{ imageUrl: string }> {
   try {
-    const editUrl = `${base}/image/edit`;
-    const editBody = {
-      source_image_url: params.imageData, // Send base64 as source
-      editing_prompt: params.prompt || 'keep the image exactly as is without any changes',
-      image_data: params.imageData,
-      dataUrl: params.imageData,
-      base64: params.imageData,
-      blog_id: String(params.blogId ?? ''),
-    };
+    // Extract base64 data and content type
+    let base64Data = params.imageData;
+    let contentType = "image/png";
     
-    const res = await fetch(editUrl, {
-      method: 'POST',
-      headers: headersJson(),
-      body: JSON.stringify(editBody),
-      cache: 'no-store',
-    });
-    
-    if (res.ok) {
-      const data: any = await res.json();
-      const outUrl = data.edited_image_url || data.imageUrl || data.url || data?.data?.imageUrl;
-      if (outUrl) {
-        return { imageUrl: outUrl, s3Key: data.s3_key || data.s3Key };
+    if (params.imageData.startsWith("data:")) {
+      const matches = params.imageData.match(/^data:([^;]+);base64,(.+)$/);
+      if (matches) {
+        contentType = matches[1];
+        base64Data = matches[2];
       }
-    } else {
-      const errText = await safeText(res);
-      lastErr = new Error(`Edit fallback failed: ${res.status} ${errText || ''}`.trim());
     }
-  } catch (e) {
-    lastErr = e;
+
+    const baseUrl = getImageBaseUrl();
+    const imageUrl = `${baseUrl}/api/images/serve/${params.imageId}`;
+    
+    // Update in database
+    await db
+      .update(blogImages)
+      .set({ 
+        imageData: base64Data,
+        contentType,
+        imageUrl,
+      })
+      .where(require("drizzle-orm").eq(blogImages.id, params.imageId));
+
+    console.log(`Successfully updated image in DB with ID: ${params.imageId}`);
+
+    return { imageUrl };
+  } catch (error) {
+    console.error("Image update failed:", error);
+    throw new Error(`Image update failed: ${(error as Error).message}`);
   }
-  
-  throw lastErr || new Error('External upload failed - no upload endpoint available');
 }
 
-async function safeText(res: Response): Promise<string | null> {
-  try {
-    const text = await res.text();
-    return text?.slice(0, 400) || null;
-  } catch {
-    return null;
+// ============================================================
+// DEPRECATED FUNCTIONS - Kept for backwards compatibility
+// ============================================================
+
+/**
+ * @deprecated Use generateAndStoreImage instead. This returns s3Key for backwards compatibility.
+ */
+export async function externalGenerateSingleImage(params: {
+  prompt: string;
+  userId?: string;
+  blogId?: string | number;
+}): Promise<{ s3Key: string }> {
+  if (!params.blogId) {
+    throw new Error("blogId is required for image generation");
   }
+
+  const result = await generateAndStoreImage({
+    prompt: params.prompt,
+    blogId: Number(params.blogId),
+    altText: params.prompt,
+  });
+
+  // Return imageId as s3Key for backwards compatibility
+  return { s3Key: String(result.imageId) };
+}
+
+/**
+ * @deprecated Use storeImageInDb instead.
+ */
+export async function externalUploadImage(params: {
+  imageData: string;
+  altText?: string;
+  prompt?: string;
+  blogId?: number | string;
+  userId?: string | number;
+}): Promise<{ imageUrl: string; s3Key?: string }> {
+  if (!params.blogId) {
+    throw new Error("blogId is required for image upload");
+  }
+
+  const result = await storeImageInDb({
+    imageData: params.imageData,
+    blogId: Number(params.blogId),
+    altText: params.altText,
+    prompt: params.prompt,
+  });
+
+  return { imageUrl: result.imageUrl, s3Key: String(result.imageId) };
+}
+
+/**
+ * @deprecated AI-based image editing has been removed.
+ */
+export async function externalEditImage(params: {
+  imageUrl?: string;
+  imageData?: string;
+  prompt: string;
+}): Promise<{ imageUrl: string; s3Key?: string }> {
+  throw new Error(
+    "AI-based image editing has been removed. Please use manual image editing features instead."
+  );
+}
+
+/**
+ * @deprecated AI-based image editing has been removed.
+ */
+export async function externalPromptEditImage(params: {
+  sourceImageUrl: string;
+  prompt: string;
+  userId?: string;
+  blogId?: string | number;
+}): Promise<{ editedImageUrl: string; s3Key?: string }> {
+  throw new Error(
+    "AI-based image editing has been removed. Please use manual image editing features instead."
+  );
 }

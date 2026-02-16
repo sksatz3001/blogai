@@ -41,12 +41,14 @@ export async function generateAndStoreImage(params: {
 
   try {
     // Generate image using OpenAI DALL-E 3
+    // Use 'natural' style for more realistic, less over-processed images
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt: params.prompt,
       n: 1,
-      size: "1024x1024",
+      size: "1792x1024",
       quality: "standard",
+      style: "natural",
       response_format: "b64_json",
     });
 
@@ -67,7 +69,7 @@ export async function generateAndStoreImage(params: {
         imagePrompt: params.prompt,
         altText: params.altText || params.prompt,
         position: params.position,
-        width: 1024,
+        width: 1792,
         height: 1024,
       })
       .returning();

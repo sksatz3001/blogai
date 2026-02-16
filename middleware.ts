@@ -10,6 +10,9 @@ const isPublicRoute = createRouteMatcher([
   // allow all superadmin APIs (they use cookie-based auth, not Clerk)
   '/api/superadmin(.*)',
   '/superadmin(.*)', // pages protected below by our cookie check
+  // Image serving - must be public so <img> tags can load without auth
+  '/api/images/serve(.*)',
+  '/api/images/proxy(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

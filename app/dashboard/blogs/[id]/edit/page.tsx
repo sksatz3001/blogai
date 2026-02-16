@@ -69,8 +69,8 @@ export default function EditBlogPage() {
       const newContent = data.htmlContent || data.content || "";
       setContent(newContent);
       
-      // Extract featured image if present
-      const featuredImgMatch = newContent.match(/<div class="featured-image-wrapper"[^>]*><img src="([^"]+)"/i);
+      // Extract featured image if present (support both old <div> and new <figure> wrappers)
+      const featuredImgMatch = newContent.match(/<(?:div|figure) class="featured-image-wrapper"[^>]*><img src="([^"]+)"/i);
       if (featuredImgMatch) {
         setFeaturedImageUrl(featuredImgMatch[1]);
       }
@@ -271,8 +271,8 @@ export default function EditBlogPage() {
       
       if (imageUrl) {
         setFeaturedImageUrl(imageUrl);
-        const featuredImgHtml = `<div class="featured-image-wrapper" style="margin: 2rem 0;"><img src="${imageUrl}" alt="${title}" style="width: 100%; height: auto; border-radius: 8px;" /></div>`;
-        let updatedContent = content.replace(/<div class="featured-image-wrapper"[^>]*>.*?<\/div>/i, '');
+        const featuredImgHtml = `<figure class="featured-image-wrapper" style="margin: 2rem 0; text-align: center;"><img src="${imageUrl}" alt="${title}" style="width: 100%; height: auto; border-radius: 8px; display: block;" loading="lazy" /></figure>`;
+        let updatedContent = content.replace(/<(?:div|figure) class="featured-image-wrapper"[^>]*>.*?<\/(?:div|figure)>/i, '');
         setContent(featuredImgHtml + updatedContent);
         // Refresh credits after image generation
         refreshCredits();
@@ -289,8 +289,8 @@ export default function EditBlogPage() {
 
   const handleSaveFeaturedImage = async (editedImageUrl: string) => {
     setFeaturedImageUrl(editedImageUrl);
-    const featuredImgHtml = `<div class="featured-image-wrapper" style="margin: 2rem 0;"><img src="${editedImageUrl}" alt="${title}" style="width: 100%; height: auto; border-radius: 8px;" /></div>`;
-    let updatedContent = content.replace(/<div class="featured-image-wrapper"[^>]*>.*?<\/div>/i, '');
+    const featuredImgHtml = `<figure class="featured-image-wrapper" style="margin: 2rem 0; text-align: center;"><img src="${editedImageUrl}" alt="${title}" style="width: 100%; height: auto; border-radius: 8px; display: block;" loading="lazy" /></figure>`;
+    let updatedContent = content.replace(/<(?:div|figure) class="featured-image-wrapper"[^>]*>.*?<\/(?:div|figure)>/i, '');
     setContent(featuredImgHtml + updatedContent);
     setShowImageEditorModal(false);
     toast.success("Featured image updated!");

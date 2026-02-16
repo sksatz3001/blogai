@@ -31,25 +31,39 @@ export function BlogContent({ htmlContent, className = '' }: BlogContentProps) {
         
         // Find all img tags
         const images = div.querySelectorAll('img');
-        const imageUrls = Array.from(images)
-          .map(img => img.src)
-          .filter(src => src && src.includes('s3')); // Only process S3 URLs
         
-        if (imageUrls.length === 0) {
-          setProcessedHtml(htmlContent);
-          setLoading(false);
-          return;
+        // Separate S3 URLs from DB-served URLs
+        const s3Urls: string[] = [];
+        const allImages = Array.from(images);
+        
+        allImages.forEach(img => {
+          const src = img.getAttribute('src') || img.src;
+          if (src && (src.includes('s3') || src.includes('.s3.'))) {
+            s3Urls.push(img.src); // Use resolved URL for S3
+          }
+        });
+        
+        let processed = htmlContent;
+        
+        // Process S3 URLs - get presigned URLs
+        if (s3Urls.length > 0) {
+          const urlMap = await getPresignedImageUrls(s3Urls);
+          urlMap.forEach((presignedUrl, originalUrl) => {
+            processed = processed.split(originalUrl).join(presignedUrl);
+          });
         }
         
-        // Get presigned URLs for all images in batch
-        const urlMap = await getPresignedImageUrls(imageUrls);
+        // For DB-served images (/api/images/serve/), ensure full URL and add cache-busting
+        processed = processed.replace(
+          /src="(\/api\/images\/serve\/\d+)"/g,
+          (match, url) => `src="${url}" loading="lazy" onerror="this.style.display='none'"`
+        );
         
-        // Replace all S3 URLs with presigned URLs
-        let processed = htmlContent;
-        urlMap.forEach((presignedUrl, originalUrl) => {
-          // Use global replace to handle multiple occurrences
-          processed = processed.split(originalUrl).join(presignedUrl);
-        });
+        // Fix featured-image-wrapper divs - ensure they render properly
+        processed = processed.replace(
+          /<div class="featured-image-wrapper"[^>]*>(.*?)<\/div>/gi,
+          (match, inner) => `<figure class="featured-image-wrapper" style="margin: 2rem 0; text-align: center;">${inner}</figure>`
+        );
         
         setProcessedHtml(processed);
       } catch (error) {

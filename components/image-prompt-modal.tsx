@@ -21,12 +21,12 @@ export function ImagePromptModal({
   blogContent,
 }: ImagePromptModalProps) {
   const [prompt, setPrompt] = useState("");
-  const [placeholder, setPlaceholder] = useState("A professional, high-quality image that captures the essence of your blog topic. Be specific about style, colors, composition, and mood for best results...");
+  const [placeholder, setPlaceholder] = useState("Describe a real-world scene — e.g. 'a person working at a laptop in a bright modern office' or 'a team brainstorming around a whiteboard'. Keep it simple and realistic for best results...");
   const [suggestions, setSuggestions] = useState<string[]>([
-    "Professional business illustration",
-    "Modern technology concept",
-    "Creative abstract design",
-    "Team collaboration scene",
+    "A professional working at a clean desk with a laptop, soft natural light",
+    "A team meeting in a modern glass-walled conference room",
+    "Close-up of hands typing on a laptop with coffee nearby",
+    "A bright, minimalist workspace with plants and natural light",
   ]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 

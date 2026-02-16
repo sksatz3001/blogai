@@ -15,16 +15,13 @@ export function isExternalBackendConfigured(): boolean {
 }
 
 /**
- * Get the base URL for image serving
- * In production, use the deployed URL; locally, use NEXT_PUBLIC_APP_URL.
- * Falls back to empty string (relative URLs) which works in the browser.
+ * Get the base URL for image serving.
+ * Always use empty string (relative URLs like /api/images/serve/123)
+ * since the API and frontend are on the same domain.
+ * This avoids issues with VERCEL_URL changing per deployment.
  */
 function getImageBaseUrl(): string {
-  // On Vercel, VERCEL_URL is auto-set (e.g., "your-app.vercel.app")
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  return process.env.NEXT_PUBLIC_APP_URL || "";
+  return "";
 }
 
 /**

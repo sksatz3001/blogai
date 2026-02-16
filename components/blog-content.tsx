@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { getPresignedImageUrls, extractS3Key } from '@/lib/presigned-url';
 
 interface BlogContentProps {
   htmlContent: string;
@@ -9,72 +8,48 @@ interface BlogContentProps {
 }
 
 /**
- * Component that processes blog HTML content and converts all S3 image URLs to presigned URLs
- * Use this for rendering blog content with dangerouslySetInnerHTML
+ * Component that processes blog HTML content for display.
+ * Images are served from /api/images/serve/[id] (database-stored).
  */
 export function BlogContent({ htmlContent, className = '' }: BlogContentProps) {
   const [processedHtml, setProcessedHtml] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function processImages() {
-      if (!htmlContent) {
-        setProcessedHtml('');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // Create a temporary div to parse HTML
-        const div = document.createElement('div');
-        div.innerHTML = htmlContent;
-        
-        // Find all img tags
-        const images = div.querySelectorAll('img');
-        
-        // Separate S3 URLs from DB-served URLs
-        const s3Urls: string[] = [];
-        const allImages = Array.from(images);
-        
-        allImages.forEach(img => {
-          const src = img.getAttribute('src') || img.src;
-          if (src && (src.includes('s3') || src.includes('.s3.'))) {
-            s3Urls.push(img.src); // Use resolved URL for S3
-          }
-        });
-        
-        let processed = htmlContent;
-        
-        // Process S3 URLs - get presigned URLs
-        if (s3Urls.length > 0) {
-          const urlMap = await getPresignedImageUrls(s3Urls);
-          urlMap.forEach((presignedUrl, originalUrl) => {
-            processed = processed.split(originalUrl).join(presignedUrl);
-          });
-        }
-        
-        // For DB-served images (/api/images/serve/), ensure full URL and add cache-busting
-        processed = processed.replace(
-          /src="(\/api\/images\/serve\/\d+)"/g,
-          (match, url) => `src="${url}" loading="lazy" onerror="this.style.display='none'"`
-        );
-        
-        // Fix featured-image-wrapper divs - ensure they render properly
-        processed = processed.replace(
-          /<div class="featured-image-wrapper"[^>]*>(.*?)<\/div>/gi,
-          (match, inner) => `<figure class="featured-image-wrapper" style="margin: 2rem 0; text-align: center;">${inner}</figure>`
-        );
-        
-        setProcessedHtml(processed);
-      } catch (error) {
-        console.error('Error processing blog images:', error);
-        setProcessedHtml(htmlContent); // Fallback to original
-      } finally {
-        setLoading(false);
-      }
+    if (!htmlContent) {
+      setProcessedHtml('');
+      setLoading(false);
+      return;
     }
-    
-    processImages();
+
+    try {
+      let processed = htmlContent;
+
+      // Ensure DB-served images have lazy loading
+      processed = processed.replace(
+        /(<img\s[^>]*src="(\/api\/images\/serve\/\d+)")/g,
+        (match) => {
+          // Only add loading="lazy" if not already present
+          if (!match.includes('loading=')) {
+            return match.replace('<img ', '<img loading="lazy" ');
+          }
+          return match;
+        }
+      );
+
+      // Fix featured-image-wrapper divs - ensure they render properly
+      processed = processed.replace(
+        /<div class="featured-image-wrapper"[^>]*>(.*?)<\/div>/gi,
+        (match, inner) => `<figure class="featured-image-wrapper" style="margin: 2rem 0; text-align: center;">${inner}</figure>`
+      );
+
+      setProcessedHtml(processed);
+    } catch (error) {
+      console.error('Error processing blog content:', error);
+      setProcessedHtml(htmlContent); // Fallback to original
+    } finally {
+      setLoading(false);
+    }
   }, [htmlContent]);
 
   if (loading) {

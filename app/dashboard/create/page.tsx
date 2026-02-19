@@ -8,13 +8,22 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Sparkles, Wand2, Building2, Search, TrendingUp, HelpCircle, Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Sparkles, Wand2, Building2, Search, TrendingUp, HelpCircle, Lightbulb, ChevronDown, ChevronUp, Brain, ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface CompanyProfile {
   id: number;
   companyName: string;
   companyWebsite: string | null;
+}
+
+interface ModelOption {
+  id: string;
+  name: string;
+  provider: string;
+  providerLabel: string;
+  type: "chat" | "image";
+  contextWindow?: number;
 }
 
 function CreateBlogContent() {
@@ -30,6 +39,13 @@ function CreateBlogContent() {
   const [keywordResearch, setKeywordResearch] = useState<any>(null);
   const [researchingKeywords, setResearchingKeywords] = useState(false);
   const [showKeywordResults, setShowKeywordResults] = useState(true);
+  
+  // Model selection state
+  const [chatModels, setChatModels] = useState<ModelOption[]>([]);
+  const [imageModels, setImageModels] = useState<ModelOption[]>([]);
+  const [loadingModels, setLoadingModels] = useState(true);
+  const [selectedChatModel, setSelectedChatModel] = useState("openai/gpt-4o");
+  const [selectedImageModel, setSelectedImageModel] = useState("dall-e-3");
   
   const [formData, setFormData] = useState({
     title: "",
@@ -57,7 +73,23 @@ function CreateBlogContent() {
 
   useEffect(() => {
     fetchCompanyProfiles();
+    fetchModels();
   }, []);
+
+  const fetchModels = async () => {
+    try {
+      const response = await fetch("/api/openrouter/models");
+      if (response.ok) {
+        const data = await response.json();
+        setChatModels(data.chatModels || []);
+        setImageModels(data.imageModels || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch models:", error);
+    } finally {
+      setLoadingModels(false);
+    }
+  };
 
   const fetchCompanyProfiles = async () => {
     try {
@@ -160,6 +192,8 @@ function CreateBlogContent() {
         secondary: formData.secondaryKeywords,
         wordCount: formData.wordCount,
         companyProfileId: String(formData.companyProfileId || "self"),
+        chatModel: selectedChatModel,
+        imageModel: selectedImageModel,
       });
       router.push(`/dashboard/create/outline/${newBlogId}?${params.toString()}`);
     } catch (error) {
@@ -496,6 +530,90 @@ function CreateBlogContent() {
                 }
                 className="h-11 bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
               />
+            </div>
+
+            {/* AI Model Selection */}
+            <div className="bg-gradient-to-r from-primary/5 to-purple-500/5 rounded-lg border border-primary/20 p-4 space-y-4">
+              <h4 className="text-sm font-semibold flex items-center gap-1.5 text-primary">
+                <Brain className="h-4 w-4" />
+                AI Model Selection
+                <span className="text-xs font-normal text-muted-foreground ml-2">(via OpenRouter)</span>
+              </h4>
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Chat/Blog Generation Model */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-foreground flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    Blog Generation LLM
+                  </Label>
+                  <select
+                    value={selectedChatModel}
+                    onChange={(e) => setSelectedChatModel(e.target.value)}
+                    className="w-full h-11 px-3 rounded-lg bg-white border-2 border-border text-foreground text-sm focus:outline-none focus:border-primary cursor-pointer"
+                    disabled={loadingModels}
+                  >
+                    {loadingModels ? (
+                      <option>Loading models...</option>
+                    ) : (
+                      Object.entries(
+                        chatModels.reduce((acc, m) => {
+                          if (!acc[m.providerLabel]) acc[m.providerLabel] = [];
+                          acc[m.providerLabel].push(m);
+                          return acc;
+                        }, {} as Record<string, ModelOption[]>)
+                      ).map(([provider, models]) => (
+                        <optgroup key={provider} label={provider}>
+                          {models.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name}{m.contextWindow ? ` (${Math.round(m.contextWindow / 1000)}k ctx)` : ''}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))
+                    )}
+                  </select>
+                  <p className="text-[11px] text-muted-foreground">
+                    Generates blog content, outlines, and text
+                  </p>
+                </div>
+
+                {/* Image Generation Model */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-foreground flex items-center gap-1.5">
+                    <ImageIcon className="h-3.5 w-3.5 text-orange-500" />
+                    Image Generation Model
+                  </Label>
+                  <select
+                    value={selectedImageModel}
+                    onChange={(e) => setSelectedImageModel(e.target.value)}
+                    className="w-full h-11 px-3 rounded-lg bg-white border-2 border-border text-foreground text-sm focus:outline-none focus:border-primary cursor-pointer"
+                    disabled={loadingModels}
+                  >
+                    {loadingModels ? (
+                      <option>Loading models...</option>
+                    ) : (
+                      Object.entries(
+                        imageModels.reduce((acc, m) => {
+                          if (!acc[m.providerLabel]) acc[m.providerLabel] = [];
+                          acc[m.providerLabel].push(m);
+                          return acc;
+                        }, {} as Record<string, ModelOption[]>)
+                      ).map(([provider, models]) => (
+                        <optgroup key={provider} label={provider}>
+                          {models.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))
+                    )}
+                  </select>
+                  <p className="text-[11px] text-muted-foreground">
+                    Creates featured &amp; section images for your blog
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="pt-4">

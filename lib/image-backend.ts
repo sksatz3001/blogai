@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { db } from "@/db";
 import { blogImages } from "@/db/schema";
+import { getOpenRouterClient } from "@/lib/openrouter";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -25,8 +26,8 @@ function getImageBaseUrl(): string {
 }
 
 /**
- * Generate a single image using OpenAI DALL-E and store in database
- * @param params - Prompt and required blogId
+ * Generate a single image using OpenRouter (or direct OpenAI) and store in database
+ * @param params - Prompt, blogId, and optional imageModel for OpenRouter routing
  * @returns Object with imageId of the stored image
  */
 export async function generateAndStoreImage(params: {
@@ -34,29 +35,63 @@ export async function generateAndStoreImage(params: {
   blogId: number;
   altText?: string;
   position?: number;
+  imageModel?: string;
 }): Promise<{ imageId: number; imageUrl: string }> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY not configured");
-  }
+  const selectedModel = params.imageModel || "dall-e-3";
 
-  console.log(`Generating image with OpenAI DALL-E for prompt: "${params.prompt.slice(0, 100)}..."`);
+  console.log(`Generating image with model: ${selectedModel} for prompt: "${params.prompt.slice(0, 100)}..."`);
 
   try {
-    // Generate image using OpenAI DALL-E 3
-    // Use 'natural' style for more realistic, less over-processed images
-    const response = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: params.prompt,
-      n: 1,
-      size: "1792x1024",
-      quality: "standard",
-      style: "natural",
-      response_format: "b64_json",
-    });
+    let imageData: string | undefined;
 
-    const imageData = response.data?.[0]?.b64_json;
+    if (process.env.OPENROUTER_API_KEY && selectedModel !== "dall-e-3") {
+      // Use OpenRouter AI Gateway for image generation
+      try {
+        const client = getOpenRouterClient();
+        const response = await client.images.generate({
+          model: selectedModel,
+          prompt: params.prompt,
+          n: 1,
+          size: "1024x1024",
+          response_format: "b64_json",
+        });
+        imageData = response.data?.[0]?.b64_json ?? undefined;
+      } catch (openRouterError: any) {
+        console.warn(`OpenRouter image gen failed for ${selectedModel}, falling back to OpenAI DALL-E:`, openRouterError?.message);
+        // Fallback to direct OpenAI
+        if (!process.env.OPENAI_API_KEY) {
+          throw new Error(`Image generation failed: No fallback API key available`);
+        }
+        const response = await openai.images.generate({
+          model: "dall-e-3",
+          prompt: params.prompt,
+          n: 1,
+          size: "1792x1024",
+          quality: "standard",
+          style: "natural",
+          response_format: "b64_json",
+        });
+        imageData = response.data?.[0]?.b64_json ?? undefined;
+      }
+    } else {
+      // Direct OpenAI for DALL-E models
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error("OPENAI_API_KEY not configured");
+      }
+      const response = await openai.images.generate({
+        model: "dall-e-3",
+        prompt: params.prompt,
+        n: 1,
+        size: "1792x1024",
+        quality: "standard",
+        style: "natural",
+        response_format: "b64_json",
+      });
+      imageData = response.data?.[0]?.b64_json ?? undefined;
+    }
+
     if (!imageData) {
-      throw new Error("OpenAI returned no image data");
+      throw new Error("AI returned no image data");
     }
 
     // Store in database
@@ -71,7 +106,7 @@ export async function generateAndStoreImage(params: {
         imagePrompt: params.prompt,
         altText: params.altText || params.prompt,
         position: params.position,
-        width: 1792,
+        width: selectedModel.includes("dall-e") ? 1792 : 1024,
         height: 1024,
       })
       .returning();
@@ -85,11 +120,11 @@ export async function generateAndStoreImage(params: {
       .set({ imageUrl })
       .where(require("drizzle-orm").eq(blogImages.id, savedImage.id));
 
-    console.log(`Successfully generated and stored image in DB with ID: ${savedImage.id}`);
+    console.log(`Successfully generated and stored image in DB with ID: ${savedImage.id} (model: ${selectedModel})`);
 
     return { imageId: savedImage.id, imageUrl };
   } catch (error) {
-    console.error("OpenAI image generation failed:", error);
+    console.error(`Image generation failed (model: ${selectedModel}):`, error);
     throw new Error(`Image generation failed: ${(error as Error).message}`);
   }
 }

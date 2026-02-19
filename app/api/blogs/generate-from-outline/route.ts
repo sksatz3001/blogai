@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { generateAndStoreImage, isExternalBackendConfigured } from "@/lib/image-backend";
 import { deductCredits, CREDIT_COSTS } from "@/lib/credits";
 import { NextResponse } from "next/server";
+import { getOpenRouterClient } from "@/lib/openrouter";
 
 // Lazy initialize OpenAI client
 let openai: OpenAI | null = null;
@@ -100,17 +101,6 @@ async function findAndInjectVideos(title: string, keyword: string, html: string)
 
 export async function POST(request: Request) {
   try {
-    // Check if OpenAI is configured
-    if (!process.env.OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY is not configured");
-      return NextResponse.json({ error: "AI service not configured", success: false }, { status: 500 });
-    }
-    
-    const client = getOpenAI();
-    if (!client) {
-      return NextResponse.json({ error: "AI service initialization failed", success: false }, { status: 500 });
-    }
-
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Unauthorized", success: false }, { status: 401 });
 
@@ -118,7 +108,7 @@ export async function POST(request: Request) {
     if (!dbUser) return new Response("User not found", { status: 404 });
 
     const body = await request.json();
-    const { blogId, title, primaryKeyword, secondaryKeywords = [], targetWordCount = 1200, outline = [], featuredImage = true, companyProfileId } = body as any;
+    const { blogId, title, primaryKeyword, secondaryKeywords = [], targetWordCount = 1200, outline = [], featuredImage = true, companyProfileId, chatModel, imageModel } = body as any;
 
     const blog = await db.query.blogs.findFirst({ where: eq(blogs.id, Number(blogId)) });
     if (!blog || blog.userId !== dbUser.id) return new Response("Blog not found", { status: 404 });
@@ -126,7 +116,8 @@ export async function POST(request: Request) {
     // Calculate total credits needed
     // 1 credit for blog generation + 0.5 credits per image
     let imageCount = 0;
-    if (isExternalBackendConfigured()) {
+    const imageGenerationAvailable = isExternalBackendConfigured() || (imageModel && process.env.OPENROUTER_API_KEY);
+    if (imageGenerationAvailable) {
       // Featured image if enabled
       if (featuredImage) imageCount += 1;
       // Section images (one per section where sectionImage is not false)
@@ -255,13 +246,51 @@ ${outlineText}
 **⚠️ FINAL REMINDER — WORD COUNT IS NON-NEGOTIABLE:**
 You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWordCount * 0.9)} words). Each H2 section needs ~${wordsPerSection} words. Each H3 subsection needs 3-5 substantial paragraphs (100-150 words each). Do NOT write a short article. Expand each point with examples, data, practical advice, comparisons, and real-world scenarios. If a section feels thin, add more depth — more examples, more statistics, more actionable tips. Count your words as you write. The article must be comprehensive and thorough.`;
 
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o",
-      temperature: 0.65,
-      max_tokens: Math.max(8000, Math.ceil(targetWordCount * 3)),
-      messages: [ { role: "system", content: sys }, { role: "user", content: usr } ],
-      stream: false,
-    });
+    // Determine which model & client to use for text generation
+    const selectedChatModel = chatModel || "openai/gpt-4o";
+    
+    let completion: any;
+    
+    if (process.env.OPENROUTER_API_KEY) {
+      // Use OpenRouter AI Gateway
+      try {
+        const openRouterClient = getOpenRouterClient();
+        console.log(`Using OpenRouter with model: ${selectedChatModel}`);
+        completion = await openRouterClient.chat.completions.create({
+          model: selectedChatModel,
+          temperature: 0.65,
+          max_tokens: Math.max(8000, Math.ceil(targetWordCount * 3)),
+          messages: [{ role: "system", content: sys }, { role: "user", content: usr }],
+          stream: false,
+        });
+      } catch (openRouterError: any) {
+        console.warn(`OpenRouter call failed for ${selectedChatModel}, falling back to OpenAI:`, openRouterError?.message);
+        const client = getOpenAI();
+        if (!client) {
+          throw new Error(`AI service not configured for model: ${selectedChatModel}`);
+        }
+        completion = await client.chat.completions.create({
+          model: "gpt-4o",
+          temperature: 0.65,
+          max_tokens: Math.max(8000, Math.ceil(targetWordCount * 3)),
+          messages: [{ role: "system", content: sys }, { role: "user", content: usr }],
+          stream: false,
+        });
+      }
+    } else {
+      // Direct OpenAI fallback
+      const client = getOpenAI();
+      if (!client) {
+        return NextResponse.json({ error: "AI service not configured", success: false }, { status: 500 });
+      }
+      completion = await client.chat.completions.create({
+        model: "gpt-4o",
+        temperature: 0.65,
+        max_tokens: Math.max(8000, Math.ceil(targetWordCount * 3)),
+        messages: [{ role: "system", content: sys }, { role: "user", content: usr }],
+        stream: false,
+      });
+    }
 
     let html = completion.choices[0]?.message?.content || "";
     // Strip markdown code block markers if present (```html ... ```)
@@ -288,7 +317,7 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
     await db.update(blogs).set({ content: html, htmlContent: html, wordCount: plainWords, updatedAt: new Date() }).where(eq(blogs.id, blog.id));
 
     // Generate images
-    if (isExternalBackendConfigured()) {
+    if (isExternalBackendConfigured() || (imageModel && process.env.OPENROUTER_API_KEY)) {
       const h2Matches = Array.from(html.matchAll(/<h2[^>]*>([^<]+)<\/h2>/gi)).map(m => (m[1] || "").trim());
 
       const prompts: Array<{ type: 'featured' | 'section'; after: string; prompt: string }> = [];
@@ -424,6 +453,7 @@ IMPORTANT: Absolutely NO text, NO letters, NO words, NO numbers, NO icons, NO ab
             prompt: p.prompt,
             blogId: blog.id,
             altText: p.prompt,
+            imageModel: imageModel,
           });
           
           console.log(`Image generation result: imageId=${imageId}, imageUrl=${imageUrl}`);
@@ -474,7 +504,7 @@ IMPORTANT: Absolutely NO text, NO letters, NO words, NO numbers, NO icons, NO ab
       await db.update(blogs)
         .set({ content: html, htmlContent: html, status: 'draft', updatedAt: new Date() })
         .where(eq(blogs.id, blog.id));
-    } else {
+    } else if (!imageGenerationAvailable) {
       // No image backend - just update status to draft
       await db.update(blogs)
         .set({ status: 'draft', updatedAt: new Date() })

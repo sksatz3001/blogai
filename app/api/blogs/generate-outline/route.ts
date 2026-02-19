@@ -4,17 +4,12 @@ import { db } from "@/db";
 import { blogs, companyProfiles, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { getOpenRouterClient } from "@/lib/openrouter";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, organization: process.env.OPENAI_ORG_ID });
 
 export async function POST(request: Request) {
   try {
-    // Check if OpenAI is configured
-    if (!process.env.OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY is not configured");
-      return NextResponse.json({ error: "AI service not configured", outline: [] }, { status: 500 });
-    }
-
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ error: "Unauthorized", outline: [] }, { status: 401 });
 
@@ -22,7 +17,7 @@ export async function POST(request: Request) {
     if (!dbUser) return NextResponse.json({ error: "User not found", outline: [] }, { status: 404 });
 
     const body = await request.json();
-    const { blogId, title, primaryKeyword, secondaryKeywords = [], targetWordCount = 1200, companyProfileId } = body;
+    const { blogId, title, primaryKeyword, secondaryKeywords = [], targetWordCount = 1200, companyProfileId, chatModel } = body;
 
     // Validate blog ownership if blogId provided
     if (blogId) {
@@ -50,17 +45,57 @@ Rules:
 - Output ONLY valid JSON with shape: { outline: [{ title: string, items?: [{ title: string }] }] }
 - No extra text.`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      temperature: 0.4,
-      messages: [ { role: "system", content: sys }, { role: "user", content: usr } ],
-      response_format: { type: "json_object" },
-    });
+    // Determine which model & client to use
+    const selectedModel = chatModel || "openai/gpt-4o";
+    
+    let completion: any;
+    
+    if (process.env.OPENROUTER_API_KEY) {
+      // Use OpenRouter AI Gateway
+      try {
+        const client = getOpenRouterClient();
+        completion = await client.chat.completions.create({
+          model: selectedModel,
+          temperature: 0.4,
+          messages: [{ role: "system", content: sys }, { role: "user", content: usr }],
+          response_format: { type: "json_object" },
+        });
+      } catch (openRouterError: any) {
+        console.warn(`OpenRouter call failed for ${selectedModel}, falling back to OpenAI:`, openRouterError?.message);
+        // Fallback to direct OpenAI
+        if (!process.env.OPENAI_API_KEY) {
+          throw new Error(`AI service not configured for model: ${selectedModel}`);
+        }
+        completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          temperature: 0.4,
+          messages: [{ role: "system", content: sys }, { role: "user", content: usr }],
+          response_format: { type: "json_object" },
+        });
+      }
+    } else {
+      // Direct OpenAI fallback
+      if (!process.env.OPENAI_API_KEY) {
+        return NextResponse.json({ error: "AI service not configured", outline: [] }, { status: 500 });
+      }
+      completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        temperature: 0.4,
+        messages: [{ role: "system", content: sys }, { role: "user", content: usr }],
+        response_format: { type: "json_object" },
+      });
+    }
 
     const content = completion.choices[0]?.message?.content || "{\"outline\":[]}";
     let json: any = { outline: [] };
-    try { json = JSON.parse(content); } catch (parseError) {
-      console.error("Failed to parse OpenAI response:", content);
+    try { 
+      // Try to extract JSON from the response (some models may wrap in code blocks)
+      let jsonStr = content;
+      const jsonMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+      if (jsonMatch) jsonStr = jsonMatch[1];
+      json = JSON.parse(jsonStr); 
+    } catch (parseError) {
+      console.error("Failed to parse AI response:", content);
     }
 
     // Ensure outline is always an array

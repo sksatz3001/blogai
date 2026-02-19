@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
-import { Loader2, GripVertical, Sparkles, Wand2, Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Loader2, GripVertical, Sparkles, Wand2, Plus, Trash2, ArrowLeft, Brain, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
@@ -35,6 +35,8 @@ export default function OutlineStepPage() {
     secondary: search.get("secondary") || "",
     wordCount: Number(search.get("wordCount") || "1000"),
     companyProfileId: search.get("companyProfileId") || "self",
+    chatModel: search.get("chatModel") || "openai/gpt-4o",
+    imageModel: search.get("imageModel") || "dall-e-3",
   }), [search]);
 
   useEffect(() => {
@@ -52,6 +54,7 @@ export default function OutlineStepPage() {
             secondaryKeywords: ctx.secondary?.split(",").map(s => s.trim()).filter(Boolean) || [],
             targetWordCount: ctx.wordCount,
             companyProfileId: ctx.companyProfileId === "self" ? null : Number(ctx.companyProfileId),
+            chatModel: ctx.chatModel,
           }),
         });
         const data = await res.json();
@@ -103,6 +106,7 @@ export default function OutlineStepPage() {
           secondaryKeywords: ctx.secondary?.split(",").map(s => s.trim()).filter(Boolean) || [],
           targetWordCount: ctx.wordCount,
           companyProfileId: ctx.companyProfileId === "self" ? null : Number(ctx.companyProfileId),
+          chatModel: ctx.chatModel,
         }),
       });
       const data = await res.json();
@@ -176,6 +180,8 @@ export default function OutlineStepPage() {
           outline: wire.sections,
           featuredImage: wire.featuredImage,
           companyProfileId: ctx.companyProfileId === "self" ? null : Number(ctx.companyProfileId),
+          chatModel: ctx.chatModel,
+          imageModel: ctx.imageModel,
         }),
       }).catch(err => console.error("Background generation error:", err));
       
@@ -219,6 +225,8 @@ export default function OutlineStepPage() {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Badge variant="secondary">Title</Badge>
                   <span className="truncate max-w-[48ch]">{ctx.title}</span>
+                  <Badge variant="outline" className="gap-1 text-[10px]"><Brain className="h-3 w-3"/>{ctx.chatModel}</Badge>
+                  <Badge variant="outline" className="gap-1 text-[10px]"><ImageIcon className="h-3 w-3"/>{ctx.imageModel}</Badge>
                 </div>
                 <div className="flex gap-2">
                   <Button 

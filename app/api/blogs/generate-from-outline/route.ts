@@ -306,7 +306,7 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
       .replace(/<p(?![^>]*brand-paragraph)[^>]*>/gi, '<p class="brand-paragraph">');
 
     // Add ids to headings
-    html = html.replace(/<h([1-3])([^>]*)>([^<]+)<\/h\1>/g, (m, lvl, attrs, text) => {
+    html = html.replace(/<h([1-3])([^>]*)>([^<]+)<\/h\1>/g, (_m: string, lvl: string, attrs: string, text: string) => {
       const id = slugify(String(text));
       const clsFixed = String(attrs).includes("id=") ? attrs : `${attrs} id="${id}"`;
       return `<h${lvl}${clsFixed}>${text}</h${lvl}>`;
@@ -318,7 +318,7 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
 
     // Generate images
     if (isExternalBackendConfigured() || (imageModel && process.env.OPENROUTER_API_KEY)) {
-      const h2Matches = Array.from(html.matchAll(/<h2[^>]*>([^<]+)<\/h2>/gi)).map(m => (m[1] || "").trim());
+      const h2Matches = [...html.matchAll(/<h2[^>]*>([^<]+)<\/h2>/gi)].map(m => (m[1] || "").trim());
 
       const prompts: Array<{ type: 'featured' | 'section'; after: string; prompt: string }> = [];
       

@@ -3,11 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getOpenRouterClient } from "@/lib/openrouter";
 
 interface KeywordSuggestion {
   keyword: string;
@@ -112,8 +108,9 @@ Rules:
 - Prioritize keywords with commercial or informational intent
 - Return ONLY valid JSON, no markdown`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    const client = getOpenRouterClient();
+    const completion = await client.chat.completions.create({
+      model: "openai/gpt-4o-mini",
       messages: [
         {
           role: "system",

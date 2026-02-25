@@ -154,8 +154,18 @@ export type Role = typeof roles.$inferSelect;
 export type NewRole = typeof roles.$inferInsert;
 export type Permission = typeof permissions.$inferSelect;
 export type RolePermission = typeof rolePermissions.$inferSelect;
+// System prompts (editable from superadmin)
+export const systemPrompts = pgTable('system_prompts', {
+  id: serial('id').primaryKey(),
+  key: text('key').notNull().unique(), // 'blog_generation', 'image_enhancement'
+  label: text('label').notNull(),
+  prompt: text('prompt').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 export type CreditTransaction = typeof creditTransactions.$inferSelect;
 export type NewCreditTransaction = typeof creditTransactions.$inferInsert;
+export type SystemPrompt = typeof systemPrompts.$inferSelect;
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({

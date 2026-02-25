@@ -24,7 +24,8 @@ import {
   Image,
   Wand2,
   ArrowUpRight,
-  RefreshCcw
+  RefreshCcw,
+  MessageSquareCode
 } from "lucide-react";
 
 export default async function SuperAdminDashboardPage() {
@@ -126,6 +127,12 @@ export default async function SuperAdminDashboardPage() {
           <p className="text-muted-foreground mt-1">Complete control center for your SaaS platform</p>
         </div>
         <div className="flex items-center gap-3">
+          <Link href="/superadmin/prompts">
+            <Button variant="outline" className="gap-2">
+              <MessageSquareCode className="h-4 w-4" />
+              Prompts
+            </Button>
+          </Link>
           <Link href="/superadmin/users">
             <Button variant="outline" className="gap-2">
               <UsersIcon className="h-4 w-4" />
@@ -351,6 +358,13 @@ export default async function SuperAdminDashboardPage() {
                   <Shield className="h-5 w-5 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
                   <p className="text-sm font-medium">Employees</p>
                   <p className="text-xs text-muted-foreground">Team access</p>
+                </div>
+              </Link>
+              <Link href="/superadmin/prompts" className="block col-span-2">
+                <div className="rounded-xl border border-border p-4 hover:bg-muted/50 hover:border-primary/50 transition-all cursor-pointer group">
+                  <MessageSquareCode className="h-5 w-5 text-orange-500 mb-2 group-hover:scale-110 transition-transform" />
+                  <p className="text-sm font-medium">System Prompts</p>
+                  <p className="text-xs text-muted-foreground">Edit AI blog & image prompts</p>
                 </div>
               </Link>
             </div>

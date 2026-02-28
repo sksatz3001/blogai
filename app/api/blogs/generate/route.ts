@@ -148,7 +148,7 @@ Write like a human expert, NOT like AI. Use conversational tone, contractions, v
 
 9. **Frequently Asked Questions** (H2)
    - <h2 class="brand-secondary-heading">Frequently Asked Questions</h2>
-   - 5-6 questions as H3 headings (each ending with "?")
+   - EXACTLY 5 questions as H3 headings (each ending with "?") — no more, no less
    - Example formats: "What is ${primaryKeyword}?", "How does ${primaryKeyword} work?", "Why is ${primaryKeyword} important?"
    - Each answer: 1-2 <p> tags, 40-60 words, direct and concise
 

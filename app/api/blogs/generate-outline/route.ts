@@ -42,6 +42,7 @@ Rules:
 - 6 to 8 top-level sections (H2)
 - Each section 2-4 subsections (H3) when appropriate
 - Order for narrative flow: intro -> value -> how-to -> examples -> pitfalls -> conclusion -> FAQ
+- The FAQ section MUST have EXACTLY 5 question items (H3 subsections ending with ?)
 - Output ONLY valid JSON with shape: { outline: [{ title: string, items?: [{ title: string }] }] }
 - No extra text.`;
 

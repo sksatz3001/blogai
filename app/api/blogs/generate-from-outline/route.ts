@@ -229,7 +229,7 @@ ${outlineText}
 4. Use <strong> tags to emphasize the primary keyword at least twice
 5. Include at least 2 bulleted or numbered lists (<ul> or <ol>)
 6. Write at least 6 paragraphs with substantive content
-7. Add a FAQ section with H2 "Frequently Asked Questions" and 4-6 H3 questions (with ? at the end)
+7. Add a FAQ section with H2 "Frequently Asked Questions" and EXACTLY 5 H3 questions (with ? at the end) — no more, no less
 8. Include actionable tips, statistics, or data points where relevant
 9. Write in an authoritative yet accessible tone — conversational, not robotic
 

@@ -6,6 +6,8 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getOpenRouterClient } from "@/lib/openrouter";
 
+export const maxDuration = 60;
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, organization: process.env.OPENAI_ORG_ID });
 
 export async function POST(request: Request) {

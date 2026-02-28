@@ -5,6 +5,8 @@ import { blogs, employees, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import OpenAI from "openai";
 
+export const maxDuration = 300;
+
 export async function POST(req: Request) {
   try {
     const session = await getEmployeeSession();

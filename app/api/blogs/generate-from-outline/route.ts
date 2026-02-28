@@ -8,6 +8,9 @@ import { deductCredits, CREDIT_COSTS } from "@/lib/credits";
 import { NextResponse } from "next/server";
 import { getOpenRouterClient } from "@/lib/openrouter";
 
+// Allow up to 300 seconds for blog generation (text + images)
+export const maxDuration = 300;
+
 // Lazy initialize OpenAI client
 let openai: OpenAI | null = null;
 function getOpenAI() {

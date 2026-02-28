@@ -6,6 +6,9 @@ import { eq } from "drizzle-orm";
 import { deductCredits, CREDIT_COSTS } from "@/lib/credits";
 import { getSystemPrompt } from "@/lib/system-prompts";
 
+// Allow up to 300 seconds for blog generation
+export const maxDuration = 300;
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   organization: process.env.OPENAI_ORG_ID,

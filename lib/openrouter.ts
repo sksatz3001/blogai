@@ -157,24 +157,57 @@ export async function getChatModels(): Promise<ModelOption[]> {
  * Get image generation models from OpenRouter's model list.
  * These are models that output images.
  */
+// Models known to produce photorealistic output (sorted best first)
+const PHOTOREALISTIC_MODELS = [
+  'black-forest-labs/flux-1.1-pro',
+  'black-forest-labs/flux-pro',
+  'black-forest-labs/flux-1-schnell',
+  'dall-e-3',
+  'openai/dall-e-3',
+  'recraft-ai/recraft-v3',
+  'ideogram-ai/ideogram-v2',
+];
+
+// Models that tend to produce CGI/animated/smooth renders
+const CGI_STYLE_MODELS = ['gemini', 'imagen'];
+
 export async function getImageModels(): Promise<ModelOption[]> {
   const models = await fetchOpenRouterModels();
 
-  return models
+  const mapped = models
     .filter((m) => {
       const outputModalities = m.architecture?.output_modalities || [];
       return outputModalities.includes("image");
     })
-    .map((m) => ({
-      id: m.id,
-      name: m.name || m.id.split("/").pop() || m.id,
-      provider: m.id.split("/")[0] || "unknown",
-      providerLabel: getProviderLabel(m.id),
-      type: "image" as const,
-      contextWindow: m.context_length,
-      pricing: m.pricing ? { prompt: m.pricing.prompt, completion: m.pricing.completion } : undefined,
-    }))
-    .sort((a, b) => a.providerLabel.localeCompare(b.providerLabel) || a.name.localeCompare(b.name));
+    .map((m) => {
+      const id = m.id.toLowerCase();
+      const isCGI = CGI_STYLE_MODELS.some(cgi => id.includes(cgi));
+      const isRecommended = PHOTOREALISTIC_MODELS.some(rec => id.includes(rec.toLowerCase()));
+      let displayName = m.name || m.id.split("/").pop() || m.id;
+      if (isRecommended) displayName = `⭐ ${displayName} (Realistic)`;
+      else if (isCGI) displayName = `${displayName} (Artistic/CGI style)`;
+      return {
+        id: m.id,
+        name: displayName,
+        provider: m.id.split("/")[0] || "unknown",
+        providerLabel: getProviderLabel(m.id),
+        type: "image" as const,
+        contextWindow: m.context_length,
+        pricing: m.pricing ? { prompt: m.pricing.prompt, completion: m.pricing.completion } : undefined,
+        _isRecommended: isRecommended,
+        _isCGI: isCGI,
+      };
+    })
+    // Sort: recommended first, then CGI-style last
+    .sort((a, b) => {
+      if (a._isRecommended && !b._isRecommended) return -1;
+      if (!a._isRecommended && b._isRecommended) return 1;
+      if (a._isCGI && !b._isCGI) return 1;
+      if (!a._isCGI && b._isCGI) return -1;
+      return a.providerLabel.localeCompare(b.providerLabel) || a.name.localeCompare(b.name);
+    });
+
+  return mapped;
 }
 
 /**

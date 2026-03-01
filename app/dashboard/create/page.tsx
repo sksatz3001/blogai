@@ -45,7 +45,7 @@ function CreateBlogContent() {
   const [imageModels, setImageModels] = useState<ModelOption[]>([]);
   const [loadingModels, setLoadingModels] = useState(true);
   const [selectedChatModel, setSelectedChatModel] = useState("openai/gpt-4o");
-  const [selectedImageModel, setSelectedImageModel] = useState("dall-e-3");
+  const [selectedImageModel, setSelectedImageModel] = useState("black-forest-labs/flux-1.1-pro");
   
   const [formData, setFormData] = useState({
     title: "",
@@ -610,7 +610,7 @@ function CreateBlogContent() {
                     )}
                   </select>
                   <p className="text-[11px] text-muted-foreground">
-                    Creates featured &amp; section images for your blog
+                    Creates featured &amp; section images. ⭐ = best for realistic photos.
                   </p>
                 </div>
               </div>

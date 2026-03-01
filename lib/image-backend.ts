@@ -67,7 +67,7 @@ export async function generateAndStoreImage(params: {
           prompt: params.prompt,
           n: 1,
           size: "1792x1024",
-          quality: "standard",
+          quality: "hd",
           style: "natural",
           response_format: "b64_json",
         });
@@ -83,7 +83,7 @@ export async function generateAndStoreImage(params: {
         prompt: params.prompt,
         n: 1,
         size: "1792x1024",
-        quality: "standard",
+        quality: "hd",
         style: "natural",
         response_format: "b64_json",
       });

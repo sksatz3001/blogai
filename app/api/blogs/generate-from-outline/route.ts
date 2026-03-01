@@ -330,64 +330,114 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
         prompts.push({
           type: 'featured',
           after: '', // Will be inserted at the beginning
-          prompt: `A clean, professional editorial photograph for a blog about "${title}". 
-The image should look like a high-end stock photo you'd find on a premium business website. 
-Style: Realistic photograph, NOT a digital illustration or 3D render. 
-Subject: A real-world scene that naturally represents ${primaryKeyword} — such as people working, a workspace, real objects, or a relevant real-life scenario. 
-Composition: Simple, uncluttered, with one clear focal point. Lots of negative space. 
-Lighting: Soft, natural light. No dramatic neon glows or lens flares. 
-Colors: Muted, professional tones — whites, grays, soft blues, warm neutrals. No oversaturated neon colors. 
-Format: Landscape, suitable as a blog header. 
-IMPORTANT: Absolutely NO text, NO letters, NO words, NO icons, NO abstract shapes, NO floating graphics. Just a clean photograph.`,
+          prompt: `Editorial photograph for a blog article about "${title}".
+
+Camera: Canon EOS R5, 50mm f/1.4 lens, shot at f/2.8, ISO 200.
+Lighting: Soft, natural window light from the left. No flash. No artificial colored lighting.
+Color: True-to-life, muted professional tones. Slight warmth. Color graded in Lightroom — no filters, no HDR.
+Film feel: Clean digital with subtle depth of field. Soft bokeh in background.
+
+Subject: A real-world scene that naturally represents ${primaryKeyword}. Show real people (diverse, natural-looking, not models) in a genuine work environment — an actual office, co-working space, coffee shop, or workshop. Candid moment, not posed.
+
+Composition: Rule of thirds. One clear subject in focus. Background softly blurred. Generous negative space on one side. Landscape orientation (16:9).
+
+Mood: Professional, approachable, authentic. Like a photo from Wired, Fast Company, or Harvard Business Review.
+
+STRICTLY FORBIDDEN: NO text, NO letters, NO words, NO numbers, NO icons, NO logos, NO 3D renders, NO CGI, NO illustrations, NO digital art, NO floating graphics, NO neon glow, NO holographic effects, NO cartoon elements, NO abstract shapes. This must look like a real candid photograph shot by a professional photojournalist.`,
         });
       }
       
-      // Determine image style based on section content — always aim for clean, professional, stock-photo look
-      const getImageStyle = (sectionTitle: string): string => {
+      // Determine image style based on section content — photorealistic editorial photography
+      const getImageStyle = (sectionTitle: string): { scene: string; camera: string; lighting: string; mood: string } => {
         const title = sectionTitle.toLowerCase();
         // Data/statistics sections
         if (title.includes('statistic') || title.includes('data') || title.includes('number') || 
             title.includes('metric') || title.includes('growth') || title.includes('trend') ||
             title.includes('analysis') || title.includes('comparison') || title.includes('percentage')) {
-          return 'a clean, realistic photo of a professional looking at charts on a laptop screen or printed report in a modern office';
+          return {
+            scene: 'A real person (mid-30s, business casual) sitting at an actual desk with a laptop open showing charts. Natural desk clutter — coffee mug, notebook, pen. NOT a perfectly staged setup.',
+            camera: 'Sony A7IV, 35mm f/1.8 lens, shot at f/2.8',
+            lighting: 'Soft overhead office lights mixed with daylight from a window. Realistic indoor color temperature.',
+            mood: 'Focused, analytical, genuine. Like a candid shot from a business magazine profile piece.'
+          };
         }
         // Process/how-to sections
         if (title.includes('how to') || title.includes('step') || title.includes('process') || 
             title.includes('guide') || title.includes('tutorial') || title.includes('implement') ||
             title.includes('workflow') || title.includes('method')) {
-          return 'a realistic photo of someone working hands-on — at a desk, whiteboard, or using tools relevant to the topic';
+          return {
+            scene: 'Hands-on work happening — writing on a whiteboard, typing on a laptop, organizing sticky notes on a wall, or collaborating at a table. Real environment with authentic details.',
+            camera: 'Fujifilm X-T5, 23mm f/2 lens, natural framing',
+            lighting: 'Available light only. Office fluorescents mixed with natural light. Realistic shadows.',
+            mood: 'Active, productive, in-the-moment. Like a behind-the-scenes documentary shot.'
+          };
         }
         // Benefits/advantages sections
         if (title.includes('benefit') || title.includes('advantage') || title.includes('feature') || 
             title.includes('reason') || title.includes('why') || title.includes('pro')) {
-          return 'a bright, optimistic photo showing successful outcomes — happy professionals, growing business, or positive results';
+          return {
+            scene: 'A small team celebrating a milestone — natural smiles, genuine interaction. In a real conference room or open office. Someone presenting good results, colleagues reacting positively. NOT staged corporate stock photo poses.',
+            camera: 'Canon EOS R6 Mark II, 50mm f/1.4 lens, shot at f/2.0 for creamy bokeh',
+            lighting: 'Bright, warm natural light flooding in from large windows. Optimistic feel without being overexposed.',
+            mood: 'Optimistic, genuine achievement, team energy. Think editorial photography for Inc. Magazine.'
+          };
         }
         // Challenges/problems sections
         if (title.includes('challenge') || title.includes('problem') || title.includes('issue') || 
             title.includes('risk') || title.includes('pitfall') || title.includes('con')) {
-          return 'a photo showing a thoughtful professional problem-solving — looking at a screen, having a discussion, or reviewing documents';
+          return {
+            scene: 'A professional deep in thought — leaning back in a chair looking at a complex screen, or reviewing documents with a furrowed brow. Real office with authentic details (sticky notes, coffee, slightly messy desk).',
+            camera: 'Nikon Z6 III, 40mm f/2 lens, slightly desaturated processing',
+            lighting: 'Moody but not dark. Overcast window light or subdued indoor lighting. Soft shadows.',
+            mood: 'Concentrated, determined, realistic about challenges. Like a Wall Street Journal profile photo.'
+          };
         }
         // Future/prediction sections
         if (title.includes('future') || title.includes('predict') || title.includes('upcoming') || 
             title.includes('next') || title.includes('evolution') || title.includes('2025') || title.includes('2026')) {
-          return 'a clean, modern photo of innovative technology or a forward-looking workspace — minimal, sleek, real-world setting';
+          return {
+            scene: 'A sleek modern office or co-working space with current real technology — a clean desk setup with a modern monitor, bright modern architecture interior, or people using real tech in a naturally modern environment.',
+            camera: 'Sony A7RV, 24-70mm f/2.8 at 35mm, clean sharp aesthetic',
+            lighting: 'Bright, clean, even lighting. Large diffused light sources. Contemporary feel.',
+            mood: 'Forward-thinking, clean, innovative. Like workplace photography for Dezeen or Monocle magazine.'
+          };
         }
         // Examples/case study sections
         if (title.includes('example') || title.includes('case') || title.includes('real-world') || 
             title.includes('application') || title.includes('use case')) {
-          return 'a candid, documentary-style photo of real people in a professional setting — meeting room, workshop, or presentation';
+          return {
+            scene: 'A genuine working meeting — 2-3 people around a table with laptops, notebooks, and coffee. One person explaining something, others listening. Real conference room with glass walls, whiteboards with actual writing.',
+            camera: 'Canon EOS R5, 35mm f/1.4 lens, photojournalism style',
+            lighting: 'Mixed — overhead office lighting with natural light from windows. Realistic color temperature.',
+            mood: 'Collaborative, authentic, productive. Like a Bloomberg Businessweek behind-the-scenes feature.'
+          };
         }
         // Tools/resources sections
         if (title.includes('tool') || title.includes('resource') || title.includes('software') || 
             title.includes('platform') || title.includes('solution')) {
-          return 'a clean overhead or angle shot of a neat workspace with laptop, notebook, and tools on a desk';
+          return {
+            scene: 'A real, lived-in desk workspace — laptop open, smartphone beside it, notebook with handwritten notes, quality pen, coffee cup, maybe a plant. Items naturally placed, not perfectly symmetrical.',
+            camera: 'Fujifilm X-T5, 23mm f/2 lens, shot from 45-degree angle above the desk',
+            lighting: 'Soft diffused overhead light with a desk lamp adding warm accent. Natural shadows.',
+            mood: 'Organized productivity, real workspace, approachable. Like a photo from Kinfolk magazine.'
+          };
         }
         // FAQ sections
         if (title.includes('faq') || title.includes('question') || title.includes('asked')) {
-          return 'a friendly photo of a professional having a one-on-one conversation or Q&A session';
+          return {
+            scene: 'Two people in a relaxed professional conversation — at a coffee shop table, casual office lounge, or standing by a window. One person gesturing while explaining, the other engaged and listening.',
+            camera: 'Canon EOS R6 Mark II, 85mm f/1.8 lens for beautiful natural bokeh',
+            lighting: 'Soft, warm natural light. Golden hour quality even if indoors. Inviting warmth.',
+            mood: 'Helpful, conversational, trustworthy. Like an interview photo from Forbes or The Atlantic.'
+          };
         }
-        // Default — generic professional stock photo
-        return 'a clean, professional editorial photo of people working in a modern environment relevant to the topic';
+        // Default — generic professional editorial
+        return {
+          scene: 'Professionals working together in a real modern co-working space or office. Candid moment — not posed. Authentic work environment with natural details.',
+          camera: 'Canon EOS R5, 50mm f/1.4 lens, shot at f/2.8, ISO 200',
+          lighting: 'Soft, natural window light. No flash. No artificial colored lighting.',
+          mood: 'Professional, approachable, authentic. Like a photo from Fast Company or Wired magazine.'
+        };
       };
 
       // Get subsections for context
@@ -411,20 +461,23 @@ IMPORTANT: Absolutely NO text, NO letters, NO words, NO icons, NO abstract shape
         }
         // Generate one image per section if sectionImage is true
         if (sec.sectionImage !== false) {
-          const imageStyle = getImageStyle(sec.title);
+          const style = getImageStyle(sec.title);
           const subsectionContext = getSubsectionContext(sec);
           prompts.push({
             type: 'section',
             after: h2,
-            prompt: `A professional, realistic photograph for a blog section titled "${sec.title}".
+            prompt: `Editorial photograph for a blog section titled "${sec.title}".
 Blog topic: ${title} (${primaryKeyword}).
 ${subsectionContext}
-Scene: ${imageStyle}.
-Photography style: Clean editorial stock photography. Shot on a professional camera. Soft natural lighting. 
-Composition: Simple and uncluttered with clear focal point and generous negative space.
-Color palette: Muted, professional — soft whites, grays, light blues, warm neutrals. NO neon, NO oversaturated colors.
-Mood: Professional, trustworthy, approachable.
-IMPORTANT: Absolutely NO text, NO letters, NO words, NO numbers, NO icons, NO abstract shapes, NO floating graphics overlaid on the image. This must look like a real photograph, not a digital illustration or 3D render.`,
+
+Camera: ${style.camera}.
+Scene: ${style.scene}
+Lighting: ${style.lighting}
+Color: True-to-life, muted professional tones. Color graded in Lightroom — no filters, no HDR. Slight warmth.
+Composition: Rule of thirds. One clear subject in focus. Background softly blurred with natural bokeh.
+Mood: ${style.mood}
+
+STRICTLY FORBIDDEN: NO text, NO letters, NO words, NO numbers, NO icons, NO logos, NO 3D renders, NO CGI, NO illustrations, NO digital art, NO floating graphics, NO neon glow, NO holographic effects, NO cartoon elements, NO abstract shapes, NO oversaturated colors. This must be indistinguishable from a real photograph taken by a human photographer.`,
           });
         }
       });

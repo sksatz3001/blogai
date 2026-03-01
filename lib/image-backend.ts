@@ -26,61 +26,48 @@ function getImageBaseUrl(): string {
 }
 
 /**
- * Get model-specific photorealism prefix and negative prompt adjustments.
- * Different image models respond to different prompt styles.
+ * Keep prompts SHORT. AI image models only read the first ~50-75 tokens.
+ * Long prompts get ignored. Negative instructions ("NO text") often backfire.
+ * The key: lead with "Photograph", keep it under 60 words, be specific about the scene.
  */
-function getModelPromptAdjustments(model: string, originalPrompt: string): string {
+function shortenPromptForModel(model: string, prompt: string): string {
+  // Prompt is already short from the route — just add a tiny model-specific prefix
   const m = model.toLowerCase();
 
-  // Gemini / Imagen models — need explicit "photograph" framing, hate verbose instructions
-  if (m.includes('gemini') || m.includes('imagen')) {
-    return `RAW photograph, 35mm film, shot on Canon EOS R5 with 50mm f/1.4 lens. ${originalPrompt} --style raw --no illustration, 3d render, cartoon, anime, digital art, CGI, text, watermark, logo, neon, glowing, oversaturated, painting, drawing, sketch, graphic design, vector art, stock photo cliché`;
-  }
-
-  // Flux models — respond well to "RAW photo" prefix and photography terms
-  if (m.includes('flux')) {
-    return `RAW photo, 8k uhd, DSLR, high quality, Fujifilm XT3, realistic film grain. ${originalPrompt} Ultra-realistic, editorial magazine photograph, natural imperfections, real skin texture.`;
-  }
-
-  // Stable Diffusion / SDXL models
-  if (m.includes('stable-diffusion') || m.includes('sdxl') || m.includes('stability')) {
-    return `(masterpiece, best quality, photorealistic:1.4), RAW photo, 35mm photograph, shot on Nikon Z8, natural lighting. ${originalPrompt} (photorealistic:1.4), (realistic skin texture:1.2), film grain, editorial magazine photography. Negative: illustration, 3d render, cartoon, anime, digital art, CGI, text, watermark, logo, neon, oversaturated, painting, drawing`;
-  }
-
-  // Midjourney-style models
-  if (m.includes('midjourney')) {
-    return `${originalPrompt} --style raw --s 200 --no text, words, letters, illustration, 3d render, cartoon, neon`;
-  }
-
-  // DALL-E — already good with detailed prompts, just ensure natural style
   if (m.includes('dall-e') || m.includes('dalle')) {
-    return originalPrompt;
+    // DALL-E handles detailed prompts well, just return as-is
+    return prompt;
   }
 
-  // Recraft / Ideogram / other models — generic photorealism prefix
-  if (m.includes('recraft') || m.includes('ideogram')) {
-    return `Professional editorial photograph. ${originalPrompt} Style: photojournalism, real candid moment, natural lighting, no digital art, no illustration.`;
+  if (m.includes('flux')) {
+    return `RAW photo, DSLR, Fujifilm XT3. ${prompt}`;
   }
 
-  // Default fallback — add generic photorealism cues
-  return `RAW photograph, professional DSLR, natural lighting, editorial style. ${originalPrompt} Photorealistic, no illustration, no 3d render, no cartoon, no text, no watermark.`;
+  if (m.includes('stable-diffusion') || m.includes('sdxl') || m.includes('stability')) {
+    return `(photorealistic:1.4), RAW photo, 35mm film. ${prompt}`;
+  }
+
+  // Gemini, Imagen, and all others — just ensure "Photograph" is first word
+  if (!prompt.toLowerCase().startsWith('photograph')) {
+    return `Photograph. ${prompt}`;
+  }
+  return prompt;
 }
 
 /**
- * Get the optimal image size for a given model via OpenRouter.
- * Returns landscape format where supported.
+ * Get optimal image size. Landscape 1792x1024 for DALL-E, 1024x1024 for others
+ * (most OpenRouter models don't reliably support non-square sizes)
  */
 function getModelImageSize(model: string): string {
   const m = model.toLowerCase();
-  // Models that support landscape formats
-  if (m.includes('flux') || m.includes('stable-diffusion') || m.includes('sdxl') || m.includes('recraft') || m.includes('ideogram')) {
-    return "1536x1024"; // 3:2 landscape
+  if (m.includes('dall-e') || m.includes('dalle')) {
+    return "1792x1024";
   }
-  if (m.includes('imagen') || m.includes('gemini')) {
-    return "1536x1024"; // 3:2 landscape
+  if (m.includes('flux') || m.includes('recraft') || m.includes('ideogram')) {
+    return "1536x1024";
   }
-  // Default — most OpenRouter image models support 1024x1024 at minimum
-  return "1536x1024";
+  // Most OpenRouter models are safest at 1024x1024
+  return "1024x1024";
 }
 
 /**
@@ -97,12 +84,11 @@ export async function generateAndStoreImage(params: {
 }): Promise<{ imageId: number; imageUrl: string }> {
   const selectedModel = params.imageModel || "dall-e-3";
 
-  // Apply model-specific prompt adjustments for photorealism
-  const adjustedPrompt = getModelPromptAdjustments(selectedModel, params.prompt);
+  // Apply model-specific prompt adjustments (keep it short!)
+  const adjustedPrompt = shortenPromptForModel(selectedModel, params.prompt);
 
-  console.log(`Generating image with model: ${selectedModel}`);
-  console.log(`Original prompt (first 100): "${params.prompt.slice(0, 100)}..."`);
-  console.log(`Adjusted prompt (first 150): "${adjustedPrompt.slice(0, 150)}..."`);
+  console.log(`[IMAGE] Model: ${selectedModel}`);
+  console.log(`[IMAGE] Prompt (${adjustedPrompt.length} chars): "${adjustedPrompt.slice(0, 200)}..."`);
 
   try {
     let imageData: string | undefined;

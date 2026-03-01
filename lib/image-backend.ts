@@ -26,6 +26,64 @@ function getImageBaseUrl(): string {
 }
 
 /**
+ * Get model-specific photorealism prefix and negative prompt adjustments.
+ * Different image models respond to different prompt styles.
+ */
+function getModelPromptAdjustments(model: string, originalPrompt: string): string {
+  const m = model.toLowerCase();
+
+  // Gemini / Imagen models — need explicit "photograph" framing, hate verbose instructions
+  if (m.includes('gemini') || m.includes('imagen')) {
+    return `RAW photograph, 35mm film, shot on Canon EOS R5 with 50mm f/1.4 lens. ${originalPrompt} --style raw --no illustration, 3d render, cartoon, anime, digital art, CGI, text, watermark, logo, neon, glowing, oversaturated, painting, drawing, sketch, graphic design, vector art, stock photo cliché`;
+  }
+
+  // Flux models — respond well to "RAW photo" prefix and photography terms
+  if (m.includes('flux')) {
+    return `RAW photo, 8k uhd, DSLR, high quality, Fujifilm XT3, realistic film grain. ${originalPrompt} Ultra-realistic, editorial magazine photograph, natural imperfections, real skin texture.`;
+  }
+
+  // Stable Diffusion / SDXL models
+  if (m.includes('stable-diffusion') || m.includes('sdxl') || m.includes('stability')) {
+    return `(masterpiece, best quality, photorealistic:1.4), RAW photo, 35mm photograph, shot on Nikon Z8, natural lighting. ${originalPrompt} (photorealistic:1.4), (realistic skin texture:1.2), film grain, editorial magazine photography. Negative: illustration, 3d render, cartoon, anime, digital art, CGI, text, watermark, logo, neon, oversaturated, painting, drawing`;
+  }
+
+  // Midjourney-style models
+  if (m.includes('midjourney')) {
+    return `${originalPrompt} --style raw --s 200 --no text, words, letters, illustration, 3d render, cartoon, neon`;
+  }
+
+  // DALL-E — already good with detailed prompts, just ensure natural style
+  if (m.includes('dall-e') || m.includes('dalle')) {
+    return originalPrompt;
+  }
+
+  // Recraft / Ideogram / other models — generic photorealism prefix
+  if (m.includes('recraft') || m.includes('ideogram')) {
+    return `Professional editorial photograph. ${originalPrompt} Style: photojournalism, real candid moment, natural lighting, no digital art, no illustration.`;
+  }
+
+  // Default fallback — add generic photorealism cues
+  return `RAW photograph, professional DSLR, natural lighting, editorial style. ${originalPrompt} Photorealistic, no illustration, no 3d render, no cartoon, no text, no watermark.`;
+}
+
+/**
+ * Get the optimal image size for a given model via OpenRouter.
+ * Returns landscape format where supported.
+ */
+function getModelImageSize(model: string): string {
+  const m = model.toLowerCase();
+  // Models that support landscape formats
+  if (m.includes('flux') || m.includes('stable-diffusion') || m.includes('sdxl') || m.includes('recraft') || m.includes('ideogram')) {
+    return "1536x1024"; // 3:2 landscape
+  }
+  if (m.includes('imagen') || m.includes('gemini')) {
+    return "1536x1024"; // 3:2 landscape
+  }
+  // Default — most OpenRouter image models support 1024x1024 at minimum
+  return "1536x1024";
+}
+
+/**
  * Generate a single image using OpenRouter (or direct OpenAI) and store in database
  * @param params - Prompt, blogId, and optional imageModel for OpenRouter routing
  * @returns Object with imageId of the stored image
@@ -39,39 +97,69 @@ export async function generateAndStoreImage(params: {
 }): Promise<{ imageId: number; imageUrl: string }> {
   const selectedModel = params.imageModel || "dall-e-3";
 
-  console.log(`Generating image with model: ${selectedModel} for prompt: "${params.prompt.slice(0, 100)}..."`);
+  // Apply model-specific prompt adjustments for photorealism
+  const adjustedPrompt = getModelPromptAdjustments(selectedModel, params.prompt);
+
+  console.log(`Generating image with model: ${selectedModel}`);
+  console.log(`Original prompt (first 100): "${params.prompt.slice(0, 100)}..."`);
+  console.log(`Adjusted prompt (first 150): "${adjustedPrompt.slice(0, 150)}..."`);
 
   try {
     let imageData: string | undefined;
+    let imageWidth = 1024;
+    let imageHeight = 1024;
 
     if (process.env.OPENROUTER_API_KEY && selectedModel !== "dall-e-3") {
       // Use OpenRouter AI Gateway for image generation
+      const imageSize = getModelImageSize(selectedModel);
+      const [w, h] = imageSize.split('x').map(Number);
+      imageWidth = w;
+      imageHeight = h;
+
       try {
         const client = getOpenRouterClient();
         const response = await client.images.generate({
           model: selectedModel,
-          prompt: params.prompt,
+          prompt: adjustedPrompt,
           n: 1,
-          size: "1024x1024",
+          size: imageSize as any,
           response_format: "b64_json",
         });
         imageData = response.data?.[0]?.b64_json ?? undefined;
       } catch (openRouterError: any) {
-        console.warn(`OpenRouter image gen failed for ${selectedModel}, falling back to OpenAI DALL-E:`, openRouterError?.message);
-        // Fallback to direct OpenAI
-        if (!process.env.OPENAI_API_KEY) {
-          throw new Error(`Image generation failed: No fallback API key available`);
+        // If landscape fails, retry with square format
+        console.warn(`OpenRouter image gen failed with ${imageSize} for ${selectedModel}, retrying with 1024x1024:`, openRouterError?.message);
+        try {
+          const client = getOpenRouterClient();
+          const response = await client.images.generate({
+            model: selectedModel,
+            prompt: adjustedPrompt,
+            n: 1,
+            size: "1024x1024",
+            response_format: "b64_json",
+          });
+          imageData = response.data?.[0]?.b64_json ?? undefined;
+          imageWidth = 1024;
+          imageHeight = 1024;
+        } catch (retryError: any) {
+          console.warn(`OpenRouter retry also failed for ${selectedModel}, falling back to OpenAI DALL-E:`, retryError?.message);
+          // Fallback to direct OpenAI
+          if (!process.env.OPENAI_API_KEY) {
+            throw new Error(`Image generation failed: No fallback API key available`);
+          }
+          const response = await openai.images.generate({
+            model: "dall-e-3",
+            prompt: params.prompt, // Use original prompt for DALL-E fallback
+            n: 1,
+            size: "1792x1024",
+            quality: "hd",
+            style: "natural",
+            response_format: "b64_json",
+          });
+          imageData = response.data?.[0]?.b64_json ?? undefined;
+          imageWidth = 1792;
+          imageHeight = 1024;
         }
-        const response = await openai.images.generate({
-          model: "dall-e-3",
-          prompt: params.prompt,
-          n: 1,
-          size: "1792x1024",
-          quality: "hd",
-          style: "natural",
-          response_format: "b64_json",
-        });
-        imageData = response.data?.[0]?.b64_json ?? undefined;
       }
     } else {
       // Direct OpenAI for DALL-E models
@@ -80,7 +168,7 @@ export async function generateAndStoreImage(params: {
       }
       const response = await openai.images.generate({
         model: "dall-e-3",
-        prompt: params.prompt,
+        prompt: adjustedPrompt,
         n: 1,
         size: "1792x1024",
         quality: "hd",
@@ -88,6 +176,8 @@ export async function generateAndStoreImage(params: {
         response_format: "b64_json",
       });
       imageData = response.data?.[0]?.b64_json ?? undefined;
+      imageWidth = 1792;
+      imageHeight = 1024;
     }
 
     if (!imageData) {
@@ -103,11 +193,11 @@ export async function generateAndStoreImage(params: {
         imageUrl: "", // Will be updated after we get the ID
         imageData: imageData, // Store base64 without data URL prefix
         contentType: "image/png",
-        imagePrompt: params.prompt,
+        imagePrompt: adjustedPrompt,
         altText: params.altText || params.prompt,
         position: params.position,
-        width: selectedModel.includes("dall-e") ? 1792 : 1024,
-        height: 1024,
+        width: imageWidth,
+        height: imageHeight,
       })
       .returning();
 

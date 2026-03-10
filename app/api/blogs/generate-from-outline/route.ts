@@ -330,33 +330,38 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
         prompts.push({
           type: 'featured',
           after: '', // Will be inserted at the beginning
-          prompt: `Photograph of a real professional scene related to ${primaryKeyword}. Candid moment in a modern office with natural window light, shallow depth of field, 50mm lens. Real people, authentic environment, editorial magazine quality.`,
+          prompt: `Photograph representing "${title}". Real professional scene about ${primaryKeyword} in a modern office with natural window light, shallow depth of field, 50mm lens, candid editorial magazine style.`,
         });
       }
       
-      // Short scene descriptor per section type — under 20 words each
-      const getSceneForSection = (sectionTitle: string): string => {
+      // Short setting/environment hint per section type
+      const getSettingHint = (sectionTitle: string): string => {
         const t = sectionTitle.toLowerCase();
         if (t.includes('statistic') || t.includes('data') || t.includes('number') || t.includes('metric') || t.includes('growth') || t.includes('analysis'))
-          return 'person analyzing data on laptop screen at a real desk with coffee and notebooks';
+          return 'in a real office with laptop and charts visible';
         if (t.includes('how to') || t.includes('step') || t.includes('process') || t.includes('guide') || t.includes('implement') || t.includes('workflow'))
-          return 'hands-on collaborative work at a whiteboard with sticky notes in a real office';
+          return 'showing hands-on work in a real workspace';
         if (t.includes('benefit') || t.includes('advantage') || t.includes('reason') || t.includes('why') || t.includes('pro'))
-          return 'small team celebrating success in a bright modern conference room, genuine smiles';
+          return 'in a bright modern workplace, optimistic mood';
         if (t.includes('challenge') || t.includes('problem') || t.includes('issue') || t.includes('risk') || t.includes('pitfall'))
-          return 'professional deep in focused thought at desk, reviewing documents, moody natural light';
+          return 'showing focused concentration, moody office lighting';
         if (t.includes('future') || t.includes('predict') || t.includes('upcoming') || t.includes('evolution') || t.includes('2025') || t.includes('2026'))
-          return 'sleek modern workspace with clean desk setup and contemporary architecture';
+          return 'in a sleek modern tech environment';
         if (t.includes('example') || t.includes('case') || t.includes('real-world') || t.includes('application'))
-          return 'two colleagues in candid discussion over laptops at a real conference table';
+          return 'showing real people collaborating at a table';
         if (t.includes('tool') || t.includes('resource') || t.includes('software') || t.includes('platform'))
-          return 'organized desk workspace with laptop, notebook, pen, and coffee from above angle';
+          return 'at an organized workspace with real tools and devices';
         if (t.includes('faq') || t.includes('question') || t.includes('asked'))
-          return 'two people in relaxed professional conversation at a coffee shop, warm natural light';
-        return 'professionals working together in a modern co-working space, candid moment';
+          return 'in a casual professional conversation setting';
+        return 'in a real modern workplace';
       };
 
-      // Get subsections for context (unused — keeping prompts short)
+      // Get subsections for richer context in image prompts
+      const getSubtopics = (sec: any): string => {
+        const items = (sec.items || []).filter((x: any) => !x.isImage).map((x: any) => x.title);
+        if (items.length === 0) return '';
+        return ` covering ${items.slice(0, 3).join(', ')}`;
+      };
 
       // One image for each section where sectionImage is true
       outline.forEach((sec: any, secIdx: number) => {
@@ -372,11 +377,12 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
         }
         // Generate one image per section if sectionImage is true
         if (sec.sectionImage !== false) {
-          const scene = getSceneForSection(sec.title);
+          const setting = getSettingHint(sec.title);
+          const subtopics = getSubtopics(sec);
           prompts.push({
             type: 'section',
             after: h2,
-            prompt: `Photograph of ${scene}. Topic: ${sec.title} (${primaryKeyword}). Natural window lighting, shallow depth of field, 35mm lens, candid editorial style.`,
+            prompt: `Photograph about ${sec.title}${subtopics} ${setting}. Blog: ${primaryKeyword}. Candid editorial photo, natural light, 35mm lens, shallow depth of field.`,
           });
         }
       });

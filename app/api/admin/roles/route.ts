@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { roles, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -7,13 +7,13 @@ import { eq } from "drizzle-orm";
 // Create role
 export async function POST(req: Request) {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const dbUser = await db.query.users.findFirst({
-      where: eq(users.clerkId, user.id),
+      where: eq(users.clerkId, userId),
     });
 
     if (!dbUser) {
@@ -51,13 +51,13 @@ export async function POST(req: Request) {
 // Get all roles
 export async function GET() {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const dbUser = await db.query.users.findFirst({
-      where: eq(users.clerkId, user.id),
+      where: eq(users.clerkId, userId),
     });
 
     if (!dbUser) {

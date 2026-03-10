@@ -1,4 +1,4 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { users, companyProfiles } from "@/db/schema";
@@ -9,14 +9,14 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function SettingsPage() {
-  const user = await currentUser();
+  const { userId } = await auth();
 
-  if (!user) {
+  if (!userId) {
     redirect("/sign-in");
   }
 
   const dbUser = await db.query.users.findFirst({
-    where: eq(users.clerkId, user.id),
+    where: eq(users.clerkId, userId),
   });
 
   if (!dbUser) {

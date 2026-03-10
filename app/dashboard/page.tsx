@@ -1,4 +1,4 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { users, blogs, employees } from "@/db/schema";
 import { eq, desc, sql, and } from "drizzle-orm";
@@ -9,14 +9,14 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function DashboardPage() {
-  const user = await currentUser();
+  const { userId } = await auth();
 
-  if (!user) {
+  if (!userId) {
     return null;
   }
 
   const dbUser = await db.query.users.findFirst({
-    where: eq(users.clerkId, user.id),
+    where: eq(users.clerkId, userId),
   });
 
   if (!dbUser) {

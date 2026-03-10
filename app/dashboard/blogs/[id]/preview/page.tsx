@@ -1,4 +1,4 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { users, blogs } from "@/db/schema";
@@ -15,14 +15,14 @@ export default async function PreviewBlogPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = await currentUser();
+  const { userId } = await auth();
 
-  if (!user) {
+  if (!userId) {
     redirect("/sign-in");
   }
 
   const dbUser = await db.query.users.findFirst({
-    where: eq(users.clerkId, user.id),
+    where: eq(users.clerkId, userId),
   });
 
   if (!dbUser) {

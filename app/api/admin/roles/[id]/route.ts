@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { roles, rolePermissions, users } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -9,14 +9,14 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const clerkUser = await currentUser();
-    if (!clerkUser) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get database user
     const dbUser = await db.query.users.findFirst({
-      where: eq(users.clerkId, clerkUser.id),
+      where: eq(users.clerkId, userId),
     });
 
     if (!dbUser) {

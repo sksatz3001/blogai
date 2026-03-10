@@ -41,66 +41,6 @@ function injectImages(html: string, images: Array<{ afterH2: string; url: string
   return out;
 }
 
-/**
- * Find relevant YouTube videos and inject embed code into blog HTML
- * Tries to find 1-2 relevant videos and places them in the middle/end of content
- */
-async function findAndInjectVideos(title: string, keyword: string, html: string): Promise<string | null> {
-  try {
-    // Search for a relevant YouTube video
-    const searchQuery = `${keyword} tutorial guide ${new Date().getFullYear()}`;
-    const encodedQuery = encodeURIComponent(searchQuery);
-    
-    const response = await fetch(
-      `https://www.youtube.com/results?search_query=${encodedQuery}`,
-      {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        },
-      }
-    );
-    
-    if (!response.ok) return null;
-    
-    const pageHtml = await response.text();
-    // Extract video IDs from search results
-    const videoIdMatches = [...pageHtml.matchAll(/"videoId":"([a-zA-Z0-9_-]{11})"/g)];
-    const uniqueIds = [...new Set(videoIdMatches.map(m => m[1]))].slice(0, 2);
-    
-    if (uniqueIds.length === 0) return null;
-    
-    // Find H2 headings to inject video after (prefer middle-to-end sections)
-    const h2Matches = Array.from(html.matchAll(/<h2[^>]*>([^<]+)<\/h2>/gi));
-    if (h2Matches.length < 3) return null;
-    
-    // Place video after 60% of the content (roughly)
-    const targetH2Index = Math.floor(h2Matches.length * 0.6);
-    const targetH2 = h2Matches[targetH2Index];
-    
-    if (!targetH2) return null;
-    
-    const videoId = uniqueIds[0];
-    const videoEmbed = `\n<p class="brand-paragraph"><strong>📹 Related Video:</strong> Watch this helpful video about ${keyword}:</p>\n<div class="video-embed-wrapper"><iframe src="https://www.youtube.com/embed/${videoId}" title="Video about ${keyword}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>\n`;
-    
-    // Insert video after the target H2 and its first paragraph
-    const h2FullMatch = targetH2[0];
-    const h2Pos = html.indexOf(h2FullMatch);
-    if (h2Pos === -1) return null;
-    
-    // Find the next </p> after this H2 to place video after the first paragraph
-    const afterH2 = html.substring(h2Pos + h2FullMatch.length);
-    const firstPEnd = afterH2.indexOf('</p>');
-    if (firstPEnd === -1) return null;
-    
-    const insertPos = h2Pos + h2FullMatch.length + firstPEnd + 4; // 4 = '</p>'.length
-    const result = html.substring(0, insertPos) + videoEmbed + html.substring(insertPos);
-    
-    return result;
-  } catch (error) {
-    console.error("Video search/injection error:", error);
-    return null;
-  }
-}
 
 export async function POST(request: Request) {
   try {
@@ -252,33 +192,78 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
     // Determine which model & client to use for text generation
     const selectedChatModel = chatModel || "openai/gpt-4o";
     
-    let completion: any;
+    // Use generous max_tokens — roughly 4 tokens per word + HTML overhead
+    const maxTokens = Math.max(12000, Math.ceil(targetWordCount * 4.5));
+    
+    /**
+     * Call the AI model with automatic continuation if output is truncated.
+     * Many models silently cap output tokens; we detect finish_reason "length"
+     * and request a continuation (up to 2 extra calls).
+     */
+    async function generateWithContinuation(
+      client: OpenAI,
+      model: string,
+      messages: Array<{ role: string; content: string }>,
+    ): Promise<string> {
+      let fullContent = "";
+      let currentMessages = [...messages];
+      const MAX_CONTINUATIONS = 2;
+      
+      for (let attempt = 0; attempt <= MAX_CONTINUATIONS; attempt++) {
+        const response: any = await client.chat.completions.create({
+          model,
+          temperature: 0.65,
+          max_tokens: maxTokens,
+          messages: currentMessages as any,
+          stream: false,
+        });
+        
+        const chunk = response.choices[0]?.message?.content || "";
+        const finishReason = response.choices[0]?.finish_reason;
+        fullContent += chunk;
+        
+        console.log(`[gen] attempt=${attempt} finish_reason=${finishReason} chunk_len=${chunk.length} total_len=${fullContent.length}`);
+        
+        // If the model finished naturally, we're done
+        if (finishReason === "stop" || finishReason !== "length") {
+          break;
+        }
+        
+        // Output was truncated — request continuation
+        console.log(`[gen] Output truncated, requesting continuation ${attempt + 1}/${MAX_CONTINUATIONS}...`);
+        currentMessages = [
+          ...messages,
+          { role: "assistant", content: fullContent },
+          { role: "user", content: "Continue writing from EXACTLY where you left off. Do NOT repeat any content. Do NOT add any preamble or commentary. Continue the HTML output directly." },
+        ];
+      }
+      
+      return fullContent;
+    }
+    
+    let html = "";
     
     if (process.env.OPENROUTER_API_KEY) {
       // Use OpenRouter AI Gateway
       try {
         const openRouterClient = getOpenRouterClient();
-        console.log(`Using OpenRouter with model: ${selectedChatModel}`);
-        completion = await openRouterClient.chat.completions.create({
-          model: selectedChatModel,
-          temperature: 0.65,
-          max_tokens: Math.max(8000, Math.ceil(targetWordCount * 3)),
-          messages: [{ role: "system", content: sys }, { role: "user", content: usr }],
-          stream: false,
-        });
+        console.log(`Using OpenRouter with model: ${selectedChatModel}, max_tokens: ${maxTokens}`);
+        html = await generateWithContinuation(
+          openRouterClient,
+          selectedChatModel,
+          [{ role: "system", content: sys }, { role: "user", content: usr }],
+        );
       } catch (openRouterError: any) {
         console.warn(`OpenRouter call failed for ${selectedChatModel}, falling back to OpenAI:`, openRouterError?.message);
         const client = getOpenAI();
         if (!client) {
           throw new Error(`AI service not configured for model: ${selectedChatModel}`);
         }
-        completion = await client.chat.completions.create({
-          model: "gpt-4o",
-          temperature: 0.65,
-          max_tokens: Math.max(8000, Math.ceil(targetWordCount * 3)),
-          messages: [{ role: "system", content: sys }, { role: "user", content: usr }],
-          stream: false,
-        });
+        html = await generateWithContinuation(
+          client,
+          "gpt-4o",
+          [{ role: "system", content: sys }, { role: "user", content: usr }],
+        );
       }
     } else {
       // Direct OpenAI fallback
@@ -286,16 +271,13 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
       if (!client) {
         return NextResponse.json({ error: "AI service not configured", success: false }, { status: 500 });
       }
-      completion = await client.chat.completions.create({
-        model: "gpt-4o",
-        temperature: 0.65,
-        max_tokens: Math.max(8000, Math.ceil(targetWordCount * 3)),
-        messages: [{ role: "system", content: sys }, { role: "user", content: usr }],
-        stream: false,
-      });
+      html = await generateWithContinuation(
+        client,
+        "gpt-4o",
+        [{ role: "system", content: sys }, { role: "user", content: usr }],
+      );
     }
 
-    let html = completion.choices[0]?.message?.content || "";
     // Strip markdown code block markers if present (```html ... ```)
     html = html
       .replace(/^\s*```(?:html)?\s*\n?/i, '')
@@ -314,9 +296,28 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
       const clsFixed = String(attrs).includes("id=") ? attrs : `${attrs} id="${id}"`;
       return `<h${lvl}${clsFixed}>${text}</h${lvl}>`;
     });
+    
+    // Close any unclosed HTML tags from truncated output
+    const openTags: string[] = [];
+    html.replace(/<\/?([a-z][a-z0-9]*)\b[^>]*>/gi, (match, tag) => {
+      if (match.startsWith('</')) {
+        if (openTags.length && openTags[openTags.length - 1] === tag.toLowerCase()) {
+          openTags.pop();
+        }
+      } else if (!match.endsWith('/>') && !['br', 'hr', 'img', 'input', 'meta', 'link'].includes(tag.toLowerCase())) {
+        openTags.push(tag.toLowerCase());
+      }
+      return match;
+    });
+    // Close remaining open tags in reverse order
+    if (openTags.length) {
+      console.log(`[gen] Closing ${openTags.length} unclosed tags: ${openTags.join(', ')}`);
+      html += openTags.reverse().map(tag => `</${tag}>`).join('');
+    }
 
     // Persist base content first
     const plainWords = html.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length;
+    console.log(`[gen] Final blog: ${plainWords} words, ${html.length} chars`);
     await db.update(blogs).set({ content: html, htmlContent: html, wordCount: plainWords, updatedAt: new Date() }).where(eq(blogs.id, blog.id));
 
     // Generate images
@@ -449,17 +450,6 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
       if (sectionImages.length) {
         html = injectImages(html, sectionImages);
         console.log(`Section images injected. Updating blog content...`);
-      }
-      
-      // Try to inject relevant YouTube videos into the content
-      try {
-        const videoEmbeds = await findAndInjectVideos(title, primaryKeyword, html);
-        if (videoEmbeds) {
-          html = videoEmbeds;
-          console.log("YouTube video embeds injected");
-        }
-      } catch (videoErr) {
-        console.error("Video injection failed (non-critical):", videoErr);
       }
       
       await db.update(blogs)

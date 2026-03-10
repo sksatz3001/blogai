@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { users, companyProfiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
   try {
-    const user = await currentUser();
+    const { userId } = await auth();
 
-    if (!user) {
+    if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     }
 
     const dbUser = await db.query.users.findFirst({
-      where: eq(users.clerkId, user.id),
+      where: eq(users.clerkId, userId),
     });
 
     if (!dbUser) {

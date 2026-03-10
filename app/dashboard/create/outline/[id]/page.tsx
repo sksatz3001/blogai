@@ -163,27 +163,35 @@ export default function OutlineStepPage() {
       // Store outline in sessionStorage for background generation
       window.sessionStorage.setItem(`outline:${blogId}`, JSON.stringify(wire));
       
-      // Redirect to My Blogs immediately
-      toast.success("Blog generation started! You'll see progress in My Blogs.");
-      router.push('/dashboard/blogs');
+      // Trigger generation BEFORE navigating — use keepalive so the browser
+      // doesn't cancel the request when the page unloads
+      const genPayload = JSON.stringify({
+        blogId,
+        title: ctx.title,
+        primaryKeyword: ctx.primary,
+        secondaryKeywords: ctx.secondary.split(",").map(s=>s.trim()).filter(Boolean),
+        targetWordCount: ctx.wordCount,
+        outline: wire.sections,
+        featuredImage: wire.featuredImage,
+        companyProfileId: ctx.companyProfileId === "self" ? null : Number(ctx.companyProfileId),
+        chatModel: ctx.chatModel,
+        imageModel: ctx.imageModel,
+      });
       
-      // Trigger generation in background (fire and forget)
+      // Fire the generation request with keepalive to survive page navigation
       fetch("/api/blogs/generate-from-outline", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          blogId,
-          title: ctx.title,
-          primaryKeyword: ctx.primary,
-          secondaryKeywords: ctx.secondary.split(",").map(s=>s.trim()).filter(Boolean),
-          targetWordCount: ctx.wordCount,
-          outline: wire.sections,
-          featuredImage: wire.featuredImage,
-          companyProfileId: ctx.companyProfileId === "self" ? null : Number(ctx.companyProfileId),
-          chatModel: ctx.chatModel,
-          imageModel: ctx.imageModel,
-        }),
+        body: genPayload,
+        keepalive: true,
       }).catch(err => console.error("Background generation error:", err));
+      
+      // Small delay to ensure the request is sent before navigation
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Now redirect to My Blogs
+      toast.success("Blog generation started! You'll see progress in My Blogs.");
+      router.push('/dashboard/blogs');
       
     } catch (error) {
       console.error("Failed to start generation:", error);

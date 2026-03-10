@@ -1,4 +1,4 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { users } from "@/db/schema";
@@ -6,15 +6,15 @@ import { eq } from "drizzle-orm";
 import { OnboardingForm } from "@/components/onboarding-form";
 
 export default async function OnboardingPage() {
-  const user = await currentUser();
+  const { userId } = await auth();
 
-  if (!user) {
+  if (!userId) {
     redirect("/sign-in");
   }
 
   // Check if user exists in database
   const existingUser = await db.query.users.findFirst({
-    where: eq(users.clerkId, user.id),
+    where: eq(users.clerkId, userId),
   });
 
   // If user completed onboarding, redirect to dashboard

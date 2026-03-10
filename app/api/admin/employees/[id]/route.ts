@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { employees, users } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -11,13 +11,13 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const dbUser = await db.query.users.findFirst({
-      where: eq(users.clerkId, user.id),
+      where: eq(users.clerkId, userId),
     });
 
     if (!dbUser) {
@@ -81,13 +81,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const dbUser = await db.query.users.findFirst({
-      where: eq(users.clerkId, user.id),
+      where: eq(users.clerkId, userId),
     });
 
     if (!dbUser) {

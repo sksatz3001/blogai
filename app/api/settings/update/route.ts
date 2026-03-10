@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
   try {
-    const user = await currentUser();
+    const { userId } = await auth();
 
-    if (!user) {
+    if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
           companyDescription,
           updatedAt: new Date(),
         })
-        .where(eq(users.clerkId, user.id));    return NextResponse.json({ success: true });
+        .where(eq(users.clerkId, userId));    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Settings update error:", error);
     return NextResponse.json(

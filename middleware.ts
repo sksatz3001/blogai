@@ -16,8 +16,25 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect();
+  try {
+    if (!isPublicRoute(request)) {
+      await auth.protect();
+    }
+  } catch (error: any) {
+    // Handle Clerk rate limiting (429) gracefully
+    if (error?.status === 429 || error?.code === 'api_response_error') {
+      console.warn(`Clerk rate limited: ${request.nextUrl.pathname}`);
+      // For API routes, return a JSON error
+      if (request.nextUrl.pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { error: 'Service temporarily unavailable. Please retry.' },
+          { status: 503, headers: { 'Retry-After': '2' } }
+        );
+      }
+      // For page routes, allow through (the page-level auth will handle it)
+      return NextResponse.next();
+    }
+    throw error;
   }
   
   // Superadmin guard: allow login page, protect others via cookie

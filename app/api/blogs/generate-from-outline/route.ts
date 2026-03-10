@@ -192,9 +192,9 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
     // Determine which model & client to use for text generation
     const selectedChatModel = chatModel || "openai/gpt-4o";
     
-    // Scale max_tokens to target word count: ~2.5 tokens per word (covers HTML overhead)
-    // Cap between 4000 and 16000 to avoid under/over-generation
-    const maxTokens = Math.min(Math.max(4000, Math.ceil(targetWordCount * 2.5)), 16000);
+    // max_tokens: enough room for the target word count + HTML overhead
+    // ~3 tokens per word covers HTML tags, classes, attributes
+    const maxTokens = Math.max(8000, Math.ceil(targetWordCount * 3));
     
     let html = "";
     
@@ -373,31 +373,37 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
       const sectionImages: Array<{ afterH2: string; url: string; alt: string }> = [];
       let featuredImageUrl = '';
       
-      for (const p of prompts) {
-        try {
+      // Generate ALL images in parallel to stay well within Vercel 300s limit
+      // (7 images × 20s each: sequential=140s vs parallel=20-30s)
+      console.log(`Starting parallel image generation for ${prompts.length} images...`);
+      const imageResults = await Promise.allSettled(
+        prompts.map(async (p) => {
           console.log(`Generating ${p.type} image${p.after ? ` for: "${p.after}"` : ''} with prompt: "${p.prompt.substring(0, 60)}..."`);
-          
-          // Generate and store image directly in database
           const { imageId, imageUrl } = await generateAndStoreImage({
             prompt: p.prompt,
             blogId: blog.id,
             altText: p.prompt,
             imageModel: imageModel,
           });
-          
-          console.log(`Image generation result: imageId=${imageId}, imageUrl=${imageUrl}`);
-          
-          if (p.type === 'featured') {
+          console.log(`Image generated: type=${p.type}, imageId=${imageId}, imageUrl=${imageUrl}`);
+          return { ...p, imageUrl };
+        })
+      );
+      
+      // Collect results
+      for (const result of imageResults) {
+        if (result.status === 'fulfilled') {
+          const { type, after, imageUrl, prompt } = result.value;
+          if (type === 'featured') {
             featuredImageUrl = imageUrl;
-            console.log(`Featured image generated: ${imageUrl}`);
           } else {
-            sectionImages.push({ afterH2: p.after, url: imageUrl, alt: p.prompt });
-            console.log(`Section image inserted. Total section images so far: ${sectionImages.length}`);
+            sectionImages.push({ afterH2: after, url: imageUrl, alt: prompt });
           }
-        } catch (e) {
-          console.error("image gen failed for prompt:", p.prompt.substring(0, 60), e);
+        } else {
+          console.error('image gen failed:', result.reason?.message || result.reason);
         }
       }
+      console.log(`Image generation complete: ${imageResults.filter(r => r.status === 'fulfilled').length}/${prompts.length} succeeded`);
 
       console.log(`Total section images: ${sectionImages.length}. Now injecting into HTML...`);
       

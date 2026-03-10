@@ -192,7 +192,7 @@ Write the complete, optimized blog post now.
               },
             ],
             temperature: 0.7,
-            max_tokens: Math.max(12000, Math.ceil(targetWordCount * 4.5)),
+            max_tokens: Math.min(Math.max(4000, Math.ceil(targetWordCount * 2.5)), 16000),
             stream: true,
           });
 

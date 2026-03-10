@@ -128,7 +128,7 @@ CRITICAL WORD COUNT RULE:
 - Title: ${title}
 - Primary Keyword: ${primaryKeyword} (use this keyword 5-8 times naturally throughout the content)
 - Secondary Keywords: ${secondaryKeywords.join(", ")} (use each 2-3 times)
-- **STRICT Word Count: ${targetWordCount} words** (THIS IS MANDATORY — you must write at least ${Math.floor(targetWordCount * 0.9)} words and no more than ${Math.ceil(targetWordCount * 1.1)} words of actual content, not counting HTML tags)
+- **STRICT Word Count: ${targetWordCount} words** (THIS IS MANDATORY — you must write at least ${Math.floor(targetWordCount * 0.9)} words and ABSOLUTELY NO MORE than ${Math.ceil(targetWordCount * 1.05)} words of actual content, not counting HTML tags. STOP WRITING once you reach the target.)
 - Words Per Section: Write approximately ${wordsPerSection} words for EACH H2 section (${sectionCount} sections + intro + FAQ/conclusion)
 - Company/Author: ${(company?.companyName) || (dbUser.companyName || "Our Company")}
 - Current Date Context: ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
@@ -187,59 +187,14 @@ ${outlineText}
 - Output clean, production-ready HTML only
 
 **⚠️ FINAL REMINDER — WORD COUNT IS NON-NEGOTIABLE:**
-You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWordCount * 0.9)} words). Each H2 section needs ~${wordsPerSection} words. Each H3 subsection needs 3-5 substantial paragraphs (100-150 words each). Do NOT write a short article. Expand each point with examples, data, practical advice, comparisons, and real-world scenarios. If a section feels thin, add more depth — more examples, more statistics, more actionable tips. Count your words as you write. The article must be comprehensive and thorough.`;
+You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWordCount * 0.9)}, maximum ${Math.ceil(targetWordCount * 1.05)} words). Each H2 section needs ~${wordsPerSection} words. STOP WRITING when you reach the target word count. Do NOT exceed it. Count your words as you write.`;
 
     // Determine which model & client to use for text generation
     const selectedChatModel = chatModel || "openai/gpt-4o";
     
-    // Use generous max_tokens — roughly 4 tokens per word + HTML overhead
-    const maxTokens = Math.max(12000, Math.ceil(targetWordCount * 4.5));
-    
-    /**
-     * Call the AI model with automatic continuation if output is truncated.
-     * Many models silently cap output tokens; we detect finish_reason "length"
-     * and request a continuation (up to 2 extra calls).
-     */
-    async function generateWithContinuation(
-      client: OpenAI,
-      model: string,
-      messages: Array<{ role: string; content: string }>,
-    ): Promise<string> {
-      let fullContent = "";
-      let currentMessages = [...messages];
-      const MAX_CONTINUATIONS = 2;
-      
-      for (let attempt = 0; attempt <= MAX_CONTINUATIONS; attempt++) {
-        const response: any = await client.chat.completions.create({
-          model,
-          temperature: 0.65,
-          max_tokens: maxTokens,
-          messages: currentMessages as any,
-          stream: false,
-        });
-        
-        const chunk = response.choices[0]?.message?.content || "";
-        const finishReason = response.choices[0]?.finish_reason;
-        fullContent += chunk;
-        
-        console.log(`[gen] attempt=${attempt} finish_reason=${finishReason} chunk_len=${chunk.length} total_len=${fullContent.length}`);
-        
-        // If the model finished naturally, we're done
-        if (finishReason === "stop" || finishReason !== "length") {
-          break;
-        }
-        
-        // Output was truncated — request continuation
-        console.log(`[gen] Output truncated, requesting continuation ${attempt + 1}/${MAX_CONTINUATIONS}...`);
-        currentMessages = [
-          ...messages,
-          { role: "assistant", content: fullContent },
-          { role: "user", content: "Continue writing from EXACTLY where you left off. Do NOT repeat any content. Do NOT add any preamble or commentary. Continue the HTML output directly." },
-        ];
-      }
-      
-      return fullContent;
-    }
+    // Scale max_tokens to target word count: ~2.5 tokens per word (covers HTML overhead)
+    // Cap between 4000 and 16000 to avoid under/over-generation
+    const maxTokens = Math.min(Math.max(4000, Math.ceil(targetWordCount * 2.5)), 16000);
     
     let html = "";
     
@@ -247,23 +202,31 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
       // Use OpenRouter AI Gateway
       try {
         const openRouterClient = getOpenRouterClient();
-        console.log(`Using OpenRouter with model: ${selectedChatModel}, max_tokens: ${maxTokens}`);
-        html = await generateWithContinuation(
-          openRouterClient,
-          selectedChatModel,
-          [{ role: "system", content: sys }, { role: "user", content: usr }],
-        );
+        console.log(`Using OpenRouter with model: ${selectedChatModel}, max_tokens: ${maxTokens}, targetWords: ${targetWordCount}`);
+        const completion: any = await openRouterClient.chat.completions.create({
+          model: selectedChatModel,
+          temperature: 0.65,
+          max_tokens: maxTokens,
+          messages: [{ role: "system", content: sys }, { role: "user", content: usr }] as any,
+          stream: false,
+        });
+        html = completion.choices[0]?.message?.content || "";
+        console.log(`[gen] finish_reason=${completion.choices[0]?.finish_reason}, output_len=${html.length}`);
       } catch (openRouterError: any) {
         console.warn(`OpenRouter call failed for ${selectedChatModel}, falling back to OpenAI:`, openRouterError?.message);
         const client = getOpenAI();
         if (!client) {
           throw new Error(`AI service not configured for model: ${selectedChatModel}`);
         }
-        html = await generateWithContinuation(
-          client,
-          "gpt-4o",
-          [{ role: "system", content: sys }, { role: "user", content: usr }],
-        );
+        const completion: any = await client.chat.completions.create({
+          model: "gpt-4o",
+          temperature: 0.65,
+          max_tokens: maxTokens,
+          messages: [{ role: "system", content: sys }, { role: "user", content: usr }] as any,
+          stream: false,
+        });
+        html = completion.choices[0]?.message?.content || "";
+        console.log(`[gen] fallback finish_reason=${completion.choices[0]?.finish_reason}, output_len=${html.length}`);
       }
     } else {
       // Direct OpenAI fallback
@@ -271,11 +234,15 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
       if (!client) {
         return NextResponse.json({ error: "AI service not configured", success: false }, { status: 500 });
       }
-      html = await generateWithContinuation(
-        client,
-        "gpt-4o",
-        [{ role: "system", content: sys }, { role: "user", content: usr }],
-      );
+      const completion: any = await client.chat.completions.create({
+        model: "gpt-4o",
+        temperature: 0.65,
+        max_tokens: maxTokens,
+        messages: [{ role: "system", content: sys }, { role: "user", content: usr }] as any,
+        stream: false,
+      });
+      html = completion.choices[0]?.message?.content || "";
+      console.log(`[gen] direct finish_reason=${completion.choices[0]?.finish_reason}, output_len=${html.length}`);
     }
 
     // Strip markdown code block markers if present (```html ... ```)

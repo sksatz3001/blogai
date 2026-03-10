@@ -163,35 +163,29 @@ export default function OutlineStepPage() {
       // Store outline in sessionStorage for background generation
       window.sessionStorage.setItem(`outline:${blogId}`, JSON.stringify(wire));
       
-      // Trigger generation BEFORE navigating — use keepalive so the browser
-      // doesn't cancel the request when the page unloads
-      const genPayload = JSON.stringify({
-        blogId,
-        title: ctx.title,
-        primaryKeyword: ctx.primary,
-        secondaryKeywords: ctx.secondary.split(",").map(s=>s.trim()).filter(Boolean),
-        targetWordCount: ctx.wordCount,
-        outline: wire.sections,
-        featuredImage: wire.featuredImage,
-        companyProfileId: ctx.companyProfileId === "self" ? null : Number(ctx.companyProfileId),
-        chatModel: ctx.chatModel,
-        imageModel: ctx.imageModel,
-      });
+      // Navigate first, then fire generation request (fire-and-forget)
+      // The serverless function runs to completion on the server regardless
+      // of browser navigation — this pattern has worked reliably for months
+      toast.success("Blog generation started! You'll see progress in My Blogs.");
+      router.push('/dashboard/blogs');
       
-      // Fire the generation request with keepalive to survive page navigation
+      // Fire generation in background after navigation starts
       fetch("/api/blogs/generate-from-outline", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: genPayload,
-        keepalive: true,
+        body: JSON.stringify({
+          blogId,
+          title: ctx.title,
+          primaryKeyword: ctx.primary,
+          secondaryKeywords: ctx.secondary.split(",").map(s=>s.trim()).filter(Boolean),
+          targetWordCount: ctx.wordCount,
+          outline: wire.sections,
+          featuredImage: wire.featuredImage,
+          companyProfileId: ctx.companyProfileId === "self" ? null : Number(ctx.companyProfileId),
+          chatModel: ctx.chatModel,
+          imageModel: ctx.imageModel,
+        }),
       }).catch(err => console.error("Background generation error:", err));
-      
-      // Small delay to ensure the request is sent before navigation
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Now redirect to My Blogs
-      toast.success("Blog generation started! You'll see progress in My Blogs.");
-      router.push('/dashboard/blogs');
       
     } catch (error) {
       console.error("Failed to start generation:", error);

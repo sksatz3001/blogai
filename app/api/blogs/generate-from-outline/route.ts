@@ -373,37 +373,43 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
       const sectionImages: Array<{ afterH2: string; url: string; alt: string }> = [];
       let featuredImageUrl = '';
       
-      // Generate ALL images in parallel to stay well within Vercel 300s limit
-      // (7 images × 20s each: sequential=140s vs parallel=20-30s)
-      console.log(`Starting parallel image generation for ${prompts.length} images...`);
-      const imageResults = await Promise.allSettled(
-        prompts.map(async (p) => {
-          console.log(`Generating ${p.type} image${p.after ? ` for: "${p.after}"` : ''} with prompt: "${p.prompt.substring(0, 60)}..."`);
-          const { imageId, imageUrl } = await generateAndStoreImage({
-            prompt: p.prompt,
-            blogId: blog.id,
-            altText: p.prompt,
-            imageModel: imageModel,
-          });
-          console.log(`Image generated: type=${p.type}, imageId=${imageId}, imageUrl=${imageUrl}`);
-          return { ...p, imageUrl };
-        })
-      );
+      // Generate images in small batches (2 at a time) to avoid rate limits
+      // while still being much faster than fully sequential
+      const BATCH_SIZE = 2;
+      console.log(`Starting batched image generation for ${prompts.length} images (batch size: ${BATCH_SIZE})...`);
       
-      // Collect results
-      for (const result of imageResults) {
-        if (result.status === 'fulfilled') {
-          const { type, after, imageUrl, prompt } = result.value;
-          if (type === 'featured') {
-            featuredImageUrl = imageUrl;
+      for (let i = 0; i < prompts.length; i += BATCH_SIZE) {
+        const batch = prompts.slice(i, i + BATCH_SIZE);
+        console.log(`Image batch ${Math.floor(i / BATCH_SIZE) + 1}: generating ${batch.length} images...`);
+        
+        const batchResults = await Promise.allSettled(
+          batch.map(async (p) => {
+            console.log(`Generating ${p.type} image${p.after ? ` for: "${p.after}"` : ''} with prompt: "${p.prompt.substring(0, 60)}..."`);
+            const { imageId, imageUrl } = await generateAndStoreImage({
+              prompt: p.prompt,
+              blogId: blog.id,
+              altText: p.prompt,
+              imageModel: imageModel,
+            });
+            console.log(`Image generated: type=${p.type}, imageId=${imageId}, imageUrl=${imageUrl}`);
+            return { ...p, imageUrl };
+          })
+        );
+        
+        for (const result of batchResults) {
+          if (result.status === 'fulfilled') {
+            const { type, after, imageUrl, prompt } = result.value;
+            if (type === 'featured') {
+              featuredImageUrl = imageUrl;
+            } else {
+              sectionImages.push({ afterH2: after, url: imageUrl, alt: prompt });
+            }
           } else {
-            sectionImages.push({ afterH2: after, url: imageUrl, alt: prompt });
+            console.error('image gen failed:', result.reason?.message || result.reason);
           }
-        } else {
-          console.error('image gen failed:', result.reason?.message || result.reason);
         }
       }
-      console.log(`Image generation complete: ${imageResults.filter(r => r.status === 'fulfilled').length}/${prompts.length} succeeded`);
+      console.log(`Image generation complete. Featured: ${featuredImageUrl ? 'yes' : 'no'}, Sections: ${sectionImages.length}`);
 
       console.log(`Total section images: ${sectionImages.length}. Now injecting into HTML...`);
       

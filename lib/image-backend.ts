@@ -1,18 +1,13 @@
-import OpenAI from "openai";
 import { db } from "@/db";
 import { blogImages } from "@/db/schema";
 import { getOpenRouterClient } from "@/lib/openrouter";
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import sharp from "sharp";
 
 /**
- * Check if OpenAI image generation is configured
+ * Check if image generation is configured (needs OpenRouter)
  */
 export function isExternalBackendConfigured(): boolean {
-  return Boolean(process.env.OPENAI_API_KEY);
+  return Boolean(process.env.OPENROUTER_API_KEY);
 }
 
 /**
@@ -34,20 +29,12 @@ function shortenPromptForModel(model: string, prompt: string): string {
   // Prompt is already short from the route — just add a tiny model-specific prefix
   const m = model.toLowerCase();
 
-  if (m.includes('dall-e') || m.includes('dalle')) {
-    // DALL-E handles detailed prompts well, just return as-is
+  if (m.includes('gpt')) {
+    // GPT image models handle detailed prompts well
     return prompt;
   }
 
-  if (m.includes('flux')) {
-    return `RAW photo, DSLR, Fujifilm XT3. ${prompt}`;
-  }
-
-  if (m.includes('stable-diffusion') || m.includes('sdxl') || m.includes('stability')) {
-    return `(photorealistic:1.4), RAW photo, 35mm film. ${prompt}`;
-  }
-
-  // Gemini, Imagen, and all others — just ensure "Photograph" is first word
+  // Gemini, and all others — just ensure "Photograph" is first word
   if (!prompt.toLowerCase().startsWith('photograph')) {
     return `Photograph. ${prompt}`;
   }
@@ -55,20 +42,9 @@ function shortenPromptForModel(model: string, prompt: string): string {
 }
 
 /**
- * Get optimal image size. Landscape 1792x1024 for DALL-E, 1024x1024 for others
- * (most OpenRouter models don't reliably support non-square sizes)
+ * These multimodal models generate images via chat completions.
+ * No explicit size parameter — the model decides image dimensions.
  */
-function getModelImageSize(model: string): string {
-  const m = model.toLowerCase();
-  if (m.includes('dall-e') || m.includes('dalle')) {
-    return "1792x1024";
-  }
-  if (m.includes('flux') || m.includes('recraft') || m.includes('ideogram')) {
-    return "1536x1024";
-  }
-  // Most OpenRouter models are safest at 1024x1024
-  return "1024x1024";
-}
 
 /**
  * Generate a single image using OpenRouter (or direct OpenAI) and store in database
@@ -82,7 +58,7 @@ export async function generateAndStoreImage(params: {
   position?: number;
   imageModel?: string;
 }): Promise<{ imageId: number; imageUrl: string }> {
-  const selectedModel = params.imageModel || "dall-e-3";
+  const selectedModel = params.imageModel || "google/gemini-2.5-flash-image";
 
   // Apply model-specific prompt adjustments (keep it short!)
   const adjustedPrompt = shortenPromptForModel(selectedModel, params.prompt);
@@ -94,98 +70,104 @@ export async function generateAndStoreImage(params: {
     let imageData: string | undefined;
     let imageWidth = 1024;
     let imageHeight = 1024;
+    let contentType = "image/png";
 
-    if (process.env.OPENROUTER_API_KEY && selectedModel !== "dall-e-3") {
-      // Use OpenRouter AI Gateway for image generation
-      const imageSize = getModelImageSize(selectedModel);
-      const [w, h] = imageSize.split('x').map(Number);
-      imageWidth = w;
-      imageHeight = h;
+    if (!process.env.OPENROUTER_API_KEY) {
+      throw new Error("OPENROUTER_API_KEY not configured");
+    }
 
-      try {
-        const client = getOpenRouterClient();
-        const response = await client.images.generate({
-          model: selectedModel,
-          prompt: adjustedPrompt,
-          n: 1,
-          size: imageSize as any,
-          response_format: "b64_json",
-        });
-        imageData = response.data?.[0]?.b64_json ?? undefined;
-      } catch (openRouterError: any) {
-        // If landscape fails, retry with square format
-        console.warn(`OpenRouter image gen failed with ${imageSize} for ${selectedModel}, retrying with 1024x1024:`, openRouterError?.message);
-        try {
-          const client = getOpenRouterClient();
-          const response = await client.images.generate({
-            model: selectedModel,
-            prompt: adjustedPrompt,
-            n: 1,
-            size: "1024x1024",
-            response_format: "b64_json",
-          });
-          imageData = response.data?.[0]?.b64_json ?? undefined;
-          imageWidth = 1024;
-          imageHeight = 1024;
-        } catch (retryError: any) {
-          console.warn(`OpenRouter retry also failed for ${selectedModel}, falling back to OpenAI DALL-E:`, retryError?.message);
-          // Fallback to direct OpenAI
-          if (!process.env.OPENAI_API_KEY) {
-            throw new Error(`Image generation failed: No fallback API key available`);
-          }
-          const response = await openai.images.generate({
-            model: "dall-e-3",
-            prompt: params.prompt, // Use original prompt for DALL-E fallback
-            n: 1,
-            size: "1792x1024",
-            quality: "hd",
-            style: "natural",
-            response_format: "b64_json",
-          });
-          imageData = response.data?.[0]?.b64_json ?? undefined;
-          imageWidth = 1792;
-          imageHeight = 1024;
+    // Use OpenRouter chat completions API for image generation
+    // Modern image models (GPT-5-image, Gemini-image) use chat format
+    const client = getOpenRouterClient();
+    const response = await client.chat.completions.create({
+      model: selectedModel,
+      messages: [
+        {
+          role: "user",
+          content: `Generate an image: ${adjustedPrompt}`,
+        },
+      ],
+      max_tokens: 4096,
+    });
+
+    // Extract image from response.choices[0].message.images
+    const message = response.choices?.[0]?.message as any;
+    const images = message?.images;
+
+    if (images && images.length > 0) {
+      const imageUrl = images[0]?.image_url?.url;
+      if (imageUrl && imageUrl.startsWith("data:")) {
+        // Parse data URL: data:image/png;base64,iVBORw0...
+        const dataUrlMatch = imageUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (dataUrlMatch) {
+          contentType = dataUrlMatch[1];
+          imageData = dataUrlMatch[2];
         }
       }
-    } else {
-      // Direct OpenAI for DALL-E models
-      if (!process.env.OPENAI_API_KEY) {
-        throw new Error("OPENAI_API_KEY not configured");
+    }
+
+    // Fallback: check content array for inline image parts
+    if (!imageData && Array.isArray(message?.content)) {
+      for (const part of message.content) {
+        if (part.type === "image_url" && part.image_url?.url?.startsWith("data:")) {
+          const dataUrlMatch = part.image_url.url.match(/^data:([^;]+);base64,(.+)$/);
+          if (dataUrlMatch) {
+            contentType = dataUrlMatch[1];
+            imageData = dataUrlMatch[2];
+            break;
+          }
+        }
       }
-      const response = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: adjustedPrompt,
-        n: 1,
-        size: "1792x1024",
-        quality: "hd",
-        style: "natural",
-        response_format: "b64_json",
-      });
-      imageData = response.data?.[0]?.b64_json ?? undefined;
-      imageWidth = 1792;
-      imageHeight = 1024;
     }
 
     if (!imageData) {
+      console.error(`[IMAGE] No image data in response. Message keys: ${Object.keys(message || {}).join(', ')}`);
       throw new Error("AI returned no image data");
     }
 
-    // Store in database
+    console.log(`[IMAGE] Got image: ${contentType}, ${imageData.length} base64 chars`);
+
+    // Compress PNG → JPEG to reduce size (1.8MB PNG → ~200KB JPEG)
+    // Neon serverless DB connection drops on large payloads
+    try {
+      const rawBuffer = Buffer.from(imageData, "base64");
+      const jpegBuffer = await sharp(rawBuffer)
+        .resize({ width: 1200, height: 800, fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 82, progressive: true })
+        .toBuffer();
+      imageData = jpegBuffer.toString("base64");
+      contentType = "image/jpeg";
+      console.log(`[IMAGE] Compressed to JPEG: ${imageData.length} base64 chars (${Math.round(jpegBuffer.length / 1024)}KB)`);
+    } catch (compressErr) {
+      console.warn(`[IMAGE] Compression failed, using original:`, (compressErr as Error).message);
+    }
+
+    // Store in database with retry (Neon HTTP can drop on large writes)
     const baseUrl = getImageBaseUrl();
-    const [savedImage] = await db
-      .insert(blogImages)
-      .values({
-        blogId: params.blogId,
-        imageUrl: "", // Will be updated after we get the ID
-        imageData: imageData, // Store base64 without data URL prefix
-        contentType: "image/png",
-        imagePrompt: adjustedPrompt,
-        altText: params.altText || params.prompt,
-        position: params.position,
-        width: imageWidth,
-        height: imageHeight,
-      })
-      .returning();
+    let savedImage: any;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        [savedImage] = await db
+          .insert(blogImages)
+          .values({
+            blogId: params.blogId,
+            imageUrl: "",
+            imageData: imageData,
+            contentType: contentType,
+            imagePrompt: adjustedPrompt,
+            altText: params.altText || params.prompt,
+            position: params.position,
+            width: imageWidth,
+            height: imageHeight,
+          })
+          .returning();
+        break;
+      } catch (dbErr: any) {
+        console.warn(`[IMAGE] DB insert attempt ${attempt}/3 failed:`, dbErr?.message?.slice(0, 100));
+        if (attempt === 3) throw dbErr;
+        await new Promise(r => setTimeout(r, 1000 * attempt));
+      }
+    }
 
     // Update imageUrl with the proper API endpoint
     const imageUrl = `${baseUrl}/api/images/serve/${savedImage.id}`;

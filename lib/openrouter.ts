@@ -159,17 +159,15 @@ export async function getChatModels(): Promise<ModelOption[]> {
  */
 // Models known to produce photorealistic output (sorted best first)
 const PHOTOREALISTIC_MODELS = [
-  'black-forest-labs/flux-1.1-pro',
-  'black-forest-labs/flux-pro',
-  'black-forest-labs/flux-1-schnell',
-  'dall-e-3',
-  'openai/dall-e-3',
-  'recraft-ai/recraft-v3',
-  'ideogram-ai/ideogram-v2',
+  'openai/gpt-5-image',
+  'openai/gpt-5-image-mini',
+  'google/gemini-2.5-flash-image',
+  'google/gemini-3-pro-image-preview',
+  'google/gemini-3.1-flash-image-preview',
 ];
 
 // Models that tend to produce CGI/animated/smooth renders
-const CGI_STYLE_MODELS = ['gemini', 'imagen'];
+const CGI_STYLE_MODELS: string[] = [];
 
 export async function getImageModels(): Promise<ModelOption[]> {
   const models = await fetchOpenRouterModels();

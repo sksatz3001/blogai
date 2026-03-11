@@ -36,7 +36,7 @@ export default function OutlineStepPage() {
     wordCount: Number(search.get("wordCount") || "1000"),
     companyProfileId: search.get("companyProfileId") || "self",
     chatModel: search.get("chatModel") || "openai/gpt-4o",
-    imageModel: search.get("imageModel") || "black-forest-labs/flux-1.1-pro",
+    imageModel: search.get("imageModel") || "google/gemini-2.5-flash-image",
   }), [search]);
 
   useEffect(() => {

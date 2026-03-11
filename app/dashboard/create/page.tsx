@@ -45,7 +45,7 @@ function CreateBlogContent() {
   const [imageModels, setImageModels] = useState<ModelOption[]>([]);
   const [loadingModels, setLoadingModels] = useState(true);
   const [selectedChatModel, setSelectedChatModel] = useState("openai/gpt-4o");
-  const [selectedImageModel, setSelectedImageModel] = useState("black-forest-labs/flux-1.1-pro");
+  const [selectedImageModel, setSelectedImageModel] = useState("google/gemini-2.5-flash-image");
   
   const [formData, setFormData] = useState({
     title: "",

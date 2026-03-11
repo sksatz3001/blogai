@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     // Calculate total credits needed
     // 1 credit for blog generation + 0.5 credits per image
     let imageCount = 0;
-    const imageGenerationAvailable = isExternalBackendConfigured() || (imageModel && process.env.OPENROUTER_API_KEY);
+    const imageGenerationAvailable = isExternalBackendConfigured();
     if (imageGenerationAvailable) {
       // Featured image if enabled
       if (featuredImage) imageCount += 1;
@@ -288,7 +288,7 @@ You MUST write exactly ~${targetWordCount} words (minimum ${Math.floor(targetWor
     await db.update(blogs).set({ content: html, htmlContent: html, wordCount: plainWords, updatedAt: new Date() }).where(eq(blogs.id, blog.id));
 
     // Generate images
-    if (isExternalBackendConfigured() || (imageModel && process.env.OPENROUTER_API_KEY)) {
+    if (isExternalBackendConfigured()) {
       const h2Matches = [...html.matchAll(/<h2[^>]*>([^<]+)<\/h2>/gi)].map(m => (m[1] || "").trim());
 
       const prompts: Array<{ type: 'featured' | 'section'; after: string; prompt: string }> = [];

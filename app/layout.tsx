@@ -7,7 +7,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Blog AI - AI-Powered Blog Creation Platform",
+  title: "Pinnara.ai - AI-Powered SEO Content Platform",
   description: "Create amazing SEO-optimized blogs with AI assistance",
 };
 

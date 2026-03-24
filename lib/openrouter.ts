@@ -34,8 +34,8 @@ export function getOpenRouterClient(): OpenAI {
     baseURL: "https://openrouter.ai/api/v1",
     apiKey,
     defaultHeaders: {
-      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "https://contendo.app",
-      "X-Title": "Contendo Blog Generator",
+      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "https://pinnara.ai",
+      "X-Title": "Pinnara.ai Blog Generator",
     },
   });
 

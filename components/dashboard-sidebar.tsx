@@ -45,11 +45,9 @@ export function DashboardSidebar() {
     <div className="flex h-screen w-64 flex-col fixed left-0 top-0 border-r border-border bg-white z-40">
       {/* Logo */}
       <Link href="/dashboard" className="flex h-16 items-center px-6 border-b border-border hover:bg-muted/50 transition-colors">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-semibold text-foreground">Blog AI</span>
+        <div className="flex items-center gap-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="Pinnara.ai" className="h-8 w-auto" />
         </div>
       </Link>
 

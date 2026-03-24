@@ -48,9 +48,22 @@ export default async function Home() {
 
       {/* ─── HERO ──────────────────────────────────────────── */}
       <section className="relative pt-32 pb-28 overflow-hidden">
-        {/* Ambient background */}
+        {/* Ambient background + grid */}
         <div className="absolute inset-0 -z-10">
-          <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-gradient-to-br from-[#534AB7]/8 via-purple-100/20 to-transparent blur-3xl" />
+          {/* Dot grid */}
+          <div className="absolute inset-0 opacity-[0.35]" style={{ backgroundImage: "radial-gradient(circle, #534AB7 0.8px, transparent 0.8px)", backgroundSize: "28px 28px" }} />
+          {/* Gradient orbs */}
+          <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[900px] h-[550px] rounded-full bg-gradient-to-br from-[#534AB7]/10 via-purple-200/25 to-transparent blur-3xl" />
+          <div className="absolute top-20 -left-40 w-[400px] h-[400px] rounded-full bg-purple-100/40 blur-3xl" />
+          <div className="absolute top-40 -right-32 w-[350px] h-[350px] rounded-full bg-indigo-100/30 blur-3xl" />
+          {/* Decorative rings */}
+          <div className="absolute top-28 left-[8%] w-24 h-24 rounded-full border border-[#534AB7]/10" />
+          <div className="absolute top-48 left-[12%] w-12 h-12 rounded-full border border-[#534AB7]/8" />
+          <div className="absolute top-20 right-[10%] w-32 h-32 rounded-full border border-purple-200/30" />
+          <div className="absolute bottom-32 right-[15%] w-16 h-16 rounded-full border border-[#534AB7]/10" />
+          {/* Grid lines overlay (faint) */}
+          <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(#534AB7 1px, transparent 1px), linear-gradient(90deg, #534AB7 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
+          {/* Bottom divider */}
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-200/60 to-transparent" />
         </div>
 
@@ -110,7 +123,13 @@ export default async function Home() {
       </section>
 
       {/* ─── BENTO FEATURES ────────────────────────────────── */}
-      <section id="features" className="py-24 px-5 bg-gray-50/60">
+      <section id="features" className="py-24 px-5 bg-gray-50/60 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(#534AB7 1px, transparent 1px), linear-gradient(90deg, #534AB7 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+          <div className="absolute -top-20 -right-20 w-[350px] h-[350px] rounded-full bg-purple-100/50 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-[300px] h-[300px] rounded-full bg-indigo-50/60 blur-3xl" />
+        </div>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest text-[#534AB7] mb-3">Features</p>
@@ -183,7 +202,14 @@ export default async function Home() {
       </section>
 
       {/* ─── HOW IT WORKS ──────────────────────────────────── */}
-      <section id="how-it-works" className="py-24 px-5 bg-white">
+      <section id="how-it-works" className="py-24 px-5 bg-white relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 opacity-[0.25]" style={{ backgroundImage: "radial-gradient(circle, #534AB7 0.6px, transparent 0.6px)", backgroundSize: "24px 24px" }} />
+          <div className="absolute top-10 left-[5%] w-20 h-20 rounded-full border border-[#534AB7]/8" />
+          <div className="absolute bottom-10 right-[8%] w-28 h-28 rounded-full border border-purple-200/25" />
+          <div className="absolute top-1/2 -left-16 w-[250px] h-[250px] rounded-full bg-purple-50/60 blur-3xl" />
+        </div>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-xs font-semibold uppercase tracking-widest text-[#534AB7] mb-3">How it works</p>
@@ -227,9 +253,11 @@ export default async function Home() {
       </section>
 
       {/* ─── STATS BANNER ──────────────────────────────────── */}
-      <section className="py-16 px-5">
-        <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-r from-[#534AB7] to-[#7B6FD4] p-10 md:p-14">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
+      <section className="py-16 px-5 relative">
+        <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-r from-[#534AB7] to-[#7B6FD4] p-10 md:p-14 relative overflow-hidden">
+          {/* Inner pattern */}
+          <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
+          <div className="grid md:grid-cols-3 gap-8 text-center relative z-10">
             {[
               { val: "10x", label: "Faster content creation" },
               { val: "100%", label: "SEO, AEO & GEO optimised" },
@@ -245,7 +273,14 @@ export default async function Home() {
       </section>
 
       {/* ─── CHECKLIST / WHY PINNARA ───────────────────────── */}
-      <section className="py-24 px-5 bg-gray-50/60">
+      <section className="py-24 px-5 bg-gray-50/60 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(#534AB7 1px, transparent 1px), linear-gradient(90deg, #534AB7 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+          <div className="absolute -top-10 right-[10%] w-[300px] h-[300px] rounded-full bg-purple-100/40 blur-3xl" />
+          <div className="absolute bottom-0 left-[5%] w-[250px] h-[250px] rounded-full bg-indigo-50/50 blur-3xl" />
+          <div className="absolute top-1/3 right-[3%] w-14 h-14 rounded-full border border-[#534AB7]/10" />
+        </div>
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-[#534AB7] mb-3">Why Pinnara.ai</p>
